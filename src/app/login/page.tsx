@@ -99,7 +99,7 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent className="grid gap-4">
           <Button variant="outline" className="w-full text-lg py-6" onClick={handleGoogleLogin} disabled={isLoading}>
-            {isLoading && !isSignUpMode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
+            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
             Sign in with Google
           </Button>
           <div className="relative">
@@ -147,7 +147,9 @@ export default function LoginPage() {
             </div>
             {error && <p className="text-xs text-destructive text-center">{error}</p>}
             <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-lg py-6" disabled={isLoading}>
-              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (isSignUpMode ? <UserPlus className="mr-2 h-5 w-5" /> : null)}
+              {isLoading && isSignUpMode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (isSignUpMode ? <UserPlus className="mr-2 h-5 w-5" /> : null)}
+              {isLoading && !isSignUpMode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {!isLoading && isSignUpMode ? <UserPlus className="mr-2 h-5 w-5" /> : null}
               {isSignUpMode ? "Sign Up" : "Login"}
             </Button>
           </form>
