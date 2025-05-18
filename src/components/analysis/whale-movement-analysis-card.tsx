@@ -1,104 +1,111 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getWhaleMovementAnalysis, type GetWhaleMovementAnalysisOutput } from "@/ai/flows/get-whale-movement-analysis";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader2, Users, AlertCircle, Search, ShieldAlert } from "lucide-react"; // Using ShieldAlert as a "Whale" icon proxy
+import { Loader2, Users, AlertCircle, Search, ShieldAlert, Info } from "lucide-react"; 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-export function WhaleMovementAnalysisCard() {
-  const [coinName, setCoinName] = useState("");
+interface WhaleMovementAnalysisCardProps {
+  coinName: string | null; // Accept coinName as a prop
+}
+
+export function WhaleMovementAnalysisCard({ coinName }: WhaleMovementAnalysisCardProps) {
   const [analysis, setAnalysis] = useState<GetWhaleMovementAnalysisOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentAnalysisCoin, setCurrentAnalysisCoin] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!coinName.trim()) {
-      setError("Please enter a coin name.");
+  useEffect(() => {
+    if (coinName && coinName !== currentAnalysisCoin) {
+      handleAnalysis(coinName);
+    } else if (!coinName) {
+      setAnalysis(null);
+      setError(null);
+      setCurrentAnalysisCoin(null);
+    }
+  }, [coinName]);
+
+  const handleAnalysis = async (nameOfCoinToAnalyze: string) => {
+    if (!nameOfCoinToAnalyze.trim()) {
+      setError("No coin selected for whale movement analysis.");
+      setAnalysis(null);
       return;
     }
     setIsLoading(true);
     setError(null);
     setAnalysis(null);
+    setCurrentAnalysisCoin(nameOfCoinToAnalyze);
+
     try {
-      const result = await getWhaleMovementAnalysis({ coinName });
+      const result = await getWhaleMovementAnalysis({ coinName: nameOfCoinToAnalyze });
       setAnalysis(result);
     } catch (err) {
       console.error("Error getting whale movement analysis:", err);
-      setError("Failed to get whale movement analysis. The AI is currently whale watching, please try again.");
+      setError(`Failed to get whale movement analysis for ${nameOfCoinToAnalyze}. The AI is currently whale watching, please try again.`);
+      setAnalysis(null);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Card className="shadow-lg">
+    <Card className="shadow-lg flex flex-col">
       <CardHeader>
         <CardTitle className="flex items-center text-xl text-primary">
-          <ShieldAlert className="mr-2 h-6 w-6" /> AI Whale Movement Analysis
+          <ShieldAlert className="mr-2 h-6 w-6" /> Whale Movement
         </CardTitle>
         <CardDescription>
-          AI-generated insights on typical whale activity patterns for a meme coin.
+          {currentAnalysisCoin ? `AI whale analysis for ${currentAnalysisCoin}:` : "Whale movement analysis will appear here."}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="coinName-whale">Coin Name</Label>
-            <Input
-              id="coinName-whale"
-              type="text"
-              placeholder="e.g., Dogecoin, Bonk"
-              value={coinName}
-              onChange={(e) => setCoinName(e.target.value)}
-              disabled={isLoading}
-            />
+      <CardContent className="flex-grow">
+         {!coinName && (
+             <div className="text-center text-muted-foreground py-8">
+                <Info className="mx-auto h-8 w-8 mb-2" />
+                <p>Select a coin above to see its whale movement analysis.</p>
+            </div>
+        )}
+        {isLoading && coinName && (
+          <div className="text-center py-8">
+            <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary mb-2" />
+            <p className="text-muted-foreground">Analyzing whale activity for {currentAnalysisCoin}...</p>
           </div>
-          <Button type="submit" disabled={isLoading} className="w-full bg-primary hover:bg-primary/90">
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Analyze Whale Activity"}
-          </Button>
-        </form>
-
-        {error && (
+        )}
+        {error && coinName && (
           <Alert variant="destructive" className="mt-4">
-            <AlertTitle>Error</AlertTitle>
+            <AlertTitle>Whale Analysis Error</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
-        {analysis && (
-          <div className="mt-6 space-y-4">
-            <h3 className="text-lg font-semibold text-neon">Whale Analysis for: {coinName.toUpperCase()}</h3>
-            
+        {analysis && !isLoading && currentAnalysisCoin === coinName && (
+          <div className="space-y-3">
             <InfoItem icon={<Users className="text-primary"/>} label="Typical Activity Summary" value={analysis.activitySummary} />
             <InfoItem icon={<AlertCircle className="text-primary"/>} label="Potential Impact" value={analysis.potentialImpact} />
 
             <div>
-              <h4 className="font-medium text-muted-foreground flex items-center mb-1"><Search className="text-primary mr-2 h-4 w-4"/>Potential Detection Indicators:</h4>
+              <h4 className="font-medium text-muted-foreground flex items-center mb-1 text-sm"><Search className="text-primary mr-2 h-4 w-4"/>Detection Indicators:</h4>
               {analysis.detectionIndicators.length > 0 ? (
-                <ul className="list-disc list-inside space-y-1 pl-2 text-base sm:text-sm text-muted-foreground">
+                <ul className="list-disc list-inside space-y-1 pl-2 text-sm text-muted-foreground">
                   {analysis.detectionIndicators.map((indicator, index) => <li key={index}>{indicator}</li>)}
                 </ul>
-              ) : <p className="text-base sm:text-sm text-muted-foreground italic">No specific indicators identified by AI.</p>}
+              ) : <p className="text-sm text-muted-foreground italic">No specific indicators identified.</p>}
             </div>
             
             {analysis.dataCaveat && (
-                <Alert variant="default" className="mt-4 border-primary/50">
+                <Alert variant="default" className="mt-3 border-primary/50 text-sm">
                     <ShieldAlert className="h-4 w-4 text-primary" />
-                    <AlertTitle className="text-primary">Important Note</AlertTitle>
-                    <AlertDescription className="text-muted-foreground">{analysis.dataCaveat}</AlertDescription>
+                    <AlertTitle className="text-primary text-sm">Important Note</AlertTitle>
+                    <AlertDescription className="text-muted-foreground text-xs">{analysis.dataCaveat}</AlertDescription>
               </Alert>
             )}
           </div>
         )}
       </CardContent>
-      <CardFooter>
-        <p className="text-xs text-muted-foreground">Note: This analysis is generalized and not based on real-time wallet tracking.</p>
+      <CardFooter className="mt-auto pt-4">
+        <p className="text-xs text-muted-foreground">Note: This analysis is generalized.</p>
       </CardFooter>
     </Card>
   );
@@ -111,7 +118,7 @@ interface InfoItemProps {
 }
 const InfoItem: React.FC<InfoItemProps> = ({ icon, label, value}) => (
     <div>
-        <h4 className="font-medium text-muted-foreground flex items-center mb-1">{icon} <span className="ml-2">{label}:</span></h4>
-        <p className="text-base sm:text-sm text-muted-foreground whitespace-pre-wrap pl-2">{value}</p>
+        <h4 className="font-medium text-muted-foreground flex items-center mb-1 text-sm">{icon} <span className="ml-2">{label}:</span></h4>
+        <p className="text-sm text-muted-foreground whitespace-pre-wrap pl-2">{value}</p>
     </div>
 );
