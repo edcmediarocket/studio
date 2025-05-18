@@ -111,9 +111,9 @@ export function NarrativeEngine() {
                 AI Narrative Analysis for: {narrativeData.analyzedTopic}
               </h3>
               <p className="text-sm text-muted-foreground">Analysis Date: {narrativeData.analysisDate}</p>
-              <p className="text-sm mt-1">
+              <div className="text-sm mt-1"> {/* Changed from p to div */}
                 AI Confidence: <Badge variant={narrativeData.confidence === 'High' ? 'default' : narrativeData.confidence === 'Medium' ? 'secondary' : 'destructive'} className="text-xs">{narrativeData.confidence}</Badge>
-              </p>
+              </div>
             </div>
 
             <Card className="bg-card shadow-sm">
@@ -185,3 +185,4 @@ export function NarrativeEngine() {
     </Card>
   );
 }
+
