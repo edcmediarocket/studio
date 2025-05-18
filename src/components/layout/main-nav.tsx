@@ -5,9 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, BarChart2, Eye, UserCircle, BotMessageSquare, Signal, Calculator, GitCompareArrows, Activity, SlidersHorizontal, Newspaper, Rocket, Siren, Lightbulb, DatabaseZap, ShieldQuestion } from "lucide-react";
+import { LayoutDashboard, BarChart2, Eye, UserCircle, BotMessageSquare, Signal, Calculator, GitCompareArrows, Activity, SlidersHorizontal, Newspaper, Rocket, Siren, Lightbulb, DatabaseZap, ShieldQuestion, ShieldAlert } from "lucide-react";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { useTier } from "@/context/tier-context"; 
+import { useAdminAuth } from "@/hooks/use-admin-auth"; // Import the new hook
 
 interface NavItem {
   href: string;
@@ -17,7 +18,7 @@ interface NavItem {
   isPremiumFeature?: boolean; 
 }
 
-const navItems: NavItem[] = [
+const baseNavItems: NavItem[] = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/signals", label: "AI Signals", icon: Signal },
   { href: "/custom-signals", label: "Custom Signals", icon: SlidersHorizontal, isProFeature: true },
@@ -38,15 +39,32 @@ const navItems: NavItem[] = [
 export function MainNav() {
   const pathname = usePathname();
   const { currentTier } = useTier(); 
+  const { isAdmin, loading: adminAuthLoading } = useAdminAuth();
+
+  const getNavItems = () => {
+    const items = [...baseNavItems];
+    if (!adminAuthLoading && isAdmin) {
+      items.push({
+        href: "/admin/dashboard",
+        label: "Admin",
+        icon: ShieldAlert,
+      });
+    }
+    return items;
+  };
+
+  const navItemsToDisplay = getNavItems();
 
   return (
     <SidebarMenu>
-      {navItems.map((item) => {
+      {navItemsToDisplay.map((item) => {
         let styleAsLocked = false;
-        let featureLockedForAria = false; // For aria-disabled
+        let featureLockedForAria = false;
         let tooltipText = item.label;
         
-        if (item.isPremiumFeature) {
+        if (item.href === "/admin/dashboard") {
+          // Admin link is never locked visually if the user is admin (it won't even be in the list if not admin)
+        } else if (item.isPremiumFeature) {
             if (currentTier !== "Premium" && currentTier !== "Pro") { 
                 styleAsLocked = true;
                 featureLockedForAria = true;
@@ -78,12 +96,14 @@ export function MainNav() {
                   ? "opacity-50 blur-sm pointer-events-none" 
                   : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               )}
+              aria-disabled={featureLockedForAria}
+              tabIndex={featureLockedForAria ? -1 : undefined}
             >
-              <Link href={item.href} aria-disabled={featureLockedForAria} tabIndex={featureLockedForAria ? -1 : undefined}>
+              <Link href={item.href}>
                 <item.icon />
                 <span className="flex items-center">
                   {item.label}
-                  {(item.isProFeature || item.isPremiumFeature) && <Rocket className="ml-auto h-3.5 w-3.5 text-neon opacity-80 group-data-[collapsible=icon]:hidden" />}
+                  {(item.isProFeature || item.isPremiumFeature) && item.href !== "/admin/dashboard" && <Rocket className="ml-auto h-3.5 w-3.5 text-neon opacity-80 group-data-[collapsible=icon]:hidden" />}
                 </span>
               </Link>
             </SidebarMenuButton>

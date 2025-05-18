@@ -28,4 +28,6 @@ const auth = getAuth(app);
 // const db = getFirestore(app); // Uncomment if you need Firestore
 // const storage = getStorage(app); // Uncomment if you need Storage
 
+export const ADMIN_EMAIL = "admin@rocketmeme.com"; // Define admin email
+
 export { app, auth /*, db, storage */ };
