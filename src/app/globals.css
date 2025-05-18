@@ -8,55 +8,55 @@ body {
 
 @layer base {
   :root {
-    --background: 234 63% 30%; /* Dark Navy Blue */
-    --foreground: 215 14% 85%; /* Light Gray */
+    --background: 0 0% 0%; /* Black */
+    --foreground: 0 0% 100%; /* White */
 
-    --muted: 234 60% 38%; /* Slightly lighter than background for muted elements */
-    --muted-foreground: 215 14% 70%; /* Lighter gray for muted text */
+    --muted: 0 0% 10%; /* Dark Grey for muted elements */
+    --muted-foreground: 0 0% 70%; /* Lighter gray for muted text */
 
-    --popover: 234 60% 25%; /* Darker for popovers */
-    --popover-foreground: 215 14% 85%;
+    --popover: 0 0% 8%; /* Darker Grey for popovers */
+    --popover-foreground: 0 0% 100%; /* White */
 
-    --card: 233 60% 33%; /* Card Background */
-    --card-foreground: 215 14% 85%;
+    --card: 0 0% 4%; /* Very Dark Grey/Almost Black for Card Background */
+    --card-foreground: 0 0% 100%; /* White */
 
-    --border: 231 53% 40%; /* Border color */
-    --input: 231 53% 45%; /* Input background */
+    --border: 0 100% 50%; /* Neon Red */
+    --input: 0 0% 10%; /* Dark Grey for Input background */
 
-    --primary: 217 90% 61%; /* Saturated Blue */
+    --primary: 0 100% 50%; /* Neon Red */
     --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 231 53% 50%; /* A secondary blue tone */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 0 0% 15%; /* Dark Grey for secondary elements */
+    --secondary-foreground: 0 0% 100%; /* White */
 
-    --accent: 109 100% 51%; /* Neon Green - for ShadCN accent if needed directly */
-    --accent-foreground: 234 63% 10%; /* Dark text for neon green accent */
+    --accent: 0 100% 50%; /* Neon Red */
+    --accent-foreground: 0 0% 100%; /* White */
     
-    --neon-accent-hsl: 109 100% 51%; /* Custom Neon Green HSL */
+    --neon-accent-hsl: 0 100% 50%; /* Neon Red HSL */
     --neon-accent: hsl(var(--neon-accent-hsl));
 
-    --destructive: 0 72% 51%; /* Red for destructive actions */
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 80% 55%; /* A slightly different, vibrant red for destructive actions */
+    --destructive-foreground: 0 0% 100%; /* White */
 
-    --ring: 217 90% 61%; /* Ring color (Saturated Blue) */
+    --ring: 0 100% 50%; /* Neon Red for Ring color */
 
     --radius: 0.5rem;
 
-    /* Sidebar specific colors, aligned with the dark theme */
-    --sidebar-background: 234 63% 28%; /* Slightly different shade of navy */
-    --sidebar-foreground: 215 14% 80%;
-    --sidebar-primary: 217 90% 61%; /* Saturated Blue for active/primary items */
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 233 60% 35%; /* Accent for hover states in sidebar */
-    --sidebar-accent-foreground: 215 14% 90%;
-    --sidebar-border: 231 53% 35%;
-    --sidebar-ring: 217 90% 61%;
+    /* Sidebar specific colors */
+    --sidebar-background: 0 0% 2%; /* Almost Black, slightly different from main bg */
+    --sidebar-foreground: 0 0% 95%; /* Off-white */
+    --sidebar-primary: 0 100% 50%; /* Neon Red for active/primary items */
+    --sidebar-primary-foreground: 0 0% 100%; /* White */
+    --sidebar-accent: 0 0% 10%; /* Dark grey for hover states in sidebar */
+    --sidebar-accent-foreground: 0 0% 100%; /* White */
+    --sidebar-border: 0 100% 50%; /* Neon Red */
+    --sidebar-ring: 0 100% 50%; /* Neon Red */
 
-    --chart-1: 217 90% 61%; /* Saturated Blue */
-    --chart-2: 109 100% 51%; /* Neon Green */
-    --chart-3: 200 80% 55%; /* A lighter blue */
-    --chart-4: 280 70% 60%; /* A purple */
-    --chart-5: 30 90% 58%; /* An orange */
+    --chart-1: 0 100% 50%; /* Neon Red */
+    --chart-2: 0 0% 80%; /* Light Grey */
+    --chart-3: 0 0% 60%; /* Mid Grey */
+    --chart-4: 0 100% 70%; /* Lighter Neon Red */
+    --chart-5: 0 80% 60%; /* Another shade of Red */
   }
 }
 
