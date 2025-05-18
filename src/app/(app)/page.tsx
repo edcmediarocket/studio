@@ -3,7 +3,7 @@
 
 import { MarketDataTable } from "@/components/dashboard/market-data-table";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, TrendingUp, TrendingDown, Info } from "lucide-react"; // Changed Zap to LayoutDashboard
+import { LayoutDashboard, TrendingUp, TrendingDown, Info } from "lucide-react"; 
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
@@ -27,6 +27,15 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <section className="py-4 sm:py-6">
         <div className="container px-0 sm:px-4">
+          
+          <div className="mb-6 flex justify-start">
+            <Button size="default" variant="outline_primary" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground text-sm sm:text-base w-full sm:w-auto" asChild>
+              <Link href="/">
+                <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
+              </Link>
+            </Button>
+          </div>
+
           <h1 className="text-2xl sm:text-3xl font-bold mb-1 text-neon">
             Market Overview
           </h1>
@@ -79,11 +88,6 @@ export default function DashboardPage() {
              <h2 className="text-xl sm:text-2xl font-semibold text-foreground flex-grow">
                 All Coins
              </h2>
-            <Button size="default" variant="outline_primary" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground text-sm sm:text-base w-full sm:w-auto" asChild>
-              <Link href="/">
-                <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
-              </Link>
-            </Button>
           </div>
         </div>
       </section>
@@ -96,4 +100,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
