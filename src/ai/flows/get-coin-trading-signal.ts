@@ -11,12 +11,12 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const GetCoinTradingSignalInputSchema = z.object({
+const GetCoinTradingSignalInputSchema = z.object({
   coinName: z.string().describe('The name of the meme coin to get a trading signal for (e.g., Dogecoin).'),
 });
 export type GetCoinTradingSignalInput = z.infer<typeof GetCoinTradingSignalInputSchema>;
 
-export const GetCoinTradingSignalOutputSchema = z.object({
+const GetCoinTradingSignalOutputSchema = z.object({
   recommendation: z.enum(['Buy', 'Sell', 'Hold']).describe('The trading recommendation: Buy, Sell, or Hold.'),
   reasoning: z.string().describe('Detailed reasoning behind the recommendation, considering current market conditions, sentiment, and coin-specific factors.'),
   rocketScore: z.number().min(1).max(5).int().describe('A score from 1 to 5 rockets, indicating bullish potential or strength of the signal. 5 is highest.'),
@@ -62,3 +62,4 @@ const getCoinTradingSignalFlow = ai.defineFlow(
     return output!;
   }
 );
+
