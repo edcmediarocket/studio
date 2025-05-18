@@ -3,7 +3,7 @@
 
 import { MarketDataTable } from "@/components/dashboard/market-data-table";
 import { Button } from "@/components/ui/button";
-import { Zap, TrendingUp, TrendingDown, Info } from "lucide-react";
+import { LayoutDashboard, TrendingUp, TrendingDown, Info } from "lucide-react"; // Changed Zap to LayoutDashboard
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
@@ -80,8 +80,8 @@ export default function DashboardPage() {
                 All Coins
              </h2>
             <Button size="default" variant="outline_primary" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground text-sm sm:text-base w-full sm:w-auto" asChild>
-              <Link href="/account#subscription">
-                <Zap className="mr-2 h-4 w-4" /> Upgrade Plan
+              <Link href="/">
+                <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
               </Link>
             </Button>
           </div>
@@ -96,3 +96,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

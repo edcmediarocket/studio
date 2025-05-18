@@ -1,7 +1,9 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -88,7 +90,9 @@ export function WatchlistTable() {
           <CardDescription>Add coins from the market data table to start tracking them.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button>Explore Coins</Button>
+          <Link href="/">
+            <Button>Explore Coins</Button>
+          </Link>
         </CardContent>
       </Card>
     );
@@ -118,15 +122,25 @@ export function WatchlistTable() {
               {watchlist.map((coin) => (
                 <TableRow key={coin.id} className="hover:bg-muted/50">
                   <TableCell>
-                    <Image src={coin.image} alt={coin.name} width={24} height={24} className="rounded-full" data-ai-hint="coin logo crypto"/>
+                    <Link href={`/coin/${coin.id}`}>
+                      <Image src={coin.image} alt={coin.name} width={24} height={24} className="rounded-full" data-ai-hint="coin logo crypto"/>
+                    </Link>
                   </TableCell>
                   <TableCell>
-                    <div className="font-medium">{coin.name}</div>
-                    <div className="text-xs text-muted-foreground">{coin.symbol.toUpperCase()}</div>
+                    <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors">
+                      <div className="font-medium">{coin.name}</div>
+                      <div className="text-xs text-muted-foreground">{coin.symbol.toUpperCase()}</div>
+                    </Link>
                   </TableCell>
-                  <TableCell className="text-right font-mono">${coin.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: coin.current_price > 0.01 ? 2 : 8 })}</TableCell>
+                  <TableCell className="text-right font-mono">
+                     <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
+                        ${coin.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: coin.current_price > 0.01 ? 2 : 8 })}
+                     </Link>
+                  </TableCell>
                   <TableCell className={`text-right font-mono ${coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {coin.price_change_percentage_24h.toFixed(2)}%
+                    <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
+                      {coin.price_change_percentage_24h.toFixed(2)}%
+                    </Link>
                   </TableCell>
                   <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{coin.notes || 'N/A'}</TableCell>
                   <TableCell className="text-center">
@@ -136,8 +150,10 @@ export function WatchlistTable() {
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center space-x-1">
-                      <Button variant="ghost" size="icon" title="View Chart">
-                        <LineChart className="h-4 w-4" />
+                      <Button variant="ghost" size="icon" title="View Details" asChild>
+                        <Link href={`/coin/${coin.id}`}>
+                          <LineChart className="h-4 w-4" />
+                        </Link>
                       </Button>
                        <Button variant="ghost" size="icon" title="Edit Notes (coming soon)" disabled>
                         <Edit3 className="h-4 w-4" />
@@ -156,3 +172,4 @@ export function WatchlistTable() {
     </Card>
   );
 }
+
