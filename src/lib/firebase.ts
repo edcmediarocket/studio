@@ -1,3 +1,4 @@
+
 // src/lib/firebase.ts
 import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
@@ -28,6 +29,6 @@ const auth = getAuth(app);
 // const db = getFirestore(app); // Uncomment if you need Firestore
 // const storage = getStorage(app); // Uncomment if you need Storage
 
-export const ADMIN_EMAIL = "admin@rocketmeme.com"; // Define admin email
+export const ADMIN_EMAIL = "coreyenglish517@gmail.com"; // Define admin email
 
 export { app, auth /*, db, storage */ };
