@@ -3,8 +3,9 @@
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Star, Rocket, ShieldCheck } from "lucide-react"; // Added ShieldCheck
+import { CheckCircle, XCircle, Star, Rocket, ShieldCheck } from "lucide-react";
 import type { UserTier } from "@/context/tier-context"; 
+import { auth } from '@/lib/firebase'; // Import Firebase auth
 
 interface TierFeature {
   text: string;
@@ -16,9 +17,9 @@ interface SubscriptionPlan {
   price: string;
   period: string;
   features: TierFeature[];
-  ctaText?: string; // Made optional as it will be dynamic
+  ctaText?: string;
   highlight?: boolean;
-  paypalPlanId?: string; // Added PayPal Plan ID
+  paypalPlanId?: string;
   icon?: React.ReactNode;
 }
 
@@ -40,7 +41,7 @@ const tiersData: Omit<SubscriptionPlan, 'ctaText'>[] = [
   },
   {
     name: "Basic",
-    price: "$9.99", // Example price
+    price: "$9.99",
     period: "/month",
     icon: <Rocket className="h-6 w-6 text-primary mx-auto mb-2" />,
     features: [
@@ -56,9 +57,9 @@ const tiersData: Omit<SubscriptionPlan, 'ctaText'>[] = [
   },
   {
     name: "Pro",
-    price: "$29.99", // Example price
+    price: "$29.99",
     period: "/month",
-    icon: <ShieldCheck className="h-6 w-6 text-neon mx-auto mb-2" />, // Using ShieldCheck for Pro
+    icon: <ShieldCheck className="h-6 w-6 text-neon mx-auto mb-2" />,
     features: [
       { text: "Full Real-time AI Signals (All Coins)", included: true },
       { text: "Advanced Market Data & Analytics", included: true },
@@ -72,10 +73,10 @@ const tiersData: Omit<SubscriptionPlan, 'ctaText'>[] = [
     paypalPlanId: "P-5GK21636B1377881VNAQPMFA",
   },
   {
-    name: "Premium", // New Premium Tier
-    price: "$49.99", // Example price
+    name: "Premium",
+    price: "$49.99",
     period: "/month",
-    icon: <Rocket className="h-6 w-6 text-purple-400 mx-auto mb-2" />, // Distinct icon/color for Premium
+    icon: <Rocket className="h-6 w-6 text-purple-400 mx-auto mb-2" />,
     features: [
       { text: "All Pro Features Included", included: true },
       { text: "Exclusive AI Models & Early Access", included: true },
@@ -85,8 +86,8 @@ const tiersData: Omit<SubscriptionPlan, 'ctaText'>[] = [
       { text: "Personalized Onboarding", included: true },
       { text: "Custom Prediction Requests (Limited)", included: true },
     ],
-    paypalPlanId: "P-66R88029R2506591NNAQPPKQ", // Premium Plan ID
-    highlight: true, // Also highlight premium
+    paypalPlanId: "P-66R88029R2506591NNAQPPKQ",
+    highlight: true,
   },
 ];
 
@@ -102,18 +103,21 @@ export function SubscriptionTiers({ currentActiveTier, onTierChange }: Subscript
       alert(`The ${tierName} plan is free or does not have a payment plan ID configured.`);
       return;
     }
-    // SIMULATE PAYPAL INTEGRATION START
-    alert(`Simulating PayPal subscription for ${tierName} tier (Plan ID: ${planId}).\n\nThis is where the actual PayPal integration would begin. The user's tier would be updated via backend webhooks upon successful payment.`);
+    
+    const currentUser = auth.currentUser;
+    const userId = currentUser ? currentUser.uid : "USER_ID_NOT_AVAILABLE (User not logged in)";
+
+    alert(`Simulating PayPal subscription for ${tierName} tier.\nPlan ID: ${planId}\nUser ID (as custom_id): ${userId}\n\nThis is where the actual PayPal JS SDK integration would begin. The user's tier would be updated via backend webhooks upon successful payment.`);
     
     // For demo purposes, call onTierChange to update the UI locally AFTER the alert.
+    // In a real app, this onTierChange would likely be triggered by a Firestore listener
+    // reacting to changes made by the backend webhook.
     onTierChange(tierName); 
   };
 
   const getButtonText = (tier: SubscriptionPlan): string => {
     if (tier.name === currentActiveTier) return "Current Plan";
     if (tier.name === "Free") return "Switch to Free"; 
-
-    // Could add logic to differentiate "Upgrade", "Downgrade", "Switch"
     return `Subscribe to ${tier.name}`; 
   };
 
@@ -160,11 +164,10 @@ export function SubscriptionTiers({ currentActiveTier, onTierChange }: Subscript
           <CardFooter>
             <Button 
               onClick={() => {
-                if (tier.paypalPlanId) {
-                  handlePayPalSubscription(tier.name, tier.paypalPlanId);
-                } else if (tier.name === "Free") {
-                  // Allow switching to Free plan directly if it's not the current one.
+                if (tier.name === "Free") {
                   if (currentActiveTier !== "Free") onTierChange("Free");
+                } else if (tier.paypalPlanId) {
+                  handlePayPalSubscription(tier.name, tier.paypalPlanId);
                 }
               }}
               className={`w-full 
