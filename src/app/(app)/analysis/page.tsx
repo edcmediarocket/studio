@@ -2,11 +2,11 @@
 "use client";
 
 import { SentimentAnalysisCard } from "@/components/analysis/sentiment-analysis-card";
-import { PriceTrendAnalysisCard } from "@/components/analysis/price-trend-analysis-card"; // New
-import { WhaleMovementAnalysisCard } from "@/components/analysis/whale-movement-analysis-card"; // New
+import { PriceTrendAnalysisCard } from "@/components/analysis/price-trend-analysis-card";
+import { WhaleMovementAnalysisCard } from "@/components/analysis/whale-movement-analysis-card";
 import { AnalysisChart } from "@/components/analysis/analysis-chart";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { BarChartHorizontalBig, Users, ShieldAlert } from "lucide-react"; // Users as placeholder for Whale
+import { BarChartHorizontalBig, ShieldAlert } from "lucide-react";
 
 export default function AnalysisPage() {
   return (
@@ -55,8 +55,9 @@ export default function AnalysisPage() {
         <CardContent>
           <p className="text-muted-foreground">
             This section will display alerts from services like Whale Alert API, providing insights into large token movements that could affect market prices. Stay tuned for this powerful feature!
-          </CardContent>
-        </Card>
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }
