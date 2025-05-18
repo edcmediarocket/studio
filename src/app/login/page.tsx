@@ -9,12 +9,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/icons/logo";
-import { KeyRound, AtSign, Loader2 } from "lucide-react";
-import { auth } from '@/lib/firebase'; // Import Firebase auth
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { KeyRound, AtSign, Loader2, UserPlus } from "lucide-react";
+import { auth } from '@/lib/firebase'; 
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
-// Placeholder for Google SVG Icon
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -25,7 +24,6 @@ const GoogleIcon = () => (
   </svg>
 );
 
-
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -33,19 +31,28 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSignUpMode, setIsSignUpMode] = useState(false);
 
-  const handleLogin = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsLoading(true);
     setError(null);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast({ title: "Login Successful", description: "Welcome back!" });
+      if (isSignUpMode) {
+        await createUserWithEmailAndPassword(auth, email, password);
+        toast({ title: "Sign Up Successful", description: "Welcome! Your account has been created." });
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+        toast({ title: "Login Successful", description: "Welcome back!" });
+      }
       router.push('/'); // Redirect to dashboard
     } catch (err: any) {
-      console.error("Email/Password login error:", err);
-      setError(err.message || "Failed to login. Please check your credentials.");
-      toast({ title: "Login Failed", description: err.message || "Please check your credentials.", variant: "destructive" });
+      console.error("Email/Password action error:", err);
+      // Don't show error for user closing popup, but show others
+      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+        setError(err.message || `Failed to ${isSignUpMode ? 'sign up' : 'login'}. Please check your credentials.`);
+        toast({ title: `${isSignUpMode ? 'Sign Up' : 'Login'} Failed`, description: err.message || "An error occurred.", variant: "destructive" });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -61,11 +68,19 @@ export default function LoginPage() {
       router.push('/'); // Redirect to dashboard
     } catch (err: any) {
       console.error("Google login error:", err);
-      setError(err.message || "Failed to login with Google. Please try again.");
-      toast({ title: "Google Sign-In Failed", description: err.message || "Please try again.", variant: "destructive" });
+      // Don't show error for user closing popup, but show others
+      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+        setError(err.message || "Failed to login with Google. Please try again.");
+        toast({ title: "Google Sign-In Failed", description: err.message || "Please try again.", variant: "destructive" });
+      }
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const toggleMode = () => {
+    setIsSignUpMode(!isSignUpMode);
+    setError(null); // Clear errors when switching modes
   };
 
   return (
@@ -75,14 +90,16 @@ export default function LoginPage() {
           <Link href="/" className="inline-block mx-auto mb-4">
             <Logo className="h-12 w-auto" />
           </Link>
-          <CardTitle className="text-2xl">Welcome Back to Rocket Meme!</CardTitle>
+          <CardTitle className="text-2xl">
+            {isSignUpMode ? "Create Your Rocket Meme Account" : "Welcome Back to Rocket Meme!"}
+          </CardTitle>
           <CardDescription>
-            Enter your credentials or sign in with Google to access your dashboard.
+            {isSignUpMode ? "Fill in your details to get started." : "Enter your credentials or sign in with Google to access your dashboard."}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <Button variant="outline" className="w-full text-lg py-6" onClick={handleGoogleLogin} disabled={isLoading}>
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
+            {isLoading && !isSignUpMode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
             Sign in with Google
           </Button>
           <div className="relative">
@@ -95,7 +112,7 @@ export default function LoginPage() {
               </span>
             </div>
           </div>
-          <form onSubmit={handleLogin} className="grid gap-4">
+          <form onSubmit={handleSubmit} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -124,25 +141,26 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
+                  placeholder={isSignUpMode ? "Choose a strong password" : "Enter your password"}
                 />
               </div>
             </div>
             {error && <p className="text-xs text-destructive text-center">{error}</p>}
             <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-lg py-6" disabled={isLoading}>
-              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Login"}
+              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (isSignUpMode ? <UserPlus className="mr-2 h-5 w-5" /> : null)}
+              {isSignUpMode ? "Sign Up" : "Login"}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-2 text-sm">
-           <Link href="#" className="font-medium text-primary hover:text-neon hover:underline">
-              Forgot your password?
-            </Link>
-          <p className="text-muted-foreground">
-            Don&apos;t have an account?{" "}
+           {!isSignUpMode && (
             <Link href="#" className="font-medium text-primary hover:text-neon hover:underline">
-              Sign Up
+                Forgot your password?
             </Link>
-          </p>
+           )}
+          <Button variant="link" onClick={toggleMode} className="font-medium text-primary hover:text-neon">
+            {isSignUpMode ? "Already have an account? Login" : "Don't have an account? Sign Up"}
+          </Button>
         </CardFooter>
       </Card>
     </div>
