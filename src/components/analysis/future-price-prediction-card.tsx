@@ -27,7 +27,7 @@ export function FuturePricePredictionCard({ coinName }: FuturePricePredictionCar
       setError(null);
       setCurrentAnalysisCoin(null);
     }
-  }, [coinName, currentAnalysisCoin]); // Added currentAnalysisCoin to dependencies
+  }, [coinName, currentAnalysisCoin]); 
 
   const handlePrediction = async (nameOfCoinToAnalyze: string) => {
     if (!nameOfCoinToAnalyze.trim()) {
@@ -109,7 +109,7 @@ export function FuturePricePredictionCard({ coinName }: FuturePricePredictionCar
                                 <CalendarClock className="h-4 w-4 mr-2 text-primary" />
                                 {pred.timeframe}:
                             </span>
-                            <span className="text-sm font-semibold text-neon">{pred.predictedPrice}</span>
+                            <span className="text-sm font-semibold text-foreground">{pred.predictedPrice}</span>
                         </li>
                     ))}
                 </ul>
