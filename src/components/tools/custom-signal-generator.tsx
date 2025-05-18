@@ -40,10 +40,15 @@ export function CustomSignalGenerator() {
       setCurrentCoinPrice(null);
 
       let coinId = coinName.trim().toLowerCase();
-      if (coinId === "xrp") {
-        coinId = "ripple";
-      }
-      // Add more specific mappings if needed, e.g., "shiba inu" -> "shiba-inu"
+      // Common coin ID mappings
+      const coinIdMappings: { [key: string]: string } = {
+        "xrp": "ripple",
+        "shiba inu": "shiba-inu",
+        "dogecoin": "dogecoin",
+        // Add more mappings as needed
+      };
+      coinId = coinIdMappings[coinId] || coinId.replace(/\s+/g, '-');
+
 
       try {
         const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`);
@@ -51,7 +56,7 @@ export function CustomSignalGenerator() {
           const errorData = await response.json().catch(() => ({ error: "Failed to parse error response" }));
           const apiErrorMessage = errorData?.error || `CoinGecko API error (Status: ${response.status})`;
           if (response.status === 404 || apiErrorMessage.toLowerCase().includes('could not find coin with id')) {
-            setPriceError(`Could not find current price for "${coinName}". Please check the coin name/ID.`);
+            setPriceError(`Could not find current price for "${coinName}". Please check the coin name/ID or try an alternative ID (e.g., 'ripple' for XRP).`);
           } else {
             setPriceError(`Failed to fetch current price: ${apiErrorMessage}`);
           }
@@ -62,13 +67,20 @@ export function CustomSignalGenerator() {
             setCurrentCoinPrice(data[coinId].usd);
             setPriceError(null);
           } else {
-            setPriceError(`Current price not available for "${coinName}" from CoinGecko.`);
+            setPriceError(`Current price not available for "${coinName}" from CoinGecko. The coin ID '${coinId}' might be incorrect or not tracked for simple price.`);
             setCurrentCoinPrice(null);
           }
         }
       } catch (err) {
         console.error("Error fetching current price:", err);
-        setPriceError("An unexpected error occurred while fetching the current price.");
+        if (err instanceof TypeError && err.message.toLowerCase().includes('failed to fetch')) {
+          setPriceError(`Network error: Failed to fetch price for "${coinName}". Please check your internet connection and try again.`);
+        } else if (err instanceof Error) {
+          setPriceError(`An unexpected error occurred while fetching the price for "${coinName}": ${err.message}`);
+        } 
+        else {
+          setPriceError(`An unexpected error occurred while fetching the price for "${coinName}".`);
+        }
         setCurrentCoinPrice(null);
       } finally {
         setPriceLoading(false);
@@ -79,12 +91,11 @@ export function CustomSignalGenerator() {
         if (coinName.trim()) {
             fetchCurrentPrice();
         } else {
-            // Clear price info if coin name is cleared
             setCurrentCoinPrice(null);
             setPriceError(null);
             setPriceLoading(false);
         }
-    }, 500); // Debounce API call
+    }, 500);
 
     return () => clearTimeout(debounceTimer);
   }, [coinName]);
@@ -101,7 +112,7 @@ export function CustomSignalGenerator() {
     setSignalData(null);
     try {
       const result = await getCustomizedCoinTradingSignal({
-        coinName: coinName.trim(), // Use trimmed coin name
+        coinName: coinName.trim(),
         timeframe,
         riskProfile,
       });
@@ -308,3 +319,4 @@ const InfoCard: React.FC<InfoCardProps> = ({icon, title, children}) => (
         </CardContent>
     </Card>
 )
+
