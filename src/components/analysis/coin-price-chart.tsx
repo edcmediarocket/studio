@@ -84,8 +84,8 @@ export function CoinPriceChart({ coinName, data, loading, error }: CoinPriceChar
               data={formattedData}
               margin={{
                 top: 5,
-                right: 10, // Increased right margin
-                left: 5,  // Increased left margin slightly
+                right: 10, 
+                left: 0, 
                 bottom: 5,
               }}
             >
@@ -97,8 +97,7 @@ export function CoinPriceChart({ coinName, data, loading, error }: CoinPriceChar
                 axisLine={false}
                 dy={5}
                 fontSize={10}
-                interval="preserveStartEnd" // Reduce tick density
-                // Or use a number e.g. interval={Math.floor(formattedData.length / 5)} to show ~5 ticks
+                interval={6} // Display fewer ticks on X-axis
               />
               <YAxis
                 stroke="hsl(var(--muted-foreground))"
@@ -111,7 +110,7 @@ export function CoinPriceChart({ coinName, data, loading, error }: CoinPriceChar
                     return `$${numValue.toFixed(fixedDigits)}`;
                 }}
                 domain={['auto', 'auto']}
-                width={55} // Reduced YAxis width
+                width={50} // Reduced YAxis width further
                 fontSize={10}
               />
               <Tooltip
