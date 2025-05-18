@@ -8,7 +8,7 @@ import type { LucideIcon } from "lucide-react";
 import { LayoutDashboard, BarChart2, Eye, UserCircle, BotMessageSquare, Signal, Calculator, GitCompareArrows, Activity, SlidersHorizontal, Newspaper, Rocket, Siren, Lightbulb, DatabaseZap, ShieldQuestion, ShieldAlert } from "lucide-react";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { useTier } from "@/context/tier-context"; 
-import { useAdminAuth } from "@/hooks/use-admin-auth"; // Import the new hook
+import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 interface NavItem {
   href: string;
@@ -58,27 +58,20 @@ export function MainNav() {
   return (
     <SidebarMenu>
       {navItemsToDisplay.map((item) => {
-        let styleAsLocked = false;
-        let featureLockedForAria = false;
         let tooltipText = item.label;
         
+        // Determine tooltip text based on feature tier
         if (item.href === "/admin/dashboard") {
-          // Admin link is never locked visually if the user is admin (it won't even be in the list if not admin)
+          // Admin link tooltip logic (if any)
         } else if (item.isPremiumFeature) {
+            tooltipText = `${item.label} (Premium Feature)`;
             if (currentTier !== "Premium" && currentTier !== "Pro") { 
-                styleAsLocked = true;
-                featureLockedForAria = true;
                 tooltipText = `${item.label} (Premium Feature - Upgrade to Access)`;
-            } else {
-                 tooltipText = `${item.label} (Premium Feature)`;
             }
         } else if (item.isProFeature) {
+            tooltipText = `${item.label} (Pro/Premium Feature)`;
             if (currentTier !== "Pro" && currentTier !== "Premium") { 
-                styleAsLocked = true;
-                featureLockedForAria = true;
                 tooltipText = `${item.label} (Pro/Premium Feature - Upgrade to Access)`;
-            } else {
-                tooltipText = `${item.label} (Pro/Premium Feature)`;
             }
         }
         
@@ -91,13 +84,13 @@ export function MainNav() {
                 children: tooltipText, 
                 className: "bg-popover text-popover-foreground"
               }}
-              className={cn(
-                styleAsLocked 
-                  ? "opacity-50 blur-sm pointer-events-none" 
-                  : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              )}
-              aria-disabled={featureLockedForAria}
-              tabIndex={featureLockedForAria ? -1 : undefined}
+              // Explicitly set className to prevent conditional blur/opacity.
+              // The SidebarMenuButton itself might have styles for aria-disabled.
+              className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              // Ensure the button is not treated as disabled by its own internal logic for ARIA states.
+              // Locking is handled by the page content.
+              aria-disabled={false} 
+              // tabIndex={0} // Ensure it's focusable
             >
               <Link href={item.href}>
                 <item.icon />
