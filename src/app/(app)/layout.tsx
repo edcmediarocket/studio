@@ -1,3 +1,4 @@
+
 import type { PropsWithChildren } from 'react';
 import { Header } from '@/components/layout/header';
 import { MainNav } from '@/components/layout/main-nav';
@@ -17,8 +18,8 @@ import Link from 'next/link';
 
 export default function AppLayout({ children }: PropsWithChildren) {
   return (
-    <SidebarProvider defaultOpen={true}>
-      <Sidebar collapsible="none" variant="sidebar" className="border-r border-sidebar-border">
+    <SidebarProvider defaultOpen={false}> {/* Changed defaultOpen to false */}
+      <Sidebar collapsible="icon" variant="sidebar" className="border-r border-sidebar-border"> {/* Changed collapsible to "icon" */}
         <SidebarHeader className="p-4">
           <Link href="/" className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
             <Logo className="h-7 sm:h-8 w-auto" />
