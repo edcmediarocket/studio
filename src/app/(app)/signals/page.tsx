@@ -162,7 +162,7 @@ export default function SignalsPage() {
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle className="text-2xl">Active Signals & Analysis</CardTitle>
-            <RefreshCw className="h-5 w-5 text-muted-foreground animate-spin [animation-duration:3s]" />
+            <RefreshCw className="h-5 w-5 text-muted-foreground" />
           </div>
           <CardDescription>
             Displaying {signalsToShow.length} signal(s) with detailed AI analysis based on your <span className="text-neon">{currentTier}</span> tier. Signals auto-refresh periodically.
@@ -203,5 +203,7 @@ export default function SignalsPage() {
     </div>
   );
 }
+
+    
 
     
