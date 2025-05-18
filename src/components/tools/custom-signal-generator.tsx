@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react"; // Added React import
 import { getCustomizedCoinTradingSignal, type GetCustomizedCoinTradingSignalInput, type GetCustomizedCoinTradingSignalOutput } from "@/ai/flows/get-customized-coin-trading-signal";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { StatItem } from "@/app/(app)/coin/[id]/page"; // Re-using StatItem for consistent display
+import { StatItem } from '@/components/shared/stat-item'; // Corrected import path
 
 export function CustomSignalGenerator() {
   const [coinName, setCoinName] = useState("");
@@ -219,3 +219,4 @@ const InfoCard: React.FC<InfoCardProps> = ({icon, title, children}) => (
         </CardContent>
     </Card>
 )
+

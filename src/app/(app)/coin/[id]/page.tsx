@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableRow, TableHead, TableHeader } from '@
 import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from '@/ai/flows/get-coin-trading-signal';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { StatItem } from '@/components/shared/stat-item';
 
 interface CoinDetail {
   id: string;
@@ -59,26 +60,6 @@ const SectionCard: React.FC<{ title: string; icon?: React.ReactNode; children: R
     <CardContent className={cn(noPadding ? "p-0" : "text-sm", noPadding && "px-4 pb-4")}>{children}</CardContent>
   </Card>
 );
-
-const StatItem: React.FC<{ label: string; value: string | number | undefined | null; unit?: string; isPercentage?: boolean; className?: string; valueClassName?: string; labelClassName?: string }> = ({ label, value, unit, isPercentage, className, valueClassName, labelClassName }) => {
-  const displayValue = useMemo(() => {
-    if (value === null || typeof value === 'undefined' || value === '') return 'N/A';
-    if (typeof value === 'number') {
-      if (isPercentage) return `${value.toFixed(2)}%`;
-      return unit === '$' ? `${unit}${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: value > 1 ? 2 : 8 })}` : `${value.toLocaleString()} ${unit || ''}`.trim();
-    }
-    return value;
-  }, [value, unit, isPercentage]);
-
-  const defaultValueColor = isPercentage && typeof value === 'number' ? (value >= 0 ? 'text-green-400' : 'text-red-400') : 'text-foreground';
-
-  return (
-    <div className={cn("flex justify-between py-2.5 px-4 border-b border-muted/30 last:border-b-0 items-center", className)}>
-      <span className={cn("text-sm text-muted-foreground", labelClassName)}>{label}</span>
-      <span className={cn("text-sm font-semibold", valueClassName || defaultValueColor)}>{displayValue}</span>
-    </div>
-  );
-};
 
 const RocketScoreDisplay: React.FC<{ score: number }> = ({ score }) => (
   <div className="flex">
