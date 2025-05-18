@@ -1,12 +1,18 @@
+
 "use client";
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/icons/logo";
-import { KeyRound, AtSign } from "lucide-react"; // Mail is not in lucide-react, using AtSign
+import { KeyRound, AtSign, Loader2 } from "lucide-react";
+import { auth } from '@/lib/firebase'; // Import Firebase auth
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
 
 // Placeholder for Google SVG Icon
 const GoogleIcon = () => (
@@ -21,16 +27,45 @@ const GoogleIcon = () => (
 
 
 export default function LoginPage() {
-  // Placeholder for login logic
-  const handleLogin = (event: React.FormEvent) => {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
-    // Firebase email/password login logic here
-    alert("Login attempt (not implemented)");
+    setIsLoading(true);
+    setError(null);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      toast({ title: "Login Successful", description: "Welcome back!" });
+      router.push('/'); // Redirect to dashboard
+    } catch (err: any) {
+      console.error("Email/Password login error:", err);
+      setError(err.message || "Failed to login. Please check your credentials.");
+      toast({ title: "Login Failed", description: err.message || "Please check your credentials.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleGoogleLogin = () => {
-    // Firebase Google Sign-In logic here
-    alert("Google login attempt (not implemented)");
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    setError(null);
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      toast({ title: "Google Sign-In Successful", description: "Welcome!" });
+      router.push('/'); // Redirect to dashboard
+    } catch (err: any) {
+      console.error("Google login error:", err);
+      setError(err.message || "Failed to login with Google. Please try again.");
+      toast({ title: "Google Sign-In Failed", description: err.message || "Please try again.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -46,8 +81,8 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <Button variant="outline" className="w-full text-lg py-6" onClick={handleGoogleLogin}>
-            <GoogleIcon />
+          <Button variant="outline" className="w-full text-lg py-6" onClick={handleGoogleLogin} disabled={isLoading}>
+            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
             Sign in with Google
           </Button>
           <div className="relative">
@@ -65,18 +100,36 @@ export default function LoginPage() {
               <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input id="email" type="email" placeholder="user@rocketmeme.com" required className="pl-10" />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="user@rocketmeme.com" 
+                  required 
+                  className="pl-10" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                />
               </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>
                <div className="relative">
                 <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input id="password" type="password" required  className="pl-10" />
+                <Input 
+                  id="password" 
+                  type="password" 
+                  required  
+                  className="pl-10" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                />
               </div>
             </div>
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-lg py-6">
-              Login
+            {error && <p className="text-xs text-destructive text-center">{error}</p>}
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-lg py-6" disabled={isLoading}>
+              {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Login"}
             </Button>
           </form>
         </CardContent>

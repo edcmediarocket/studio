@@ -1,6 +1,8 @@
+
 "use client";
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,31 +14,49 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogIn, LogOut, User, Settings, CreditCard } from "lucide-react";
+import { LogIn, LogOut, User, Settings, CreditCard, Loader2 } from "lucide-react";
 import { useState, useEffect } from 'react';
+import { auth } from '@/lib/firebase'; // Import Firebase auth
+import { onAuthStateChanged, signOut, type User as FirebaseUser } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
 
 export function UserNav() {
-  // Placeholder for authentication state
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userName, setUserName] = useState("User");
-  const [userEmail, setUserEmail] = useState("user@example.com");
+  const router = useRouter();
+  const { toast } = useToast();
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading true
 
-  // Simulate auth check
   useEffect(() => {
-    // In a real app, check Firebase Auth state here
-    // For now, toggle based on a random value or localStorage
-    const authStatus = Math.random() > 0.5;
-    setIsAuthenticated(authStatus);
-    if (authStatus) {
-      setUserName("Meme Lord");
-      setUserEmail("lord@memeprophet.com");
-    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setFirebaseUser(user);
+      setIsLoading(false);
+    });
+    return () => unsubscribe(); // Cleanup subscription on unmount
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast({ title: "Logged Out", description: "You have been successfully logged out." });
+      // Optional: redirect to login or home page after logout
+      router.push('/login'); 
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      toast({ title: "Logout Failed", description: error.message || "Could not log out.", variant: "destructive" });
+    }
+  };
 
-  if (!isAuthenticated) {
+  if (isLoading) {
     return (
-      <Button asChild variant="outline_primary" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+      <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full">
+        <Loader2 className="h-5 w-5 animate-spin" />
+      </Button>
+    );
+  }
+
+  if (!firebaseUser) {
+    return (
+      <Button asChild variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
         <Link href="/login">
           <LogIn className="mr-2 h-4 w-4" /> Login
         </Link>
@@ -44,20 +64,28 @@ export function UserNav() {
     );
   }
 
+  const displayName = firebaseUser.displayName || firebaseUser.email?.split('@')[0] || "User";
+  const userEmail = firebaseUser.email || "No email provided";
+  const avatarFallback = displayName.charAt(0).toUpperCase();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10 border-2 border-primary">
-            <AvatarImage src="https://placehold.co/100x100.png" alt={userName} data-ai-hint="avatar abstract" />
-            <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback>
+            {firebaseUser.photoURL ? (
+              <AvatarImage src={firebaseUser.photoURL} alt={displayName} data-ai-hint="avatar user" />
+            ) : (
+              <AvatarImage src="https://placehold.co/100x100.png" alt={displayName} data-ai-hint="avatar abstract" />
+            )}
+            <AvatarFallback>{avatarFallback}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{userName}</p>
+            <p className="text-sm font-medium leading-none">{displayName}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {userEmail}
             </p>
@@ -83,7 +111,7 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => setIsAuthenticated(false)}> {/* Simulate logout */}
+        <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>
