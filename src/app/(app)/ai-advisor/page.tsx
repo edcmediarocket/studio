@@ -5,14 +5,12 @@ import { AiChatAssistant } from "@/components/tools/ai-chat-assistant";
 import { BotMessageSquare } from "lucide-react";
 import { useTier } from "@/context/tier-context";
 import { UpgradePrompt } from "@/components/shared/upgrade-prompt";
+import { cn } from "@/lib/utils";
 
 export default function AiAdvisorPage() {
   const { currentTier } = useTier();
 
-  // Pro or Premium can access this feature
-  if (currentTier !== "Pro" && currentTier !== "Premium") {
-    return <UpgradePrompt featureName="AI Advisor" requiredTier="Pro" />;
-  }
+  const isLocked = currentTier !== "Pro" && currentTier !== "Premium";
 
   return (
     <div className="space-y-8">
@@ -24,7 +22,12 @@ export default function AiAdvisorPage() {
           Ask questions about specific meme coins or general crypto topics.
         </p>
       </div>
-      <AiChatAssistant />
+
+      {isLocked && <UpgradePrompt featureName="AI Advisor" requiredTier="Pro" />}
+      
+      <div className={cn(isLocked && "blur-sm opacity-60 pointer-events-none")}>
+        <AiChatAssistant />
+      </div>
     </div>
   );
 }

@@ -5,14 +5,12 @@ import { PredictionConfidenceDashboard } from "@/components/tools/prediction-con
 import { ShieldQuestion } from "lucide-react";
 import { useTier } from "@/context/tier-context";
 import { UpgradePrompt } from "@/components/shared/upgrade-prompt";
+import { cn } from "@/lib/utils";
 
 export default function ConfidenceDashboardPage() {
   const { currentTier } = useTier();
 
-  // Premium or Pro can access this feature
-  if (currentTier !== "Premium" && currentTier !== "Pro") {
-    return <UpgradePrompt featureName="AI Prediction Confidence Dashboard" requiredTier="Premium" />;
-  }
+  const isLocked = currentTier !== "Premium" && currentTier !== "Pro";
 
   return (
     <div className="space-y-8">
@@ -24,8 +22,12 @@ export default function ConfidenceDashboardPage() {
           Visualize the AI's certainty using simulated radar charts, confidence trends, and prediction drift analysis.
         </p>
       </div>
-      <PredictionConfidenceDashboard />
+
+      {isLocked && <UpgradePrompt featureName="AI Prediction Confidence Dashboard" requiredTier="Premium" />}
+      
+      <div className={cn(isLocked && "blur-sm opacity-60 pointer-events-none")}>
+        <PredictionConfidenceDashboard />
+      </div>
     </div>
   );
 }
-

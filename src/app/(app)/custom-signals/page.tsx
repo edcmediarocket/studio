@@ -5,14 +5,12 @@ import { CustomSignalGenerator } from "@/components/tools/custom-signal-generato
 import { SlidersHorizontal } from "lucide-react";
 import { useTier } from "@/context/tier-context";
 import { UpgradePrompt } from "@/components/shared/upgrade-prompt";
+import { cn } from "@/lib/utils";
 
 export default function CustomSignalsPage() {
   const { currentTier } = useTier();
 
-  // Pro or Premium can access this feature
-  if (currentTier !== "Pro" && currentTier !== "Premium") {
-    return <UpgradePrompt featureName="Customizable AI Signals" requiredTier="Pro" />;
-  }
+  const isLocked = currentTier !== "Pro" && currentTier !== "Premium";
 
   return (
     <div className="space-y-8">
@@ -24,7 +22,12 @@ export default function CustomSignalsPage() {
           Generate tailored AI trading signals by specifying coin, timeframe, and your risk profile.
         </p>
       </div>
-      <CustomSignalGenerator />
+
+      {isLocked && <UpgradePrompt featureName="Customizable AI Signals" requiredTier="Pro" />}
+      
+      <div className={cn(isLocked && "blur-sm opacity-60 pointer-events-none")}>
+        <CustomSignalGenerator />
+      </div>
     </div>
   );
 }

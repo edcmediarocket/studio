@@ -5,14 +5,12 @@ import { OnChainIntelligenceScorer } from "@/components/tools/onchain-intelligen
 import { DatabaseZap } from "lucide-react";
 import { useTier } from "@/context/tier-context";
 import { UpgradePrompt } from "@/components/shared/upgrade-prompt";
+import { cn } from "@/lib/utils";
 
 export default function OnChainIntelligencePage() {
   const { currentTier } = useTier();
 
-  // Premium or Pro can access this feature
-  if (currentTier !== "Premium" && currentTier !== "Pro") {
-    return <UpgradePrompt featureName="AI On-Chain Intelligence Scoring" requiredTier="Premium" />;
-  }
+  const isLocked = currentTier !== "Premium" && currentTier !== "Pro";
 
   return (
     <div className="space-y-8">
@@ -24,8 +22,12 @@ export default function OnChainIntelligencePage() {
           Get a proprietary AI-driven score (0-100) for any coin, reflecting smart money activity vs. retail FOMO.
         </p>
       </div>
-      <OnChainIntelligenceScorer />
+
+      {isLocked && <UpgradePrompt featureName="AI On-Chain Intelligence Scoring" requiredTier="Premium" />}
+      
+      <div className={cn(isLocked && "blur-sm opacity-60 pointer-events-none")}>
+        <OnChainIntelligenceScorer />
+      </div>
     </div>
   );
 }
-

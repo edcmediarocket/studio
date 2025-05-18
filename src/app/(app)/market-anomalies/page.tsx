@@ -5,14 +5,12 @@ import { MarketAnomalyDetector } from "@/components/tools/market-anomaly-detecto
 import { Siren } from "lucide-react";
 import { useTier } from "@/context/tier-context";
 import { UpgradePrompt } from "@/components/shared/upgrade-prompt";
+import { cn } from "@/lib/utils";
 
 export default function MarketAnomaliesPage() {
   const { currentTier } = useTier();
 
-  // Premium or Pro can access this feature
-  if (currentTier !== "Premium" && currentTier !== "Pro") {
-    return <UpgradePrompt featureName="AI Market Anomaly Detector" requiredTier="Premium" />;
-  }
+  const isLocked = currentTier !== "Premium" && currentTier !== "Pro";
   
   return (
     <div className="space-y-8">
@@ -24,8 +22,12 @@ export default function MarketAnomaliesPage() {
           Identify unusual market activities and sentiment shifts for various crypto segments, powered by AI.
         </p>
       </div>
-      <MarketAnomalyDetector />
+
+      {isLocked && <UpgradePrompt featureName="AI Market Anomaly Detector" requiredTier="Premium" />}
+      
+      <div className={cn(isLocked && "blur-sm opacity-60 pointer-events-none")}>
+        <MarketAnomalyDetector />
+      </div>
     </div>
   );
 }
-

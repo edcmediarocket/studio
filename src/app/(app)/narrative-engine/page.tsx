@@ -5,14 +5,12 @@ import { NarrativeEngine } from "@/components/tools/narrative-engine";
 import { Lightbulb } from "lucide-react"; // Or MessagesSquare, Brain
 import { useTier } from "@/context/tier-context";
 import { UpgradePrompt } from "@/components/shared/upgrade-prompt";
+import { cn } from "@/lib/utils";
 
 export default function NarrativeEnginePage() {
   const { currentTier } = useTier();
 
-  // Premium or Pro can access this feature
-  if (currentTier !== "Premium" && currentTier !== "Pro") {
-    return <UpgradePrompt featureName="AI Narrative Engine" requiredTier="Premium" />;
-  }
+  const isLocked = currentTier !== "Premium" && currentTier !== "Pro";
 
   return (
     <div className="space-y-8">
@@ -24,8 +22,12 @@ export default function NarrativeEnginePage() {
           Detect emerging market narratives and shifts in psychological sentiment for any crypto topic or coin.
         </p>
       </div>
-      <NarrativeEngine />
+
+      {isLocked && <UpgradePrompt featureName="AI Narrative Engine" requiredTier="Premium" />}
+      
+      <div className={cn(isLocked && "blur-sm opacity-60 pointer-events-none")}>
+        <NarrativeEngine />
+      </div>
     </div>
   );
 }
-
