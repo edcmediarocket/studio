@@ -5,16 +5,15 @@ import { getAuth } from 'firebase/auth';
 // import { getFirestore } from 'firebase/firestore';
 // import { getStorage } from 'firebase/storage';
 
-// TODO: Replace with your actual Firebase project configuration
-// These values are typically found in your Firebase project settings.
+// Firebase project configuration provided by the user.
 const firebaseConfig: FirebaseOptions = {
-  apiKey: "YOUR_API_KEY_HERE",
-  authDomain: "YOUR_AUTH_DOMAIN_HERE",
-  projectId: "YOUR_PROJECT_ID_HERE",
-  storageBucket: "YOUR_STORAGE_BUCKET_HERE",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
-  appId: "YOUR_APP_ID_HERE",
-  measurementId: "YOUR_MEASUREMENT_ID_HERE" // Optional: for Google Analytics
+  apiKey: "AIzaSyDRWV3OilblaZWlEDDcy1dOd5ysO5jxUjI",
+  authDomain: "rocketmemefinal.firebaseapp.com",
+  projectId: "rocketmemefinal",
+  storageBucket: "rocketmemefinal.appspot.com", // Corrected: Removed 'firebasestorage' from the middle
+  messagingSenderId: "213714563438",
+  appId: "1:213714563438:web:2eddc648692a831471117f",
+  measurementId: "YOUR_MEASUREMENT_ID_HERE" // Optional: for Google Analytics - User can add this if needed
 };
 
 // Initialize Firebase
