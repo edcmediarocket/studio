@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -12,13 +13,29 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GetCoinAdviceInputSchema = z.object({
-  coinName: z.string().describe('The name of the meme coin to get advice on.'),
-  question: z.string().describe('The question to ask about the meme coin.'),
+  coinName: z.string().describe('The name of the meme coin to get advice on (e.g., Dogecoin, SHIB). Can be "general crypto" for non-specific questions.'),
+  question: z.string().describe('The specific question the user has about the meme coin or crypto topic.'),
 });
 export type GetCoinAdviceInput = z.infer<typeof GetCoinAdviceInputSchema>;
 
 const GetCoinAdviceOutputSchema = z.object({
-  answer: z.string().describe('The answer to the question about the meme coin.'),
+  adviceDetail: z.string().describe('The core advice or answer to the user\'s question.'),
+  supportingReasoning: z
+    .string()
+    .describe(
+      'Detailed reasoning behind the advice, including any data points, trends, or factors considered. Explain the "why" behind the advice.'
+    ),
+  potentialRisks: z
+    .array(z.string())
+    .describe(
+      'Key potential risks associated with the advice or the coin/topic in question that the user should be aware of.'
+    ),
+  confidenceLevel: z
+    .string()
+    .describe(
+      'The AI\'s confidence in this advice (e.g., High, Medium, Low), with a brief justification if not High.'
+    ),
+  disclaimer: z.string().default("This is AI-generated advice and not financial advice. Always do your own research (DYOR) before making investment decisions.").describe("Standard disclaimer for financial-related advice.")
 });
 export type GetCoinAdviceOutput = z.infer<typeof GetCoinAdviceOutputSchema>;
 
@@ -30,7 +47,23 @@ const prompt = ai.definePrompt({
   name: 'getCoinAdvicePrompt',
   input: {schema: GetCoinAdviceInputSchema},
   output: {schema: GetCoinAdviceOutputSchema},
-  prompt: `You are an AI assistant specializing in providing advice on meme coins.\n\nCoin Name: {{{coinName}}}\nQuestion: {{{question}}}\n\nAnswer:`,
+  prompt: `You are an expert AI financial analyst specializing in the highly volatile and speculative meme coin market, as well as general cryptocurrency topics.
+A user is asking for advice.
+Coin/Topic: {{{coinName}}}
+Question: {{{question}}}
+
+Provide a comprehensive, insightful, and balanced response in the structured JSON format defined by the output schema.
+
+Your 'adviceDetail' should directly answer the user's question.
+Your 'supportingReasoning' must be thorough. Explain the factors, data, or market observations that lead to your advice. Mention relevant news, tokenomics, community sentiment, or technical patterns if applicable and known.
+Identify and list key 'potentialRisks'. Meme coins are inherently risky; highlight specific risks relevant to the coin/topic and question.
+State your 'confidenceLevel' (High, Medium, or Low) in the provided advice and briefly justify if it's not High.
+Always include the standard 'disclaimer'.
+
+Strive for clarity, objectivity, and actionable insights, while always emphasizing the speculative nature of meme coins.
+If the question is about a non-meme coin topic, adapt your expertise to provide relevant cryptocurrency advice.
+If the coin is obscure or data is unavailable, clearly state that limitations exist in providing specific advice.
+`,
 });
 
 const getCoinAdviceFlow = ai.defineFlow(
@@ -41,6 +74,11 @@ const getCoinAdviceFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
+    // Ensure disclaimer is always present, even if LLM forgets
+    if (output && !output.disclaimer) {
+      output.disclaimer = "This is AI-generated advice and not financial advice. Always do your own research (DYOR) before making investment decisions.";
+    }
     return output!;
   }
 );
+
