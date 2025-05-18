@@ -20,7 +20,7 @@ export type GetPredictionConfidenceInsightsInput = z.infer<typeof GetPredictionC
 const RadarSubjectSchema = z.object({
   subject: z.string().describe('The factor or aspect being rated for confidence (e.g., "Data Quality", "Model Stability", "Market Volatility Impact").'),
   score: z.number().min(0).max(100).int().describe('The confidence score for this subject (0-100).'),
-  fullMark: z.literal(100).default(100).describe('The maximum possible score for this subject, always 100.'),
+  fullMark: z.number().describe('The maximum possible score for this subject. This value should be 100.'),
 });
 
 const ConfidenceTrendPointSchema = z.object({
@@ -107,3 +107,4 @@ const getPredictionConfidenceInsightsFlow = ai.defineFlow(
     return output!;
   }
 );
+
