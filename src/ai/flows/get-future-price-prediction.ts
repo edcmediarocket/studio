@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Provides AI-generated speculative future price predictions for a meme coin, considering its current price.
@@ -62,7 +63,7 @@ For each timeframe, provide a 'predictedPrice' as a string (e.g., "$0.1234", "Ma
 IMPORTANT: If a 'currentPriceUSD' of {{{currentPriceUSD}}} USD is provided, your 'predictedPrice' for each timeframe MUST be a plausible future value that logically evolves from this current price. For example, if current price is $1.00, a 1-week prediction might be $1.10 or $0.90, not $0.0001.
 
 Also include an overall 'confidenceLevel' ('High', 'Medium', 'Low') for these collective predictions.
-Provide 'reasoning' that explains the general basis for your predictions, mentioning factors like simulated market trends, potential catalysts (e.g., hype cycles, roadmap milestones if known for meme coins), and coin-specific sentiment. Critically, this reasoning must emphasize the highly speculative nature of meme coin price movements. Your reasoning should also consider the provided 'currentPriceUSD' if available.
+Provide 'reasoning' that explains the general basis for your predictions. This reasoning must consider factors like simulated market trends, potential catalysts (e.g., hype cycles, roadmap milestones if known for meme coins), coin-specific sentiment, and critically, the provided 'currentPriceUSD'. When discussing current market conditions or the coin's current standing in your 'reasoning', ensure you refer to the provided 'currentPriceUSD' (e.g., "Given the current price of {{{currentPriceUSD}}} USD, our analysis considers..."). Do not invent or use a different current price in your textual explanation. Emphasize the highly speculative nature of meme coin price movements.
 Ensure the 'disclaimer' is included.
 The 'coinName' in the output should match the input.
 
