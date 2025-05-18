@@ -58,6 +58,7 @@ export function OnChainDataVisualizer() {
               value={coinName}
               onChange={(e) => setCoinName(e.target.value)}
               disabled={isLoading}
+              className="mt-1"
             />
           </div>
           <Button type="submit" disabled={isLoading} className="w-full bg-primary hover:bg-primary/90">
@@ -71,6 +72,7 @@ export function OnChainDataVisualizer() {
 
         {error && (
           <Alert variant="destructive" className="mt-4">
+             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
@@ -95,13 +97,14 @@ export function OnChainDataVisualizer() {
           </div>
         )}
          {!isLoading && !insights && !error && (
-            <div className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center bg-card/30 mt-6">
-                <Activity className="h-12 w-12 text-muted-foreground/50 mb-3" />
+            <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center bg-muted/10 mt-6">
+                <Activity className="h-12 w-12 text-muted-foreground/50 mb-4" />
                 <p className="text-muted-foreground">Enter a coin name above to get AI-generated on-chain insights.</p>
+                <p className="text-xs text-muted-foreground/80 mt-2">These are general textual analyses, not live charts.</p>
             </div>
         )}
       </CardContent>
-      <CardFooter>
+      <CardFooter className="mt-4">
          <p className="text-xs text-muted-foreground pt-2">
            Remember: These are generalized AI insights, not real-time financial or on-chain data.
          </p>
@@ -119,13 +122,16 @@ interface InsightCategoryCardProps {
 const InsightCategoryCard: React.FC<InsightCategoryCardProps> = ({ title, icon, content }) => {
     return (
         <Card className="bg-background/50">
-            <CardHeader className="pb-2 flex flex-row items-center space-x-2">
+            <CardHeader className="pb-2 flex flex-row items-center space-x-2 pt-4">
                 {icon}
                 <CardTitle className="text-lg">{title}</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-2">
                 <p className="text-base sm:text-sm text-muted-foreground whitespace-pre-wrap">{content || "No specific insights available from AI for this category."}</p>
             </CardContent>
         </Card>
     );
 };
+
+// Added AlertTriangle to imports for error display
+import { AlertTriangle } from 'lucide-react';
