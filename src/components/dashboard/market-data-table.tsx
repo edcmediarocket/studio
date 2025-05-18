@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
-import Link from 'next/link'; // Import Link
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -14,10 +14,11 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Star, LineChart } from "lucide-react"; // Changed ExternalLink to LineChart
+import { Star, LineChart } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface CoinData {
   id: string;
@@ -121,9 +122,18 @@ export function MarketDataTable() {
     return (
       <div className="space-y-4">
         <Skeleton className="h-10 w-full max-w-sm" />
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-16 w-full" />
-        ))}
+        <div className="border rounded-md">
+            {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex items-center space-x-4 p-4 border-b last:border-b-0">
+                <Skeleton className="h-6 w-6 rounded-full" />
+                <div className="flex-1 space-y-1">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+                </div>
+                <Skeleton className="h-4 w-1/4" />
+            </div>
+            ))}
+        </div>
       </div>
     );
   }
@@ -144,69 +154,82 @@ export function MarketDataTable() {
         placeholder="Search coins (e.g., Bitcoin, ETH)..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
-        className="max-w-sm"
+        className="max-w-sm text-base sm:text-sm"
       />
-      <div className="rounded-md border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[50px]"></TableHead>
-              <TableHead onClick={() => requestSort('name')} className="cursor-pointer hover:text-neon">
-                Name{getSortIndicator('name')}
-              </TableHead>
-              <TableHead onClick={() => requestSort('current_price')} className="text-right cursor-pointer hover:text-neon">
-                Price{getSortIndicator('current_price')}
-              </TableHead>
-              <TableHead onClick={() => requestSort('price_change_percentage_24h')} className="text-right cursor-pointer hover:text-neon">
-                24h %{getSortIndicator('price_change_percentage_24h')}
-              </TableHead>
-              <TableHead onClick={() => requestSort('total_volume')} className="text-right hidden md:table-cell cursor-pointer hover:text-neon">
-                Volume{getSortIndicator('total_volume')}
-              </TableHead>
-              <TableHead onClick={() => requestSort('market_cap')} className="text-right hidden lg:table-cell cursor-pointer hover:text-neon">
-                Market Cap{getSortIndicator('market_cap')}
-              </TableHead>
-              <TableHead className="text-center">Actions</TableHead>
+      {/* Removed the outer border/card div from around the table */}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[50px] pr-0"></TableHead>
+            <TableHead onClick={() => requestSort('name')} className="cursor-pointer text-xs sm:text-sm">
+              Name{getSortIndicator('name')}
+            </TableHead>
+            <TableHead onClick={() => requestSort('current_price')} className="text-right cursor-pointer text-xs sm:text-sm">
+              Price{getSortIndicator('current_price')}
+            </TableHead>
+            <TableHead onClick={() => requestSort('price_change_percentage_24h')} className="text-right cursor-pointer text-xs sm:text-sm">
+              24h %{getSortIndicator('price_change_percentage_24h')}
+            </TableHead>
+            <TableHead onClick={() => requestSort('market_cap')} className="text-right hidden md:table-cell cursor-pointer text-xs sm:text-sm">
+              Market Cap{getSortIndicator('market_cap')}
+            </TableHead>
+            <TableHead className="text-center text-xs sm:text-sm">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {sortedCoins.length > 0 ? sortedCoins.map((coin) => (
+            <TableRow key={coin.id} className="hover:bg-muted/30">
+              <TableCell className="pr-0 py-3">
+                {coin.image && (
+                    <Link href={`/coin/${coin.id}`} className="block">
+                        <Image src={coin.image} alt={coin.name} width={28} height={28} className="rounded-full" data-ai-hint="coin logo crypto" />
+                    </Link>
+                )}
+              </TableCell>
+              <TableCell className="py-3">
+                <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors">
+                  <div className="font-medium text-sm sm:text-base">{coin.name}</div>
+                  <div className="text-xs text-muted-foreground">{coin.symbol.toUpperCase()}</div>
+                </Link>
+              </TableCell>
+              <TableCell className="text-right font-mono text-sm sm:text-base py-3">
+                <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
+                    ${coin.current_price !== null && coin.current_price !== undefined ? coin.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: coin.current_price > 0.01 ? 2 : 8 }) : 'N/A'}
+                </Link>
+              </TableCell>
+              <TableCell className={cn("text-right font-mono text-sm sm:text-base py-3", coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400')}>
+                <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
+                    {coin.price_change_percentage_24h !== null && coin.price_change_percentage_24h !== undefined ? coin.price_change_percentage_24h.toFixed(2) + '%' : 'N/A'}
+                </Link>
+              </TableCell>
+              <TableCell className="text-right font-mono hidden md:table-cell text-sm sm:text-base py-3">
+                 <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
+                    ${coin.market_cap !== null && coin.market_cap !== undefined ? coin.market_cap.toLocaleString() : 'N/A'}
+                 </Link>
+                </TableCell>
+              <TableCell className="text-center py-3">
+                <div className="flex items-center justify-center space-x-0 sm:space-x-1">
+                  <Button variant="ghost" size="icon" title="Add to Watchlist" className="h-8 w-8 sm:h-9 sm:w-9">
+                    <Star className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </Button>
+                  {/* Link is now on the row data, this button is redundant but kept for explicit action */}
+                  <Button variant="ghost" size="icon" title="View Details" asChild className="h-8 w-8 sm:h-9 sm:w-9">
+                    <Link href={`/coin/${coin.id}`}>
+                      <LineChart className="h-4 w-4 sm:h-5 sm:w-5" />
+                    </Link>
+                  </Button>
+                </div>
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedCoins.length > 0 ? sortedCoins.map((coin) => (
-              <TableRow key={coin.id} className="hover:bg-muted/50">
-                <TableCell>
-                  {coin.image && <Image src={coin.image} alt={coin.name} width={24} height={24} className="rounded-full" data-ai-hint="coin logo crypto" />}
-                </TableCell>
-                <TableCell>
-                  <div className="font-medium">{coin.name} ({coin.symbol.toUpperCase()})</div>
-                </TableCell>
-                <TableCell className="text-right font-mono">${coin.current_price !== null && coin.current_price !== undefined ? coin.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: coin.current_price > 0.01 ? 2 : 8 }) : 'N/A'}</TableCell>
-                <TableCell className={`text-right font-mono ${coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {coin.price_change_percentage_24h !== null && coin.price_change_percentage_24h !== undefined ? coin.price_change_percentage_24h.toFixed(2) + '%' : 'N/A'}
-                </TableCell>
-                <TableCell className="text-right font-mono hidden md:table-cell">${coin.total_volume !== null && coin.total_volume !== undefined ? coin.total_volume.toLocaleString() : 'N/A'}</TableCell>
-                <TableCell className="text-right font-mono hidden lg:table-cell">${coin.market_cap !== null && coin.market_cap !== undefined ? coin.market_cap.toLocaleString() : 'N/A'}</TableCell>
-                <TableCell className="text-center">
-                  <div className="flex items-center justify-center space-x-1">
-                    <Button variant="ghost" size="icon" title="Add to Watchlist">
-                      <Star className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" title="View Details" asChild>
-                      <Link href={`/coin/${coin.id}`}>
-                        <LineChart className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )) : (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground h-24">
-                  No coins found matching your search criteria.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+          )) : (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center text-muted-foreground h-24">
+                No coins found matching your search criteria.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 }
