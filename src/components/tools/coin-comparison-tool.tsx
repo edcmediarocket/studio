@@ -5,7 +5,6 @@ import { useState } from "react";
 import { compareMemeCoins, type CompareMemeCoinsOutput, type CompareMemeCoinsInput } from "@/ai/flows/compare-meme-coins";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"; // Keep for potential future use, but using select now
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GitCompareArrows, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -61,7 +60,7 @@ export function CoinComparisonTool() {
           <div>
             <Label htmlFor="coin1-select">Select Coin 1</Label>
             <Select value={coin1Name} onValueChange={setCoin1Name}>
-              <SelectTrigger id="coin1-select">
+              <SelectTrigger id="coin1-select" className="mt-1">
                 <SelectValue placeholder="Choose coin..." />
               </SelectTrigger>
               <SelectContent>
@@ -72,7 +71,7 @@ export function CoinComparisonTool() {
           <div>
             <Label htmlFor="coin2-select">Select Coin 2</Label>
             <Select value={coin2Name} onValueChange={setCoin2Name}>
-              <SelectTrigger id="coin2-select">
+              <SelectTrigger id="coin2-select" className="mt-1">
                 <SelectValue placeholder="Choose coin..." />
               </SelectTrigger>
               <SelectContent>
@@ -101,21 +100,21 @@ export function CoinComparisonTool() {
           <div className="mt-6 space-y-4">
             <h3 className="text-xl font-semibold text-neon mb-2">Comparison: <span className="text-foreground">{coin1Name}</span> vs <span className="text-foreground">{coin2Name}</span></h3>
             
-            <div className="border rounded-md">
+            <div className="border rounded-md overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[200px] text-primary">Metric</TableHead>
-                    <TableHead className="text-left text-foreground">{coin1Name}</TableHead>
-                    <TableHead className="text-left text-foreground">{coin2Name}</TableHead>
+                    <TableHead className="w-[35%] sm:w-[30%] md:w-[200px] text-primary text-sm">Metric</TableHead>
+                    <TableHead className="text-left text-foreground text-sm">{coin1Name}</TableHead>
+                    <TableHead className="text-left text-foreground text-sm">{coin2Name}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {comparisonResult.comparisonTable.map((data) => (
                     <TableRow key={data.metric}>
-                      <TableCell className="font-medium text-muted-foreground">{data.metric}</TableCell>
-                      <TableCell className="text-left">{data.coin1Value}</TableCell>
-                      <TableCell className="text-left">{data.coin2Value}</TableCell>
+                      <TableCell className="font-medium text-muted-foreground text-sm">{data.metric}</TableCell>
+                      <TableCell className="text-left text-sm">{data.coin1Value}</TableCell>
+                      <TableCell className="text-left text-sm">{data.coin2Value}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
