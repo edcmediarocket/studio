@@ -48,11 +48,8 @@ export default function LoginPage() {
       router.push('/'); // Redirect to dashboard
     } catch (err: any) {
       console.error("Email/Password action error:", err);
-      // Don't show error for user closing popup, but show others
-      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
-        setError(err.message || `Failed to ${isSignUpMode ? 'sign up' : 'login'}. Please check your credentials.`);
-        toast({ title: `${isSignUpMode ? 'Sign Up' : 'Login'} Failed`, description: err.message || "An error occurred.", variant: "destructive" });
-      }
+      setError(err.message || `Failed to ${isSignUpMode ? 'sign up' : 'login'}. Please check your credentials.`);
+      toast({ title: `${isSignUpMode ? 'Sign Up' : 'Login'} Failed`, description: err.message || "An error occurred.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -68,8 +65,13 @@ export default function LoginPage() {
       router.push('/'); // Redirect to dashboard
     } catch (err: any) {
       console.error("Google login error:", err);
-      // Don't show error for user closing popup, but show others
-      if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+        toast({
+          title: "Google Sign-In Cancelled",
+          description: "The Google Sign-In popup was closed or the process was cancelled by the user or browser.",
+          variant: "default", 
+        });
+      } else {
         setError(err.message || "Failed to login with Google. Please try again.");
         toast({ title: "Google Sign-In Failed", description: err.message || "Please try again.", variant: "destructive" });
       }
@@ -99,7 +101,7 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent className="grid gap-4">
           <Button variant="outline" className="w-full text-lg py-6" onClick={handleGoogleLogin} disabled={isLoading}>
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
+            {isLoading && !isSignUpMode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
             Sign in with Google
           </Button>
           <div className="relative">
@@ -147,9 +149,10 @@ export default function LoginPage() {
             </div>
             {error && <p className="text-xs text-destructive text-center">{error}</p>}
             <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-lg py-6" disabled={isLoading}>
-              {isLoading && isSignUpMode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (isSignUpMode ? <UserPlus className="mr-2 h-5 w-5" /> : null)}
+              {isLoading && isSignUpMode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               {isLoading && !isSignUpMode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               {!isLoading && isSignUpMode ? <UserPlus className="mr-2 h-5 w-5" /> : null}
+              {!isLoading && !isSignUpMode && !isSignUpMode ? <KeyRound className="mr-2 h-5 w-5" /> : null}
               {isSignUpMode ? "Sign Up" : "Login"}
             </Button>
           </form>
@@ -168,3 +171,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
