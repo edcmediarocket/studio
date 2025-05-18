@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview Provides AI-generated speculative future price predictions for a meme coin.
+ * @fileOverview Provides AI-generated speculative future price predictions for a meme coin, considering its current price.
  *
  * - getFuturePricePrediction - A function that returns future price predictions.
  * - GetFuturePricePredictionInput - The input type.
@@ -9,10 +9,11 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z}from 'genkit';
 
 const GetFuturePricePredictionInputSchema = z.object({
   coinName: z.string().describe('The name of the meme coin (e.g., Dogecoin).'),
+  currentPriceUSD: z.number().optional().describe('The current market price of the coin in USD, to be used as a reference for prediction generation.'),
 });
 export type GetFuturePricePredictionInput = z.infer<typeof GetFuturePricePredictionInputSchema>;
 
@@ -50,7 +51,7 @@ const prompt = ai.definePrompt({
   input: {schema: GetFuturePricePredictionInputSchema},
   output: {schema: GetFuturePricePredictionOutputSchema},
   prompt: `You are an AI market analyst specializing in speculative forecasting for meme coins.
-For the coin "{{coinName}}", provide future price predictions.
+For the coin "{{coinName}}"{{#if currentPriceUSD}}, which is currently trading around {{{currentPriceUSD}}} USD{{/if}}, provide future price predictions.
 
 Generate predictions for the following timeframes:
 - 1 Week
@@ -60,7 +61,7 @@ Generate predictions for the following timeframes:
 
 For each timeframe, provide a 'predictedPrice' as a string (e.g., "$0.1234", "May test $0.50").
 Also include an overall 'confidenceLevel' ('High', 'Medium', 'Low') for these collective predictions.
-Provide 'reasoning' that explains the general basis for your predictions, mentioning factors like simulated market trends, potential catalysts (e.g., hype cycles, roadmap milestones if known for meme coins), and coin-specific sentiment. Critically, this reasoning must emphasize the highly speculative nature of meme coin price movements.
+Provide 'reasoning' that explains the general basis for your predictions, mentioning factors like simulated market trends, potential catalysts (e.g., hype cycles, roadmap milestones if known for meme coins), and coin-specific sentiment. Critically, this reasoning must emphasize the highly speculative nature of meme coin price movements. If a current price was provided, factor that into your reasoning and targets.
 Ensure the 'disclaimer' is included.
 The 'coinName' in the output should match the input.
 
@@ -87,3 +88,4 @@ const getFuturePricePredictionFlow = ai.defineFlow(
     return output!;
   }
 );
+
