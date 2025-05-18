@@ -22,15 +22,15 @@ const GetCoinTradingSignalOutputSchema = z.object({
   rocketScore: z.number().min(1).max(5).int().describe('A score from 1 to 5 rockets, indicating bullish potential or strength of the signal. 5 is highest.'),
   detailedAnalysis: z.string().describe('In-depth analysis of the factors influencing the signal, including technical and fundamental aspects if applicable for a meme coin (e.g., market sentiment, recent news, tokenomics, chart patterns).'),
   futurePriceOutlook: z.object({
-    shortTermTarget: z.string().optional().describe('Speculative short-term price target (e.g., "$0.05 in 1 week").'),
-    midTermTarget: z.string().optional().describe('Speculative mid-term price target (e.g., "$0.10 in 1-3 months").')
+    shortTermTarget: z.string().optional().describe('Speculative short-term price target (e.g., "$0.05 in 1 week", "0.1234 USD").'),
+    midTermTarget: z.string().optional().describe('Speculative mid-term price target (e.g., "$0.10 in 1-3 months", "1.50 USD").')
   }).describe('Speculative future price targets based on current analysis.'),
   tradingTargets: z.object({
-    entryPoint: z.string().optional().describe('Suggested entry price range (e.g., "$0.040-$0.042").'),
-    stopLoss: z.string().describe('Suggested stop-loss price to limit potential losses (e.g., "$0.035").'),
-    takeProfit1: z.string().describe('First take-profit target price (e.g., "$0.055").'),
-    takeProfit2: z.string().optional().describe('Second take-profit target price (e.g., "$0.065").'),
-    takeProfit3: z.string().optional().describe('Third take-profit target price (e.g., "$0.075").')
+    entryPoint: z.string().optional().describe('Suggested entry price range (e.g., "$0.040-$0.042", "0.038 USD").'),
+    stopLoss: z.string().describe('Suggested stop-loss price to limit potential losses (e.g., "$0.035", "0.030 USD").'),
+    takeProfit1: z.string().describe('First take-profit target price (e.g., "$0.055", "0.060 USD").'),
+    takeProfit2: z.string().optional().describe('Second take-profit target price (e.g., "$0.065", "0.070 USD").'),
+    takeProfit3: z.string().optional().describe('Third take-profit target price (e.g., "$0.075", "0.080 USD").')
   }).describe('Specific trading price targets for executing a trade.'),
   investmentAdvice: z.string().describe('Specific investment advice or strategy for this coin based on the current signal and analysis (e.g., "Consider allocating a small percentage of a speculative portfolio," or "Wait for confirmation of breakout before entering." ).'),
   disclaimer: z.string().default("This AI-generated trading signal and analysis is for informational purposes only and not financial advice. Meme coins are highly speculative. DYOR and invest only what you can afford to lose.").describe("Standard disclaimer.")
@@ -47,6 +47,7 @@ const prompt = ai.definePrompt({
   output: {schema: GetCoinTradingSignalOutputSchema},
   prompt: `You are an expert AI crypto analyst providing comprehensive trading signals and investment advice for meme coins.
 For the coin "{{coinName}}", provide a clear trading recommendation, detailed analysis, speculative price targets, specific trading targets, and investment advice.
+When providing price targets, entry points, stop-loss, or take-profit levels, ensure they are specific numerical currency values based on your analysis (e.g., '$0.1234', '1.50 USD').
 
 Your response must adhere to the JSON output schema.
 

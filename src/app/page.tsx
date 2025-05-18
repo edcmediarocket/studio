@@ -1,9 +1,13 @@
-
 // This page is effectively / due to route groups.
-// Redirect to /dashboard or make this the dashboard.
-// For simplicity, this will be the dashboard page.
-import DashboardPage from "./(app)/page";
+// It now ensures that the AppLayout (which includes SidebarProvider) is used
+// when rendering the dashboard content for the root path.
+import AppLayout from "./(app)/layout";
+import DashboardPage from "./(app)/page"; // This is the component from src/app/(app)/page.tsx
 
 export default function Home() {
-  return <DashboardPage />;
+  return (
+    <AppLayout>
+      <DashboardPage />
+    </AppLayout>
+  );
 }

@@ -4,8 +4,8 @@
 import { MarketDataTable } from "@/components/dashboard/market-data-table";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, TrendingUp, TrendingDown, Info } from "lucide-react"; 
-import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSidebar } from "@/components/ui/sidebar"; 
 
 // Placeholder data for Market Overview
 const topGainers = [
@@ -22,6 +22,7 @@ const topLosers = [
 
 
 export default function DashboardPage() {
+  const { toggleSidebar } = useSidebar(); 
 
   return (
     <div className="space-y-6">
@@ -29,10 +30,13 @@ export default function DashboardPage() {
         <div className="container px-0 sm:px-4">
           
           <div className="mb-6 flex justify-start">
-            <Button size="default" variant="outline_primary" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground text-sm sm:text-base w-full sm:w-auto" asChild>
-              <Link href="/">
-                <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
-              </Link>
+            <Button 
+              size="default" 
+              variant="outline" 
+              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground text-sm sm:text-base w-full sm:w-auto" 
+              onClick={toggleSidebar} 
+            >
+              <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
             </Button>
           </div>
 
