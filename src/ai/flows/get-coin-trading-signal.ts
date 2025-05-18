@@ -20,7 +20,7 @@ const GetCoinTradingSignalOutputSchema = z.object({
   recommendation: z.enum(['Buy', 'Sell', 'Hold']).describe('The trading recommendation: Buy, Sell, or Hold.'),
   reasoning: z.string().describe('A concise summary of the main reason for the recommendation.'),
   rocketScore: z.number().min(1).max(5).int().describe('A score from 1 to 5 rockets, indicating bullish potential or strength of the signal. 5 is highest.'),
-  detailedAnalysis: z.string().describe('In-depth analysis of the factors influencing the signal, including technical and fundamental aspects if applicable for a meme coin (e.g., market sentiment, recent news, tokenomics, chart patterns).'),
+  detailedAnalysis: z.string().describe('In-depth analysis of the factors influencing the signal. This should be a comprehensive summary reflecting analysis of market sentiment, technical indicators, on-chain data, whale activity, and tokenomics, as if derived from a sophisticated AI model trained on extensive crypto datasets.'),
   futurePriceOutlook: z.object({
     shortTermTarget: z.string().optional().describe('Speculative short-term price target (e.g., "$0.05 in 1 week", "0.1234 USD").'),
     midTermTarget: z.string().optional().describe('Speculative mid-term price target (e.g., "$0.10 in 1-3 months", "1.50 USD").')
@@ -45,36 +45,39 @@ const prompt = ai.definePrompt({
   name: 'getCoinTradingSignalPrompt',
   input: {schema: GetCoinTradingSignalInputSchema},
   output: {schema: GetCoinTradingSignalOutputSchema},
-  prompt: `You are an expert AI crypto analyst providing comprehensive trading signals and investment advice for meme coins.
-For the coin "{{coinName}}", provide a clear trading recommendation, detailed analysis, speculative price targets, specific trading targets, and investment advice.
-When providing price targets, entry points, stop-loss, or take-profit levels, ensure they are specific numerical currency values based on your analysis (e.g., '$0.1234', '1.50 USD').
+  prompt: `You are an advanced AI crypto signal engine, "Meme Prophet". Your analysis for the meme coin "{{coinName}}" should be comprehensive, simulating insights as if derived from a sophisticated training pipeline using the following data points:
 
-Your response must adhere to the JSON output schema.
+Simulated Data Inputs (consider these conceptually):
+- Real-time and historical price data (price_usd, price_change_pct_1h, price_change_pct_24h).
+- Market fundamentals (volume_24h, market_cap, liquidity_score).
+- Whale activity (whale_alerts_count, avg_whale_txn_value_usd).
+- Social sentiment (social_sentiment_score from Twitter/Reddit, mentions_count).
+- On-chain metrics (onchain_txn_count_24h, unique_wallets_24h).
+- Smart contract integrity (contract_risk_score).
+- Technical indicators (RSI, MACD, EMA12/26, Bollinger Bands within a 'technicals' JSON object).
 
-Consider factors like:
-- Current market sentiment (social media buzz, news).
-- Recent price action and basic technical indicators if discernible (e.g., support/resistance, volume trends).
-- Tokenomics (supply, distribution, burn mechanisms if known).
-- Upcoming events, partnerships, or catalysts.
-- Overall risk profile of {{coinName}} and the broader meme coin market.
+Based on a simulated multi-faceted analysis of these inputs, provide a trading signal for "{{coinName}}". Your response MUST adhere to the JSON output schema.
 
-Specifically, provide:
+Specifically, in your 'detailedAnalysis' field, articulate how these simulated factors (market conditions, sentiment, on-chain activity, whale movements, technicals, and tokenomics) contribute to your overall recommendation. For instance, you might state: "Current social sentiment score is X, indicating Y, while on-chain unique wallet activity shows Z. Technicals (RSI at A, MACD crossover B) suggest C."
+
+Ensure all output fields are populated:
 1.  'recommendation': "Buy", "Sell", or "Hold".
 2.  'reasoning': A concise (1-2 sentence) summary for the recommendation.
 3.  'rocketScore': An integer from 1 to 5 indicating bullish potential (5 is most bullish).
-4.  'detailedAnalysis': A thorough explanation of the factors (technical, fundamental, sentimental) driving your recommendation. Discuss why this is a buy/sell/hold.
+4.  'detailedAnalysis': A comprehensive explanation synthesizing the simulated analysis of the above-mentioned data categories.
 5.  'futurePriceOutlook':
-    *   'shortTermTarget': A speculative price target for the near future (e.g., next few days to a week), if one can be reasonably estimated.
-    *   'midTermTarget': A speculative price target for the medium term (e.g., next few weeks to months), if one can be reasonably estimated.
+    *   'shortTermTarget': A speculative price target for the near future (e.g., "$0.05 in 1 week").
+    *   'midTermTarget': A speculative price target for the medium term (e.g., "$0.10 in 1-3 months").
 6.  'tradingTargets':
-    *   'entryPoint': A suggested price range for entering a trade if 'Buy'.
-    *   'stopLoss': A crucial price level to exit and limit losses.
-    *   'takeProfit1': The first price level to consider taking profits.
+    *   'entryPoint': Suggested price range for entering a trade if 'Buy'.
+    *   'stopLoss': Crucial price level to limit losses.
+    *   'takeProfit1': First price level for profit-taking.
     *   'takeProfit2', 'takeProfit3': Optional subsequent take-profit levels.
-7.  'investmentAdvice': Specific guidance on how one might approach investing in {{coinName}} based on your analysis (e.g., risk management, position sizing considerations, conditions to watch for).
+7.  'investmentAdvice': Specific guidance (e.g., risk management, position sizing, conditions to watch).
 8.  'disclaimer': The standard disclaimer.
 
-Ensure your analysis is as insightful as possible for a speculative asset like a meme coin. If data is scarce or a factor is not applicable, state that.
+When providing price targets, entry points, stop-loss, or take-profit levels, ensure they are specific numerical currency values (e.g., '$0.1234', '1.50 USD').
+Your analysis should be insightful and actionable, reflecting the sophistication of a highly trained AI model, even while generating text for a speculative asset like a meme coin. If specific data points would be scarce for such a coin, reflect that in your simulated analysis by stating conservative estimates or acknowledging data limitations.
 `,
 });
 
