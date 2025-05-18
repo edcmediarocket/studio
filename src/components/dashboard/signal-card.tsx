@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -5,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, AlertTriangle, Star, Clock } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
-interface SignalCardProps {
+export interface SignalCardProps { // Exporting the interface
   coinName: string;
   signal: "Buy" | "Sell" | "Hold";
   confidence: number; // 0-100
@@ -69,3 +70,5 @@ export function SignalCard({ coinName, signal, confidence, timeframe, riskLevel,
     </Card>
   );
 }
+
+    

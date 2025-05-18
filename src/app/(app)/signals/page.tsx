@@ -2,15 +2,16 @@
 "use client";
 
 import { SignalCard } from "@/components/dashboard/signal-card";
+import type { SignalCardProps } from "@/components/dashboard/signal-card"; // Import the type
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button"; 
-import { Signal as SignalIcon, Zap } from "lucide-react"; 
-import { useState, useEffect } from 'react';
+import { Signal as SignalIcon, Zap, RefreshCw } from "lucide-react"; 
+import { useState, useEffect, useCallback } from 'react';
 import { useTier, type UserTier } from "@/context/tier-context"; 
 import Link from "next/link"; 
 
-// Placeholder signal data - now with more detailed analysis
-const allSignals = [
+// Master list of all available signals (placeholder data)
+const initialSignalsData: SignalCardProps[] = [
   { 
     coinName: "DogeCoin (DOGE)", 
     signal: "Buy", 
@@ -65,24 +66,70 @@ const allSignals = [
     lastUpdate: "45m ago", 
     details: "The coin is currently exhibiting sideways price action with decreasing volume, suggesting indecision in the market. Wait for a clear volume spike and a break above key resistance or below support before making a move. Neutral sentiment across social platforms." 
   },
+  {
+    coinName: "Book of Meme (BOME)",
+    signal: "Buy",
+    confidence: 85,
+    timeframe: "4H",
+    riskLevel: "High",
+    lastUpdate: "10m ago",
+    details: "AI detects a significant surge in social media mentions and positive sentiment, coupled with increasing buy volume on decentralized exchanges. Technical indicators suggest a potential breakout above a key resistance level. High risk, but potential for short-term gains."
+  },
+  {
+    coinName: "Dogwifhat (WIF)",
+    signal: "Sell",
+    confidence: 65,
+    timeframe: "1D",
+    riskLevel: "Medium",
+    lastUpdate: "1h ago",
+    details: "After a recent strong rally, AI analysis indicates potential profit-taking and consolidation. RSI is overbought, and on-chain data shows some large holders moving tokens to exchanges. A corrective pullback is plausible before any further upside."
+  }
 ];
 
-const getTieredSignals = (tier: UserTier) => {
-  if (tier === 'Premium' || tier === 'Pro') { // Premium also gets all signals
-    return allSignals;
+const getTieredSignals = (tier: UserTier, sourceSignals: SignalCardProps[]): SignalCardProps[] => {
+  if (tier === 'Premium' || tier === 'Pro') {
+    return sourceSignals; // Pro and Premium users see all available signals
   } else if (tier === 'Basic') {
-    return allSignals.slice(0, 3); // Basic users get top 3 (adjust as needed for your plan)
+    return sourceSignals.slice(0, 3); // Basic users get top 3
   }
-  return allSignals.slice(0, 1); // Free users get 1
+  return sourceSignals.slice(0, 1); // Free users get 1
 };
 
 export default function SignalsPage() {
   const { currentTier, setCurrentTier } = useTier(); 
-  const [signalsToShow, setSignalsToShow] = useState(getTieredSignals(currentTier));
+  const [masterSignalList, setMasterSignalList] = useState<SignalCardProps[]>(initialSignalsData);
+  const [signalsToShow, setSignalsToShow] = useState<SignalCardProps[]>([]);
 
+  // Effect to simulate auto-updating signals in the master list
   useEffect(() => {
-    setSignalsToShow(getTieredSignals(currentTier));
-  }, [currentTier]);
+    const intervalId = setInterval(() => {
+      setMasterSignalList(prevMasterList => {
+        const newList = prevMasterList.map(signal => ({ ...signal })); // Create a deep enough copy for modification
+        if (newList.length === 0) return prevMasterList;
+
+        // Pick a random signal to update
+        const randomIndex = Math.floor(Math.random() * newList.length);
+        const signalToUpdate = newList[randomIndex];
+        
+        // Update lastUpdate and confidence
+        newList[randomIndex] = {
+          ...signalToUpdate,
+          lastUpdate: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit'}),
+          confidence: Math.min(100, Math.max(0, signalToUpdate.confidence + (Math.floor(Math.random() * 11) - 5))), // +/- 0-5
+          // Optionally, could even randomly change the signal type for more dynamic simulation
+          // signal: ['Buy', 'Sell', 'Hold'][Math.floor(Math.random() * 3)] as "Buy" | "Sell" | "Hold",
+        };
+        return newList;
+      });
+    }, 15000); // Update every 15 seconds
+
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+  }, []); // Run once on mount to start the simulation
+
+  // Effect to update signalsToShow when tier or masterSignalList changes
+  useEffect(() => {
+    setSignalsToShow(getTieredSignals(currentTier, masterSignalList));
+  }, [currentTier, masterSignalList]);
 
   return (
     <div className="space-y-8">
@@ -91,7 +138,8 @@ export default function SignalsPage() {
           <SignalIcon className="mr-3 h-8 w-8" /> AI Signal Stream
         </h1>
         <p className="text-lg text-muted-foreground">
-          Real-time AI-driven buy/sell signals for meme coins, featuring detailed analysis. Signals may be limited by your subscription tier.
+          Live AI-driven buy/sell signals, auto-updating with the latest analysis.
+          Pro & Premium users see all available signals.
         </p>
       </div>
 
@@ -104,7 +152,7 @@ export default function SignalsPage() {
             <Button onClick={() => setCurrentTier('Free')} variant={currentTier === 'Free' ? 'default' : 'outline'} size="sm" className="text-xs">Set to Free</Button>
             <Button onClick={() => setCurrentTier('Basic')} variant={currentTier === 'Basic' ? 'default' : 'outline'} size="sm" className="text-xs">Set to Basic</Button>
             <Button onClick={() => setCurrentTier('Pro')} variant={currentTier === 'Pro' ? 'default' : 'outline'} size="sm" className="text-xs">Set to Pro</Button>
-            <Button onClick={() => setCurrentTier('Premium')} variant={currentTier === 'Premium' ? 'default' : 'outline'} size="sm" className="text-xs">Set to Premium</Button> {/* Added Premium Button */}
+            <Button onClick={() => setCurrentTier('Premium')} variant={currentTier === 'Premium' ? 'default' : 'outline'} size="sm" className="text-xs">Set to Premium</Button>
             <p className="text-sm self-center ml-auto">Current Tier: <span className="font-semibold text-neon">{currentTier}</span></p>
         </CardContent>
       </Card>
@@ -112,10 +160,13 @@ export default function SignalsPage() {
 
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl">Active Signals & Analysis</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-2xl">Active Signals & Analysis</CardTitle>
+            <RefreshCw className="h-5 w-5 text-muted-foreground animate-spin [animation-duration:3s]" />
+          </div>
           <CardDescription>
-            Displaying {signalsToShow.length} signal(s) with detailed AI analysis based on your <span className="text-neon">{currentTier}</span> tier.
-            {(currentTier !== 'Pro' && currentTier !== 'Premium') && ( // Show upgrade if not Pro or Premium
+            Displaying {signalsToShow.length} signal(s) with detailed AI analysis based on your <span className="text-neon">{currentTier}</span> tier. Signals auto-refresh periodically.
+            {(currentTier !== 'Pro' && currentTier !== 'Premium') && (
                 <Button asChild variant="link" className="px-1 text-neon hover:text-neon/80">
                     <Link href="/account#subscription">
                         Upgrade for more signals and deeper insights <Zap className="ml-1 h-4 w-4" />
@@ -128,7 +179,7 @@ export default function SignalsPage() {
           {signalsToShow.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {signalsToShow.map((signal, index) => (
-                <SignalCard key={index} {...signal} />
+                <SignalCard key={`${signal.coinName}-${index}-${signal.lastUpdate}`} {...signal} /> // Ensure key changes on update
               ))}
             </div>
           ) : (
@@ -152,3 +203,5 @@ export default function SignalsPage() {
     </div>
   );
 }
+
+    
