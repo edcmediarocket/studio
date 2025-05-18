@@ -10,10 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase } from 'lucide-react';
 import { Table, TableBody, TableCell, TableRow, TableHead, TableHeader } from '@/components/ui/table';
 import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from '@/ai/flows/get-coin-trading-signal';
 import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
 
 interface CoinDetail {
   id: string;
@@ -47,21 +48,21 @@ interface CoinDetail {
   };
 }
 
-const SectionCard: React.FC<{ title: string; icon?: React.ReactNode; children: React.ReactNode; className?: string; noPadding?: boolean }> = ({ title, icon, children, className, noPadding }) => (
+const SectionCard: React.FC<{ title: string; icon?: React.ReactNode; children: React.ReactNode; className?: string; noPadding?: boolean; titleClassName?: string }> = ({ title, icon, children, className, noPadding, titleClassName }) => (
   <Card className={cn("shadow-lg", className)}>
-    <CardHeader>
-      <CardTitle className="flex items-center text-xl text-primary">
+    <CardHeader className={cn(noPadding ? "pb-2 pt-4 px-4" : "pb-3")}>
+      <CardTitle className={cn("flex items-center text-xl text-primary", titleClassName)}>
         {icon}
         <span className={cn(icon && "ml-2")}>{title}</span>
       </CardTitle>
     </CardHeader>
-    <CardContent className={cn(noPadding ? "p-0" : "", "text-sm")}>{children}</CardContent>
+    <CardContent className={cn(noPadding ? "p-0" : "text-sm", noPadding && "px-4 pb-4")}>{children}</CardContent>
   </Card>
 );
 
-const StatItem: React.FC<{ label: string; value: string | number | undefined | null; unit?: string; isPercentage?: boolean; className?: string; valueClassName?: string }> = ({ label, value, unit, isPercentage, className, valueClassName }) => {
+const StatItem: React.FC<{ label: string; value: string | number | undefined | null; unit?: string; isPercentage?: boolean; className?: string; valueClassName?: string; labelClassName?: string }> = ({ label, value, unit, isPercentage, className, valueClassName, labelClassName }) => {
   const displayValue = useMemo(() => {
-    if (value === null || typeof value === 'undefined') return 'N/A';
+    if (value === null || typeof value === 'undefined' || value === '') return 'N/A';
     if (typeof value === 'number') {
       if (isPercentage) return `${value.toFixed(2)}%`;
       return unit === '$' ? `${unit}${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: value > 1 ? 2 : 8 })}` : `${value.toLocaleString()} ${unit || ''}`.trim();
@@ -73,7 +74,7 @@ const StatItem: React.FC<{ label: string; value: string | number | undefined | n
 
   return (
     <div className={cn("flex justify-between py-2.5 px-4 border-b border-muted/30 last:border-b-0 items-center", className)}>
-      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className={cn("text-sm text-muted-foreground", labelClassName)}>{label}</span>
       <span className={cn("text-sm font-semibold", valueClassName || defaultValueColor)}>{displayValue}</span>
     </div>
   );
@@ -168,7 +169,7 @@ export default function CoinDetailPage() {
             </div>
           </div>
         </div>
-        {[...Array(3)].map((_, i) => (
+        {[...Array(4)].map((_, i) => ( // Increased skeleton count for new sections
           <Card key={i} className="shadow-lg">
             <CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader>
             <CardContent className="space-y-3">
@@ -218,6 +219,78 @@ export default function CoinDetailPage() {
     if (recommendation === 'Hold') return 'secondary';
     return 'outline';
   };
+  
+  const renderSignalContent = () => {
+    if (signalLoading) {
+      return (
+        <div className="space-y-4 py-4">
+          <div className="flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="ml-3 text-muted-foreground text-lg">Fetching Advanced AI Analysis...</p>
+          </div>
+          <Skeleton className="h-6 w-1/3 mx-auto" /> 
+          <Skeleton className="h-5 w-1/2 mx-auto" /> 
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-24 w-full" />
+        </div>
+      );
+    }
+    if (signalError) {
+      return (
+        <Alert variant="destructive" className="my-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Signal Error</AlertTitle>
+          <AlertDescription>{signalError}</AlertDescription>
+        </Alert>
+      );
+    }
+    if (tradingSignal) {
+      return (
+        <div className="space-y-6">
+          <div className="flex flex-col items-center space-y-2 text-center">
+            <Badge variant={getRecommendationBadgeVariant(tradingSignal.recommendation)} className="text-xl px-6 py-2 font-semibold">
+              {tradingSignal.recommendation}
+            </Badge>
+            <p className="text-sm text-muted-foreground">{tradingSignal.reasoning}</p>
+            <RocketScoreDisplay score={tradingSignal.rocketScore} />
+          </div>
+
+          <Separator />
+
+          <div>
+            <h4 className="text-md font-semibold text-primary mb-2 flex items-center"><HelpCircle className="mr-2 h-5 w-5"/>Detailed Analysis</h4>
+            <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md whitespace-pre-wrap">{tradingSignal.detailedAnalysis}</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+                 <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><Target className="mr-2 h-5 w-5"/>Future Price Outlook</h4>
+                 <StatItem label="Short-Term Target" value={tradingSignal.futurePriceOutlook?.shortTermTarget} className="px-3 py-1.5 bg-muted/30 rounded-t-md border-b-0" labelClassName="text-xs" valueClassName="text-sm"/>
+                 <StatItem label="Mid-Term Target" value={tradingSignal.futurePriceOutlook?.midTermTarget} className="px-3 py-1.5 bg-muted/30 rounded-b-md" labelClassName="text-xs" valueClassName="text-sm"/>
+            </div>
+             <div className="space-y-1">
+                <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><ShieldCheck className="mr-2 h-5 w-5"/>Trading Targets</h4>
+                <StatItem label="Entry Point" value={tradingSignal.tradingTargets?.entryPoint} className="px-3 py-1.5 bg-muted/30 rounded-t-md border-b-0" labelClassName="text-xs" valueClassName="text-sm"/>
+                <StatItem label="Stop-Loss" value={tradingSignal.tradingTargets.stopLoss} className="px-3 py-1.5 bg-muted/30" labelClassName="text-xs" valueClassName="text-sm"/>
+                <StatItem label="Take Profit 1" value={tradingSignal.tradingTargets.takeProfit1} className="px-3 py-1.5 bg-muted/30" labelClassName="text-xs" valueClassName="text-sm"/>
+                {tradingSignal.tradingTargets.takeProfit2 && <StatItem label="Take Profit 2" value={tradingSignal.tradingTargets.takeProfit2} className="px-3 py-1.5 bg-muted/30" labelClassName="text-xs" valueClassName="text-sm"/>}
+                {tradingSignal.tradingTargets.takeProfit3 && <StatItem label="Take Profit 3" value={tradingSignal.tradingTargets.takeProfit3} className="px-3 py-1.5 bg-muted/30 rounded-b-md" labelClassName="text-xs" valueClassName="text-sm"/>}
+            </div>
+          </div>
+          
+          <div>
+            <h4 className="text-md font-semibold text-primary mb-2 flex items-center"><Briefcase className="mr-2 h-5 w-5"/>Investment Advice</h4>
+            <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md whitespace-pre-wrap">{tradingSignal.investmentAdvice}</p>
+          </div>
+
+          <p className="text-xs text-muted-foreground pt-3 border-t border-muted/30 mt-3">{tradingSignal.disclaimer}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
 
   return (
     <div className="space-y-6">
@@ -227,69 +300,31 @@ export default function CoinDetailPage() {
         </Button>
       </div>
       
-      <div className="p-4 bg-card rounded-lg shadow-lg">
-        <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
-            <Image src={image.large || 'https://placehold.co/128x128.png'} alt={name} width={64} height={64} className="rounded-full border-2 border-primary" data-ai-hint="coin logo crypto"/>
-            <div className="flex-grow text-center sm:text-left">
-              <h1 className="text-2xl sm:text-3xl font-bold text-neon flex items-center justify-center sm:justify-start">
-                {name} <Badge variant="secondary" className="ml-2 text-base sm:text-lg">{symbol.toUpperCase()}</Badge>
-              </h1>
-              {market_cap_rank && <p className="text-sm text-muted-foreground">Market Cap Rank: #{market_cap_rank}</p>}
+      <Card className="shadow-lg overflow-hidden">
+        <CardHeader className="bg-card p-4">
+            <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                <Image src={image.large || 'https://placehold.co/128x128.png'} alt={name} width={64} height={64} className="rounded-full border-2 border-primary" data-ai-hint="coin logo crypto"/>
+                <div className="flex-grow text-center sm:text-left">
+                <h1 className="text-2xl sm:text-3xl font-bold text-neon flex items-center justify-center sm:justify-start">
+                    {name} <Badge variant="secondary" className="ml-2 text-base sm:text-lg">{symbol.toUpperCase()}</Badge>
+                </h1>
+                {market_cap_rank && <p className="text-sm text-muted-foreground">Market Cap Rank: #{market_cap_rank}</p>}
+                </div>
+                <div className="text-center sm:text-right">
+                <p className="text-2xl sm:text-3xl font-bold text-foreground">${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: currentPrice > 0.01 ? 2 : 8 })}</p>
+                <p className={`text-base font-semibold ${priceChange24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {priceChange24h.toFixed(2)}% (24h)
+                </p>
+                </div>
             </div>
-            <div className="text-center sm:text-right">
-              <p className="text-2xl sm:text-3xl font-bold text-foreground">${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: currentPrice > 0.01 ? 2 : 8 })}</p>
-              <p className={`text-base font-semibold ${priceChange24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {priceChange24h.toFixed(2)}% (24h)
-              </p>
-            </div>
-        </div>
-      </div>
+        </CardHeader>
+      </Card>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-           <Card className="shadow-lg">
-            <CardHeader>
-                <CardTitle className="flex items-center text-xl text-primary">
-                    <BrainCircuit className="mr-2 h-5 w-5"/>AI Trading Signal
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                {signalLoading && (
-                  <div className="space-y-3 py-4">
-                    <div className="flex items-center justify-center">
-                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                      <p className="ml-2 text-muted-foreground">Fetching AI Signal...</p>
-                    </div>
-                    <Skeleton className="h-5 w-1/4 mx-auto" /> 
-                    <Skeleton className="h-4 w-1/2 mx-auto" /> 
-                    <Skeleton className="h-16 w-full" />
-                    <Skeleton className="h-4 w-full" />
-                  </div>
-                )}
-                {signalError && (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertTitle>Signal Error</AlertTitle>
-                    <AlertDescription>{signalError}</AlertDescription>
-                  </Alert>
-                )}
-                {tradingSignal && !signalLoading && !signalError && (
-                  <div className="space-y-3">
-                    <div className="flex flex-col items-center space-y-2 border-b border-muted/30 pb-3 mb-3">
-                      <Badge variant={getRecommendationBadgeVariant(tradingSignal.recommendation)} className="text-lg px-4 py-1">
-                        {tradingSignal.recommendation}
-                      </Badge>
-                      <RocketScoreDisplay score={tradingSignal.rocketScore} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Reasoning:</p>
-                      <p className="text-sm text-foreground bg-muted/30 p-3 rounded-md whitespace-pre-wrap">{tradingSignal.reasoning}</p>
-                    </div>
-                    <p className="text-xs text-muted-foreground pt-2 border-t border-muted/30 mt-3">{tradingSignal.disclaimer}</p>
-                  </div>
-                )}
-            </CardContent>
-          </Card>
+           <SectionCard title="AI Trading Signal & Analysis" icon={<BrainCircuit className="h-5 w-5"/>} noPadding>
+             {renderSignalContent()}
+           </SectionCard>
 
           <SectionCard title="Description" icon={<BookOpen className="h-5 w-5"/>}>
             {cleanDescription ? (
@@ -300,23 +335,23 @@ export default function CoinDetailPage() {
           </SectionCard>
 
           <SectionCard title="Links" icon={<Globe className="h-5 w-5"/>}>
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
               {links.homepage?.[0] && (
-                <Button variant="link" asChild className="p-0 h-auto justify-start text-sm">
+                <Button variant="link" asChild className="p-0 h-auto justify-start text-sm text-muted-foreground hover:text-primary">
                   <a href={links.homepage[0]} target="_blank" rel="noopener noreferrer">
                     <Globe className="mr-2 h-4 w-4" /> Official Website <ExternalLink className="ml-1 h-3 w-3" />
                   </a>
                 </Button>
               )}
               {links.blockchain_site?.[0] && (
-                 <Button variant="link" asChild className="p-0 h-auto justify-start text-sm">
+                 <Button variant="link" asChild className="p-0 h-auto justify-start text-sm text-muted-foreground hover:text-primary">
                   <a href={links.blockchain_site[0]} target="_blank" rel="noopener noreferrer">
                     <Package className="mr-2 h-4 w-4" /> Blockchain Explorer <ExternalLink className="ml-1 h-3 w-3" />
                   </a>
                 </Button>
               )}
                {links.twitter_screen_name && (
-                 <Button variant="link" asChild className="p-0 h-auto justify-start text-sm">
+                 <Button variant="link" asChild className="p-0 h-auto justify-start text-sm text-muted-foreground hover:text-primary">
                   <a href={`https://twitter.com/${links.twitter_screen_name}`} target="_blank" rel="noopener noreferrer">
                     <svg className="mr-2 h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M23.643 4.937c-.835.37-1.732.62-2.675.733.962-.576 1.7-1.49 2.048-2.578-.9.534-1.897.922-2.958 1.13-.85-.904-2.06-1.47-3.4-1.47-2.572 0-4.658 2.086-4.658 4.66 0 .364.042.718.12 1.06-3.873-.195-7.304-2.05-9.602-4.868-.4.69-.63 1.49-.63 2.342 0 1.616.823 3.043 2.072 3.878-.764-.025-1.482-.234-2.11-.583v.06c0 2.257 1.605 4.14 3.737 4.568-.39.106-.803.162-1.227.162-.3 0-.593-.028-.877-.082.593 1.85 2.313 3.198 4.352 3.234-1.595 1.25-3.604 1.995-5.786 1.995-.376 0-.747-.022-1.112-.065 2.062 1.32 4.507 2.093 7.14 2.093 8.57 0 13.255-7.098 13.255-13.254 0-.2-.005-.402-.014-.602.91-.658 1.7-1.477 2.323-2.41z"></path></svg>
                     Twitter <ExternalLink className="ml-1 h-3 w-3" />
@@ -324,10 +359,18 @@ export default function CoinDetailPage() {
                 </Button>
               )}
                {links.telegram_channel_identifier && (
-                 <Button variant="link" asChild className="p-0 h-auto justify-start text-sm">
+                 <Button variant="link" asChild className="p-0 h-auto justify-start text-sm text-muted-foreground hover:text-primary">
                   <a href={`https://t.me/${links.telegram_channel_identifier}`} target="_blank" rel="noopener noreferrer">
                     <svg className="mr-2 h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M9.78 18.65l.28-4.23c.07-.99-.46-1.4-1.02-1.8l-2.4-1.6c-.57-.38-.84-.9-.58-1.5.27-.62.9-.9 1.55-.75l11.07 4.3c.66.26.97.88.8 1.5-.17.63-.8 1-1.52.75l-3.6-1.7c-.64-.3-1.42.17-1.32 1.07l.3 3.5c.05.6-.2 1.18-.7 1.5s-1.18.35-1.75-.04L9.78 18.65z"></path></svg>
                     Telegram <ExternalLink className="ml-1 h-3 w-3" />
+                  </a>
+                </Button>
+              )}
+              {links.subreddit_url && (
+                 <Button variant="link" asChild className="p-0 h-auto justify-start text-sm text-muted-foreground hover:text-primary">
+                  <a href={links.subreddit_url} target="_blank" rel="noopener noreferrer">
+                     <svg className="mr-2 h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M12.01,2.02 C12.01,2.02 11.02,2.02 10.08,2.04 C8.93,2.07 7.89,2.17 7.89,2.17 C7.89,2.17 7.07,2.31 6.45,2.93 C5.83,3.55 5.69,4.37 5.69,4.37 C5.69,4.37 5.59,5.41 5.56,6.56 C5.53,7.71 5.53,8.71 5.53,8.71 C5.53,8.71 5.53,9.81 5.56,11.07 C5.59,12.33 5.69,13.57 5.69,13.57 C5.69,13.57 5.83,14.39 6.45,15.01 C7.07,15.63 7.89,15.77 7.89,15.77 C7.89,15.77 8.93,15.87 10.08,15.9 C11.23,15.93 12.01,15.92 12.01,15.92 C12.01,15.92 13.00,15.92 14.15,15.89 C15.30,15.86 16.34,15.76 16.34,15.76 C16.34,15.76 17.16,15.62 17.78,15.00 C18.40,14.38 18.54,13.56 18.54,13.56 C18.54,13.56 18.64,12.52 18.67,11.37 C18.70,10.22 18.70,9.22 18.70,9.22 C18.70,9.22 18.70,8.12 18.67,6.86 C18.64,5.60 18.54,4.36 18.54,4.36 C18.54,4.36 18.40,3.54 17.78,2.92 C17.16,2.30 16.34,2.16 16.34,2.16 C16.34,2.16 15.30,2.06 14.15,2.03 C12.98,2.00 12.01,2.02 12.01,2.02 Z M12.00,5.76 C13.66,5.76 15.00,7.10 15.00,8.76 C15.00,10.42 13.66,11.76 12.00,11.76 C10.34,11.76 9.00,10.42 9.00,8.76 C9.00,7.10 10.34,5.76 12.00,5.76 Z M12.00,13.00 C14.38,13.00 16.34,13.83 17.50,15.00 L6.50,15.00 C7.66,13.83 9.62,13.00 12.00,13.00 Z M6.00,19.00 C6.00,19.00 6.00,20.00 7.00,20.00 L17.00,20.00 C18.00,20.00 18.00,19.00 18.00,19.00 L6.00,19.00 Z M12.00,17.25 C10.90,17.25 10.00,18.15 10.00,19.25 C10.00,20.35 10.90,21.25 12.00,21.25 C13.10,21.25 14.00,20.35 14.00,19.25 C14.00,18.15 13.10,17.25 12.00,17.25 Z" /></svg>
+                    Reddit <ExternalLink className="ml-1 h-3 w-3" />
                   </a>
                 </Button>
               )}
