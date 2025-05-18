@@ -4,7 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, BarChartHorizontalBig } from "lucide-react";
 import { format } from 'date-fns';
 
 export interface OhlcData {
@@ -40,8 +40,7 @@ export function CoinPriceChart({ coinName, data, loading, error }: CoinPriceChar
         <CardContent className="text-center">
           <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
           <CardTitle className="text-destructive mb-2">Chart Error</CardTitle>
-          <CardDescription className="text-destructive-foreground">{error}</CardDescription>
-          <p className="text-xs text-muted-foreground mt-2">Try a different coin ID or check CoinGecko for availability.</p>
+          <CardDescription className="text-destructive-foreground max-w-md mx-auto">{error}</CardDescription>
         </CardContent>
       </Card>
     );
@@ -128,6 +127,3 @@ export function CoinPriceChart({ coinName, data, loading, error }: CoinPriceChar
     </Card>
   );
 }
-
-// Added BarChartHorizontalBig for placeholder state
-import { BarChartHorizontalBig } from "lucide-react";

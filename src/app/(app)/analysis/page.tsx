@@ -39,23 +39,31 @@ export default function AnalysisPage() {
       setChartError(null);
       setChartData([]); 
 
-      const coinId = selectedCoinForAnalysis.toLowerCase().replace(/\s+/g, '-');
+      let processedCoinId = selectedCoinForAnalysis.toLowerCase().replace(/\s+/g, '-');
+      if (processedCoinId === 'xrp') {
+        processedCoinId = 'ripple'; // Map XRP to its CoinGecko ID
+      }
 
       try {
-        const response = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}/ohlc?vs_currency=usd&days=30`);
+        const response = await fetch(`https://api.coingecko.com/api/v3/coins/${processedCoinId}/ohlc?vs_currency=usd&days=30`);
         
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: "Invalid JSON response from server" })); // Catch JSON parsing errors
-          const errorMessage = errorData.error || `Failed to fetch chart data (Status: ${response.status})`;
-          console.warn(`Chart data fetch failed for ${coinId}: ${errorMessage}`);
-          setChartError(`Could not load chart for "${selectedCoinForAnalysis}": ${errorMessage}. Please ensure the coin ID is correct on CoinGecko or try a different coin.`);
+          const errorData = await response.json().catch(() => ({ error: "Invalid JSON response from server" }));
+          const apiErrorMessage = errorData.error || `API error (Status: ${response.status})`;
+          
+          console.warn(`Chart data fetch failed for ${processedCoinId} (original input: "${selectedCoinForAnalysis}"): ${apiErrorMessage}`);
+
+          if (apiErrorMessage.toLowerCase().includes("coin not found")) {
+            setChartError(`Could not load chart for "${selectedCoinForAnalysis}". CoinGecko couldn't find this coin with the ID '${processedCoinId}'. Some common coins use specific IDs (e.g., for XRP, use 'ripple'). Please verify the ID on CoinGecko or try another coin.`);
+          } else {
+            setChartError(`Could not load chart for "${selectedCoinForAnalysis}": ${apiErrorMessage}. Please ensure the coin ID is correct or try a different coin.`);
+          }
           setChartData([]);
-          // No throw here, error is set for UI
         } else {
           const data: [number, number, number, number, number][] = await response.json();
           
           if (data.length === 0) {
-            console.warn(`No OHLC data found for ${coinId}.`);
+            console.warn(`No OHLC data found for ${processedCoinId}.`);
             setChartError(`No chart data available for "${selectedCoinForAnalysis}". The coin might be new or data is not tracked by CoinGecko.`);
             setChartData([]);
           } else {
@@ -69,10 +77,9 @@ export default function AnalysisPage() {
             setChartError(null); // Clear any previous error on success
           }
         }
-      } catch (err) { // Catches network errors or other unexpected issues
+      } catch (err) { 
         console.error("Unexpected error fetching chart data:", err);
         let message = "An unexpected error occurred while fetching chart data. Please check your connection or try again later.";
-        // err instanceof Error is fine here for unexpected errors
         if (err instanceof Error) {
             message = err.message;
         }
@@ -93,7 +100,7 @@ export default function AnalysisPage() {
           <BarChartHorizontalBig className="mr-3 h-8 w-8" /> AI Analysis Dashboard
         </h1>
         <p className="text-lg text-muted-foreground">
-          Enter a coin name (e.g., Bitcoin, Dogecoin) to get AI insights and view its price chart.
+          Enter a coin name (e.g., Bitcoin, Dogecoin, XRP) to get AI insights and view its price chart.
         </p>
       </div>
 
@@ -108,7 +115,7 @@ export default function AnalysisPage() {
               <Input
                 id="coinName-analysis-shared"
                 type="text"
-                placeholder="Enter coin name or ID (e.g. bitcoin, dogecoin)"
+                placeholder="Enter coin name or ID (e.g. bitcoin, dogecoin, xrp)"
                 value={coinInput}
                 onChange={(e) => setCoinInput(e.target.value)}
                 className="text-base"
