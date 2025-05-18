@@ -92,7 +92,7 @@ const tiersData: Omit<SubscriptionPlan, 'ctaText'>[] = [
 
 interface SubscriptionTiersProps {
   currentActiveTier: UserTier;
-  onTierChange: (newTier: UserTier) => void; // This is for the demo buttons, actual subscription changes via PayPal
+  onTierChange: (newTier: UserTier) => void; 
 }
 
 export function SubscriptionTiers({ currentActiveTier, onTierChange }: SubscriptionTiersProps) {
@@ -103,18 +103,15 @@ export function SubscriptionTiers({ currentActiveTier, onTierChange }: Subscript
       return;
     }
     // SIMULATE PAYPAL INTEGRATION START
-    // In a real app, this would initialize the PayPal SDK, create an order with your backend,
-    // and redirect the user or open the PayPal checkout flow.
     alert(`Simulating PayPal subscription for ${tierName} tier (Plan ID: ${planId}).\n\nThis is where the actual PayPal integration would begin. The user's tier would be updated via backend webhooks upon successful payment.`);
     
-    // For demo purposes, we can still call onTierChange to update the UI locally.
-    // In a real app, onTierChange would likely be triggered by a successful webhook from PayPal.
-    // onTierChange(tierName); // Commenting this out to make it clear this button is for *starting* PayPal.
+    // For demo purposes, call onTierChange to update the UI locally AFTER the alert.
+    onTierChange(tierName); 
   };
 
   const getButtonText = (tier: SubscriptionPlan): string => {
     if (tier.name === currentActiveTier) return "Current Plan";
-    if (tier.name === "Free") return "Select Free Plan"; // Or hide button if already free
+    if (tier.name === "Free") return "Switch to Free"; 
 
     // Could add logic to differentiate "Upgrade", "Downgrade", "Switch"
     return `Subscribe to ${tier.name}`; 
