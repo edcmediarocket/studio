@@ -1,19 +1,19 @@
 
 "use client";
 
-import React, { useState } from "react"; // Added React import
+import React, { useState, useEffect } from "react";
 import { getCustomizedCoinTradingSignal, type GetCustomizedCoinTradingSignalInput, type GetCustomizedCoinTradingSignalOutput } from "@/ai/flows/get-customized-coin-trading-signal";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Wand2, Sparkles, AlertTriangle, Info, BarChart, Target, ShieldCheck, FileText } from "lucide-react";
+import { Loader2, Wand2, Sparkles, AlertTriangle, Info, BarChart, Target, ShieldCheck, FileText, DollarSign } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { StatItem } from '@/components/shared/stat-item'; // Corrected import path
+import { StatItem } from '@/components/shared/stat-item';
 
 export function CustomSignalGenerator() {
   const [coinName, setCoinName] = useState("");
@@ -21,31 +21,96 @@ export function CustomSignalGenerator() {
   const [riskProfile, setRiskProfile] = useState<GetCustomizedCoinTradingSignalInput['riskProfile'] | undefined>(undefined);
   
   const [signalData, setSignalData] = useState<GetCustomizedCoinTradingSignalOutput | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoadingSignal, setIsLoadingSignal] = useState(false);
+  const [signalError, setSignalError] = useState<string | null>(null);
+
+  const [currentCoinPrice, setCurrentCoinPrice] = useState<number | null>(null);
+  const [priceLoading, setPriceLoading] = useState(false);
+  const [priceError, setPriceError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCurrentPrice = async () => {
+      if (!coinName.trim()) {
+        setCurrentCoinPrice(null);
+        setPriceError(null);
+        return;
+      }
+      setPriceLoading(true);
+      setPriceError(null);
+      setCurrentCoinPrice(null);
+
+      let coinId = coinName.trim().toLowerCase();
+      if (coinId === "xrp") {
+        coinId = "ripple";
+      }
+      // Add more specific mappings if needed, e.g., "shiba inu" -> "shiba-inu"
+
+      try {
+        const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: "Failed to parse error response" }));
+          const apiErrorMessage = errorData?.error || `CoinGecko API error (Status: ${response.status})`;
+          if (response.status === 404 || apiErrorMessage.toLowerCase().includes('could not find coin with id')) {
+            setPriceError(`Could not find current price for "${coinName}". Please check the coin name/ID.`);
+          } else {
+            setPriceError(`Failed to fetch current price: ${apiErrorMessage}`);
+          }
+          setCurrentCoinPrice(null);
+        } else {
+          const data = await response.json();
+          if (data[coinId] && data[coinId].usd !== undefined) {
+            setCurrentCoinPrice(data[coinId].usd);
+            setPriceError(null);
+          } else {
+            setPriceError(`Current price not available for "${coinName}" from CoinGecko.`);
+            setCurrentCoinPrice(null);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching current price:", err);
+        setPriceError("An unexpected error occurred while fetching the current price.");
+        setCurrentCoinPrice(null);
+      } finally {
+        setPriceLoading(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(() => {
+        if (coinName.trim()) {
+            fetchCurrentPrice();
+        } else {
+            // Clear price info if coin name is cleared
+            setCurrentCoinPrice(null);
+            setPriceError(null);
+            setPriceLoading(false);
+        }
+    }, 500); // Debounce API call
+
+    return () => clearTimeout(debounceTimer);
+  }, [coinName]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!coinName.trim() || !timeframe || !riskProfile) {
-      setError("Please fill in all fields: Coin Name, Timeframe, and Risk Profile.");
+      setSignalError("Please fill in all fields: Coin Name, Timeframe, and Risk Profile.");
       setSignalData(null);
       return;
     }
-    setIsLoading(true);
-    setError(null);
+    setIsLoadingSignal(true);
+    setSignalError(null);
     setSignalData(null);
     try {
       const result = await getCustomizedCoinTradingSignal({
-        coinName,
+        coinName: coinName.trim(), // Use trimmed coin name
         timeframe,
         riskProfile,
       });
       setSignalData(result);
     } catch (err) {
       console.error("Error getting customized signal:", err);
-      setError("Failed to generate signal. The AI might be recalibrating its crystal ball, please try again.");
+      setSignalError("Failed to generate signal. The AI might be recalibrating its crystal ball, please try again.");
     } finally {
-      setIsLoading(false);
+      setIsLoadingSignal(false);
     }
   };
   
@@ -74,13 +139,37 @@ export function CustomSignalGenerator() {
             <Input
               id="custom-coinName"
               type="text"
-              placeholder="e.g., Pepe, Bonk"
+              placeholder="e.g., Pepe, Bonk, Bitcoin"
               value={coinName}
               onChange={(e) => setCoinName(e.target.value)}
-              disabled={isLoading}
+              disabled={isLoadingSignal || priceLoading}
               className="mt-1"
             />
           </div>
+          
+          {priceLoading && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching current price...
+            </div>
+          )}
+          {priceError && !priceLoading && (
+            <Alert variant="destructive" className="text-xs py-2 px-3">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{priceError}</AlertDescription>
+            </Alert>
+          )}
+          {currentCoinPrice !== null && !priceLoading && !priceError && (
+            <Card className="bg-muted/30">
+              <CardContent className="p-3">
+                <Label className="text-xs text-muted-foreground">Current Market Price for {coinName.trim()}:</Label>
+                <p className="text-xl font-bold text-neon flex items-center">
+                  <DollarSign className="h-5 w-5 mr-1"/>
+                  {currentCoinPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: currentCoinPrice > 0.01 ? 2 : 8 })}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -88,7 +177,7 @@ export function CustomSignalGenerator() {
               <Select
                 value={timeframe}
                 onValueChange={(value) => setTimeframe(value as GetCustomizedCoinTradingSignalInput['timeframe'])}
-                disabled={isLoading}
+                disabled={isLoadingSignal}
               >
                 <SelectTrigger id="custom-timeframe" className="mt-1">
                   <SelectValue placeholder="Select timeframe..." />
@@ -106,7 +195,7 @@ export function CustomSignalGenerator() {
               <Select
                 value={riskProfile}
                 onValueChange={(value) => setRiskProfile(value as GetCustomizedCoinTradingSignalInput['riskProfile'])}
-                disabled={isLoading}
+                disabled={isLoadingSignal}
               >
                 <SelectTrigger id="custom-riskProfile" className="mt-1">
                   <SelectValue placeholder="Select risk profile..." />
@@ -120,8 +209,8 @@ export function CustomSignalGenerator() {
             </div>
           </div>
           
-          <Button type="submit" disabled={isLoading || !coinName.trim() || !timeframe || !riskProfile} className="w-full bg-primary hover:bg-primary/90">
-            {isLoading ? (
+          <Button type="submit" disabled={isLoadingSignal || priceLoading || !coinName.trim() || !timeframe || !riskProfile} className="w-full bg-primary hover:bg-primary/90">
+            {isLoadingSignal ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <>
@@ -131,11 +220,11 @@ export function CustomSignalGenerator() {
           </Button>
         </form>
 
-        {error && (
+        {signalError && (
           <Alert variant="destructive" className="mt-6">
             <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
+            <AlertTitle>Signal Generation Error</AlertTitle>
+            <AlertDescription>{signalError}</AlertDescription>
           </Alert>
         )}
 
@@ -143,7 +232,7 @@ export function CustomSignalGenerator() {
           <div className="mt-8 space-y-6">
             <Separator />
             <h3 className="text-xl font-semibold text-neon text-center">
-              Custom AI Signal for: {coinName.toUpperCase()}
+              Custom AI Signal for: {coinName.trim().toUpperCase()}
             </h3>
             <CardDescription className="text-center -mt-4">
               Timeframe: <Badge variant="outline">{timeframe}</Badge> | Risk Profile: <Badge variant="outline">{riskProfile}</Badge>
@@ -166,7 +255,7 @@ export function CustomSignalGenerator() {
 
             <Card className="bg-card shadow-sm">
                 <CardHeader className="pb-2 pt-4">
-                    <CardTitle className="text-lg text-primary flex items-center"><Target className="mr-2 h-5 w-5"/>Trading Targets</CardTitle>
+                    <CardTitle className="text-lg text-primary flex items-center"><Target className="mr-2 h-5 w-5"/>AI Recommended Trading Targets</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-0.5 !p-0">
                     <StatItem label="Entry Point" value={signalData.priceTargets.entryPoint || "Market"} className="px-4 py-2" valueClassName="text-sm"/>
@@ -176,7 +265,7 @@ export function CustomSignalGenerator() {
                 </CardContent>
             </Card>
 
-            <InfoCard icon={<FileText className="h-5 w-5" />} title="Strategy Notes">
+            <InfoCard icon={<FileText className="h-5 w-5" />} title="AI Strategy Notes">
               <p className="text-base sm:text-sm text-muted-foreground whitespace-pre-wrap">{signalData.strategyNotes}</p>
             </InfoCard>
 
@@ -185,7 +274,7 @@ export function CustomSignalGenerator() {
             )}
           </div>
         )}
-        {!isLoading && !signalData && !error && (
+        {!isLoadingSignal && !signalData && !signalError && (
             <div className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center bg-muted/10 mt-6">
                 <Wand2 className="h-10 w-10 text-muted-foreground/50 mb-3" />
                 <p className="text-muted-foreground">Enter details above to generate your custom AI trading signal.</p>
@@ -194,7 +283,7 @@ export function CustomSignalGenerator() {
       </CardContent>
       <CardFooter className="mt-4">
         <p className="text-xs text-muted-foreground">
-          Disclaimer: Customized AI signals are for informational purposes only and not financial advice. High-risk strategies involve a greater chance of loss.
+          Disclaimer: Customized AI signals are for informational purposes only and not financial advice. High-risk strategies involve a greater chance of loss. Current market price is fetched from CoinGecko.
         </p>
       </CardFooter>
     </Card>
@@ -219,4 +308,3 @@ const InfoCard: React.FC<InfoCardProps> = ({icon, title, children}) => (
         </CardContent>
     </Card>
 )
-
