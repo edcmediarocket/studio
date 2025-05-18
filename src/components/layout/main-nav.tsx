@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, BarChart2, Eye, UserCircle, BotMessageSquare, Signal, Calculator, GitCompareArrows, Activity, SlidersHorizontal, Newspaper, Rocket, Siren, Lightbulb, DatabaseZap } from "lucide-react";
+import { LayoutDashboard, BarChart2, Eye, UserCircle, BotMessageSquare, Signal, Calculator, GitCompareArrows, Activity, SlidersHorizontal, Newspaper, Rocket, Siren, Lightbulb, DatabaseZap, ShieldQuestion } from "lucide-react";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { useTier } from "@/context/tier-context"; 
 
@@ -23,14 +23,15 @@ const navItems: NavItem[] = [
   { href: "/custom-signals", label: "Custom Signals", icon: SlidersHorizontal, isProFeature: true },
   { href: "/analysis", label: "AI Analysis", icon: BarChart2 },
   { href: "/news-buzz", label: "News & Buzz", icon: Newspaper },
-  { href: "/narrative-engine", label: "Narrative Engine", icon: Lightbulb, isPremiumFeature: true }, // New
-  { href: "/onchain-intelligence", label: "On-Chain Intel", icon: DatabaseZap, isPremiumFeature: true }, // New
+  { href: "/narrative-engine", label: "Narrative Engine", icon: Lightbulb, isPremiumFeature: true }, 
+  { href: "/onchain-intelligence", label: "On-Chain Intel", icon: DatabaseZap, isPremiumFeature: true }, 
   { href: "/market-anomalies", label: "Market Anomalies", icon: Siren, isPremiumFeature: true },
+  { href: "/confidence-dashboard", label: "Confidence Dashboard", icon: ShieldQuestion, isPremiumFeature: true }, // New
   { href: "/watchlist", label: "Watchlist", icon: Eye },
   { href: "/roi-calculator", label: "ROI Calculator", icon: Calculator },
   { href: "/ai-advisor", label: "AI Advisor", icon: BotMessageSquare, isProFeature: true },
   { href: "/coin-comparison", label: "Coin Comparison", icon: GitCompareArrows },
-  { href: "/on-chain-insights", label: "On-Chain Insights", icon: Activity }, // General On-Chain Insights
+  { href: "/on-chain-insights", label: "On-Chain Insights", icon: Activity }, 
   { href: "/account", label: "Account", icon: UserCircle },
 ];
 
@@ -43,16 +44,13 @@ export function MainNav() {
       {navItems.map((item) => {
         let styleAsLocked = false;
         let tooltipText = item.label;
-        let featureTierLabel = "";
-
+        
         if (item.isPremiumFeature) {
-            featureTierLabel = "(Premium)";
             if (currentTier !== "Premium") {
                 styleAsLocked = true;
                 tooltipText = `${item.label} (Premium Feature)`;
             }
         } else if (item.isProFeature) {
-            featureTierLabel = "(Pro)";
             if (currentTier !== "Pro" && currentTier !== "Premium") {
                 styleAsLocked = true;
                 tooltipText = `${item.label} (Pro/Premium Feature)`;
@@ -68,9 +66,10 @@ export function MainNav() {
                 children: tooltipText, 
                 className: "bg-popover text-popover-foreground"
               }}
-              className={cn(styleAsLocked && "opacity-60 hover:bg-sidebar-accent/70")}
+              className={cn(styleAsLocked && "opacity-60 hover:bg-sidebar-accent/70 cursor-not-allowed")}
+              disabled={styleAsLocked} // Disable button if feature is locked
             >
-              <Link href={item.href}>
+              <Link href={item.href} aria-disabled={styleAsLocked} tabIndex={styleAsLocked ? -1 : undefined}>
                 <item.icon />
                 <span className="flex items-center">
                   {item.label}
