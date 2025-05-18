@@ -12,7 +12,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           <SidebarTrigger /> {/* Removed md:hidden */}
           <Link href="/" className="flex items-center space-x-2">
-            <Logo className="h-8 w-auto" />
+            <Logo className="h-7 sm:h-8 w-auto" /> {/* Adjusted logo size for mobile */}
           </Link>
         </div>
         

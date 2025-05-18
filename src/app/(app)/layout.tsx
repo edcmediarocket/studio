@@ -21,7 +21,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
       <Sidebar collapsible="none" variant="sidebar" className="border-r border-sidebar-border">
         <SidebarHeader className="p-4">
           <Link href="/" className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
-            <Logo className="h-8 w-auto" />
+            <Logo className="h-7 sm:h-8 w-auto" />
           </Link>
           {/* Icon version for collapsed state */}
           <Link href="/" className="hidden group-data-[collapsible=icon]:flex items-center justify-center">
@@ -50,7 +50,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
       </Sidebar>
       <SidebarInset>
         <Header />
-        <main className="flex-1 p-4 md:p-8 pt-6 overflow-y-auto">
+        <main className="flex-1 p-3 sm:p-4 md:p-6 pt-4 overflow-y-auto">
           {children}
         </main>
       </SidebarInset>

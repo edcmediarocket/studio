@@ -48,7 +48,7 @@ export function AiChatAssistant() {
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: "bot",
-        text: result.answer,
+        text: result.adviceDetail, // Corrected based on GetCoinAdviceOutputSchema
       };
       setMessages((prev) => [...prev, botMessage]);
     } catch (err) {
@@ -74,7 +74,7 @@ export function AiChatAssistant() {
   }, [messages]);
 
   return (
-    <Card className="shadow-lg w-full max-w-2xl mx-auto flex flex-col h-[70vh]">
+    <Card className="shadow-lg w-full max-w-2xl mx-auto flex flex-col h-[65vh] min-h-[400px] max-h-[700px]">
       <CardHeader>
         <CardTitle className="flex items-center text-2xl text-primary">
           <Bot className="mr-2 h-6 w-6" /> AI Coin Advisor
