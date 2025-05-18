@@ -3,8 +3,11 @@
 
 import { SignalCard } from "@/components/dashboard/signal-card";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Signal as SignalIcon } from "lucide-react"; // Renamed to avoid conflict
+import { Button } from "@/components/ui/button"; // Import Button
+import { Signal as SignalIcon, Zap } from "lucide-react"; // Renamed to avoid conflict, Added Zap
 import { useState, useEffect } from 'react';
+import { useTier, type UserTier } from "@/context/tier-context"; // Import useTier and UserTier
+import Link from "next/link"; // Import Link
 
 // Placeholder signal data - now with more detailed analysis
 const allSignals = [
@@ -64,39 +67,22 @@ const allSignals = [
   },
 ];
 
-// Example of how signals might be filtered by tier
-const getTieredSignals = (tier: string) => {
-  // In a real app, 'tier' would come from user authentication / subscription status
+const getTieredSignals = (tier: UserTier) => {
   if (tier === 'Pro') {
-    return allSignals; // Pro users get all signals
+    return allSignals;
   } else if (tier === 'Basic') {
-    return allSignals.slice(0, 2); // Basic users get top 2 (example)
+    return allSignals.slice(0, 3); // Basic users get top 3
   }
-  return allSignals.slice(0, 1); // Free users get 1 (example)
+  return allSignals.slice(0, 1); // Free users get 1
 };
 
 export default function SignalsPage() {
-  const [currentUserTier, setCurrentUserTier] = useState('Free'); // Placeholder for user tier
-  const [signalsToShow, setSignalsToShow] = useState(getTieredSignals(currentUserTier));
-
-  // Simulate fetching user tier and updating signals
-  useEffect(() => {
-    // In a real app, fetch user's actual tier. For demo, cycle through tiers:
-    // const tiers = ['Free', 'Basic', 'Pro'];
-    // const randomTier = tiers[Math.floor(Math.random() * tiers.length)];
-    // setCurrentUserTier(randomTier);
-    // For now, let's assume it's fetched and set.
-  }, []);
+  const { currentTier, setCurrentTier } = useTier(); // Use TierContext
+  const [signalsToShow, setSignalsToShow] = useState(getTieredSignals(currentTier));
 
   useEffect(() => {
-    setSignalsToShow(getTieredSignals(currentUserTier));
-  }, [currentUserTier]);
-
-  // Placeholder function to simulate changing user tier for demonstration
-  const changeTier = (newTier: string) => {
-    setCurrentUserTier(newTier);
-  };
-
+    setSignalsToShow(getTieredSignals(currentTier));
+  }, [currentTier]);
 
   return (
     <div className="space-y-8">
@@ -110,21 +96,31 @@ export default function SignalsPage() {
       </div>
 
       {/* Demo buttons to change tier - remove in production */}
-      <div className="flex gap-2 my-4 p-4 border rounded-md bg-card">
-        <p className="text-sm text-muted-foreground self-center">Demo: Change Tier</p>
-        <button onClick={() => changeTier('Free')} className="p-2 bg-muted rounded hover:bg-primary/20 text-xs">Free</button>
-        <button onClick={() => changeTier('Basic')} className="p-2 bg-muted rounded hover:bg-primary/20 text-xs">Basic</button>
-        <button onClick={() => changeTier('Pro')} className="p-2 bg-muted rounded hover:bg-primary/20 text-xs">Pro</button>
-        <p className="text-sm self-center ml-auto">Current Tier: <span className="font-semibold text-neon">{currentUserTier}</span></p>
-      </div>
+      <Card className="shadow-md">
+        <CardHeader>
+            <CardTitle className="text-lg">Demo: Simulate Tier Change</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2 items-center">
+            <Button onClick={() => setCurrentTier('Free')} variant={currentTier === 'Free' ? 'default' : 'outline'} size="sm" className="text-xs">Set to Free</Button>
+            <Button onClick={() => setCurrentTier('Basic')} variant={currentTier === 'Basic' ? 'default' : 'outline'} size="sm" className="text-xs">Set to Basic</Button>
+            <Button onClick={() => setCurrentTier('Pro')} variant={currentTier === 'Pro' ? 'default' : 'outline'} size="sm" className="text-xs">Set to Pro</Button>
+            <p className="text-sm self-center ml-auto">Current Tier: <span className="font-semibold text-neon">{currentTier}</span></p>
+        </CardContent>
+      </Card>
 
 
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl">Active Signals & Analysis</CardTitle>
           <CardDescription>
-            Displaying {signalsToShow.length} signal(s) with detailed AI analysis based on your <span className="text-neon">{currentUserTier}</span> tier.
-            {currentUserTier !== 'Pro' && " Upgrade for more signals and deeper insights."}
+            Displaying {signalsToShow.length} signal(s) with detailed AI analysis based on your <span className="text-neon">{currentTier}</span> tier.
+            {currentTier !== 'Pro' && (
+                <Button asChild variant="link" className="px-1 text-neon hover:text-neon/80">
+                    <Link href="/account#subscription">
+                        Upgrade for more signals and deeper insights <Zap className="ml-1 h-4 w-4" />
+                    </Link>
+                </Button>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>

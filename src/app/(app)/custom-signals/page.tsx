@@ -3,8 +3,16 @@
 
 import { CustomSignalGenerator } from "@/components/tools/custom-signal-generator";
 import { SlidersHorizontal } from "lucide-react";
+import { useTier } from "@/context/tier-context";
+import { UpgradePrompt } from "@/components/shared/upgrade-prompt";
 
 export default function CustomSignalsPage() {
+  const { currentTier } = useTier();
+
+  if (currentTier !== "Pro") {
+    return <UpgradePrompt featureName="Customizable AI Signals" requiredTier="Pro" />;
+  }
+
   return (
     <div className="space-y-8">
       <div className="mb-6 md:mb-8">

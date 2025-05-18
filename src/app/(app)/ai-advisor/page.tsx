@@ -3,8 +3,16 @@
 
 import { AiChatAssistant } from "@/components/tools/ai-chat-assistant";
 import { BotMessageSquare } from "lucide-react";
+import { useTier } from "@/context/tier-context";
+import { UpgradePrompt } from "@/components/shared/upgrade-prompt";
 
 export default function AiAdvisorPage() {
+  const { currentTier } = useTier();
+
+  if (currentTier !== "Pro") {
+    return <UpgradePrompt featureName="AI Advisor" requiredTier="Pro" />;
+  }
+
   return (
     <div className="space-y-8">
       <div className="mb-6 md:mb-8">

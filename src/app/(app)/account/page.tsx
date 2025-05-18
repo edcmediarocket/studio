@@ -1,3 +1,4 @@
+
 "use client";
 
 import { SubscriptionTiers } from "@/components/account/subscription-tiers";
@@ -6,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserCircle, Edit3 } from "lucide-react";
+import { UserCircle, Edit3, ShoppingCart } from "lucide-react"; // Added ShoppingCart
 import { useState, useEffect } from 'react';
+import { useTier } from '@/context/tier-context'; // Import useTier
 
 export default function AccountPage() {
-  // Placeholder user data
+  const { currentTier, setCurrentTier } = useTier(); // Use the tier context
   const [userName, setUserName] = useState("Meme Lord");
   const [userEmail, setUserEmail] = useState("lord@memeprophet.com");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -18,6 +20,7 @@ export default function AccountPage() {
   // Simulate fetching user data
   useEffect(() => {
     // In a real app, fetch from Firebase Auth / Firestore
+    // And also fetch user's current subscription tier
   }, []);
 
   return (
@@ -27,7 +30,7 @@ export default function AccountPage() {
           <UserCircle className="mr-3 h-8 w-8" /> Account Management
         </h1>
         <p className="text-lg text-muted-foreground">
-          Manage your profile, subscription, and settings.
+          Manage your profile, subscription, and settings. Current Tier: <span className="font-semibold text-neon">{currentTier}</span>
         </p>
       </div>
 
@@ -80,9 +83,18 @@ export default function AccountPage() {
         </CardContent>
       </Card>
       
-      <div id="subscription">
-        <SubscriptionTiers />
-      </div>
+      <Card className="shadow-lg" id="subscription"> {/* Added ID for deep linking */}
+        <CardHeader>
+          <CardTitle className="text-2xl text-primary flex items-center">
+            <ShoppingCart className="mr-2 h-6 w-6" /> Subscription Plans
+          </CardTitle>
+          <CardDescription>Choose the plan that best fits your meme coin trading strategy. Your current tier is <span className="font-semibold text-neon">{currentTier}</span>.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            {/* Pass currentTier and setCurrentTier to SubscriptionTiers */}
+            <SubscriptionTiers currentActiveTier={currentTier} onTierChange={setCurrentTier} />
+        </CardContent>
+      </Card>
 
       {/* Placeholder for other settings like notifications, API keys etc. */}
     </div>
