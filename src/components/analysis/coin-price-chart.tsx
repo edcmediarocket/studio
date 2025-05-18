@@ -69,7 +69,6 @@ export function CoinPriceChart({ coinName, data, loading, error }: CoinPriceChar
     price: item.close,
   }));
 
-  // Determine if prices are very small to adjust Y-axis formatting
   const hasVerySmallPrices = data.some(d => d.close < 0.01 && d.close !== 0);
 
   return (
@@ -78,15 +77,15 @@ export function CoinPriceChart({ coinName, data, loading, error }: CoinPriceChar
         <CardTitle className="text-xl text-primary">Price Chart: {coinName}</CardTitle>
         <CardDescription>Closing prices over the last 30 days (USD).</CardDescription>
       </CardHeader>
-      <CardContent className="h-[50vh] sm:h-[400px] p-0 sm:p-2 md:p-4">
+      <CardContent className="h-[50vh] sm:h-[400px] p-0"> {/* Changed padding to p-0 */}
         <ChartContainer config={chartConfig} className="w-full h-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={formattedData}
               margin={{
                 top: 5,
-                right: 5, 
-                left: 0, 
+                right: 10, // Increased right margin
+                left: 5,  // Increased left margin slightly
                 bottom: 5,
               }}
             >
@@ -97,7 +96,9 @@ export function CoinPriceChart({ coinName, data, loading, error }: CoinPriceChar
                 tickLine={false}
                 axisLine={false}
                 dy={5}
-                fontSize={10} 
+                fontSize={10}
+                interval="preserveStartEnd" // Reduce tick density
+                // Or use a number e.g. interval={Math.floor(formattedData.length / 5)} to show ~5 ticks
               />
               <YAxis
                 stroke="hsl(var(--muted-foreground))"
@@ -106,17 +107,16 @@ export function CoinPriceChart({ coinName, data, loading, error }: CoinPriceChar
                 tickFormatter={(value) => {
                     const numValue = Number(value);
                     if (isNaN(numValue)) return '$--';
-                    // If any price is very small, use more precision for all Y-axis ticks for consistency on that chart
                     const fixedDigits = hasVerySmallPrices ? (numValue === 0 ? 2 : 6) : (numValue < 1 && numValue !== 0 ? 4 : 2);
                     return `$${numValue.toFixed(fixedDigits)}`;
                 }}
                 domain={['auto', 'auto']}
-                width={60} 
+                width={55} // Reduced YAxis width
                 fontSize={10}
               />
               <Tooltip
-                content={<ChartTooltipContent 
-                            indicator="dot" 
+                content={<ChartTooltipContent
+                            indicator="dot"
                             formatter={(value, name) => {
                                 const numValue = Number(value);
                                 if (name === 'price') {
