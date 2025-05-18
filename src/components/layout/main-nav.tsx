@@ -37,7 +37,9 @@ export function MainNav() {
   return (
     <SidebarMenu>
       {navItems.map((item) => {
-        const isLocked = item.isProFeature && currentTier !== "Pro";
+        // Determine if the feature should be visually styled as locked for the current user
+        // This is true if it's a pro feature AND the user is on Free or Basic tier.
+        const styleAsLocked = item.isProFeature && (currentTier === "Free" || currentTier === "Basic");
         
         return (
           <SidebarMenuItem key={item.href}>
@@ -45,12 +47,15 @@ export function MainNav() {
               asChild
               isActive={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href))}
               tooltip={{
-                children: isLocked ? `${item.label} (Pro Feature)` : item.label, 
+                children: item.isProFeature ? `${item.label} (Pro/Premium Feature)` : item.label, 
                 className: "bg-popover text-popover-foreground"
               }}
-              className={cn(isLocked && "opacity-70 hover:bg-sidebar-accent/50 cursor-default")} // Basic styling for locked items
+              // Apply dimming style if it's a Pro feature and user is on Free/Basic.
+              // Navigation is allowed; page itself will show UpgradePrompt.
+              className={cn(styleAsLocked && "opacity-70 hover:bg-sidebar-accent/80")}
             >
-              <Link href={item.href} onClick={(e) => { if (isLocked) e.preventDefault(); /* Optional: show toast or modal */ }}>
+              {/* Navigation is no longer prevented here by onClick; page handles access */}
+              <Link href={item.href}>
                 <item.icon />
                 <span className="flex items-center">
                   {item.label}
