@@ -1,11 +1,10 @@
-
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, BarChart2, Eye, Settings2, UserCircle, BotMessageSquare, Signal, Calculator, GitCompareArrows, Activity, SlidersHorizontal } from "lucide-react";
+import { LayoutDashboard, BarChart2, Eye, Settings2, UserCircle, BotMessageSquare, Signal, Calculator, GitCompareArrows, Activity, SlidersHorizontal, Newspaper } from "lucide-react";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from "@/components/ui/sidebar";
 
 interface NavItem {
@@ -20,6 +19,7 @@ const navItems: NavItem[] = [
   { href: "/signals", label: "AI Signals", icon: Signal },
   { href: "/custom-signals", label: "Custom Signals", icon: SlidersHorizontal },
   { href: "/analysis", label: "AI Analysis", icon: BarChart2 },
+  { href: "/news-buzz", label: "News & Buzz", icon: Newspaper },
   { href: "/watchlist", label: "Watchlist", icon: Eye },
   { href: "/roi-calculator", label: "ROI Calculator", icon: Calculator },
   { href: "/ai-advisor", label: "AI Advisor", icon: BotMessageSquare },
