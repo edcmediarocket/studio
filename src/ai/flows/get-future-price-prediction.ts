@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Provides AI-generated speculative future price predictions for a meme coin, considering its current price.
@@ -32,7 +33,7 @@ const GetFuturePricePredictionOutputSchema = z.object({
   reasoning: z
     .string()
     .describe(
-      'A brief explanation of the factors considered for these predictions (e.g., market trends, potential catalysts, coin-specific news). Always highlight the speculative nature.'
+      'A brief explanation of the factors considered for these predictions (e.g., market trends, potential catalysts, coin-specific news). Always highlight the speculative nature. This reasoning MUST explicitly state and use the provided currentPriceUSD if available.'
     ),
   disclaimer: z
     .string()
@@ -60,14 +61,20 @@ Generate predictions for the following timeframes:
 
 For each timeframe, provide a 'predictedPrice' as a string (e.g., "$0.1234", "May test $0.50").
 
-**CRITICAL INSTRUCTION:** If a 'currentPriceUSD' of {{{currentPriceUSD}}} USD is provided, your 'predictedPrice' for each timeframe **MUST** be a plausible future value that logically evolves from this current price.
-*   Your predictions should generally reflect potential percentage changes (e.g., +/- 5-50% for shorter terms, potentially wider for longer terms) from the 'currentPriceUSD'.
-*   Do **NOT** predict extremely low values (like $0.0001) if the 'currentPriceUSD' is significantly higher (e.g., $1.00 or more).
-*   If 'currentPriceUSD' is $1.00, a 1-week prediction might be $1.10 or $0.90, but **NOT** $0.0001. Your predictions MUST be scaled relative to the provided 'currentPriceUSD'.
-*   If 'currentPriceUSD' is $0.000050, then predictions should be in a similar order of magnitude (e.g., $0.000055 or $0.000045).
+**CRITICAL INSTRUCTIONS IF currentPriceUSD ({{{currentPriceUSD}}} USD) IS PROVIDED:**
 
-Also include an overall 'confidenceLevel' ('High', 'Medium', 'Low') for these collective predictions.
-Provide 'reasoning' that explains the general basis for your predictions. This reasoning must consider factors like simulated market trends, potential catalysts (e.g., hype cycles, roadmap milestones if known for meme coins), coin-specific sentiment, and critically, the provided 'currentPriceUSD'. When discussing current market conditions or the coin's current standing in your 'reasoning', ensure you refer to the provided 'currentPriceUSD' (e.g., "Given the current price of {{{currentPriceUSD}}} USD, our analysis considers..."). Do not invent or use a different current price in your textual explanation. Emphasize the highly speculative nature of meme coin price movements, but ensure your target prices are contextually relevant to the input price.
+1.  **Reasoning Text**: Your 'reasoning' field **MUST** explicitly state the current price used for your analysis. For example, if {{{currentPriceUSD}}} USD is the input, your reasoning should include a phrase like "Given the current price of {{{currentPriceUSD}}} USD, our analysis considers..." or "Starting from the current price of {{{currentPriceUSD}}} USD...". **DO NOT use any other value for the current price in your reasoning text if {{{currentPriceUSD}}} is available.**
+
+2.  **Numerical Predictions**: Your 'predictedPrice' values for each timeframe **MUST** be mathematically plausible future values derived from the input 'currentPriceUSD' ({{{currentPriceUSD}}} USD).
+    *   They should represent speculative percentage changes (e.g., +/- 5-50% for shorter terms, potentially wider for longer terms) directly from this 'currentPriceUSD'.
+    *   For example, if 'currentPriceUSD' is {{{currentPriceUSD}}} USD, a short-term prediction should be a value like {{{currentPriceUSD}}} * 1.10 or {{{currentPriceUSD}}} * 0.90, NOT an arbitrary low number unless that represents a realistic crash from {{{currentPriceUSD}}} USD.
+    *   If 'currentPriceUSD' is {{{currentPriceUSD}}} USD, do **NOT** predict $0.0001 unless a crash to that level from {{{currentPriceUSD}}} is the specific prediction you are making and justifying.
+    *   The scale of your predictions **MUST** directly reflect the scale of 'currentPriceUSD' ({{{currentPriceUSD}}} USD).
+
+If 'currentPriceUSD' is NOT provided, you may make more general estimations, but clearly state that they are not based on a specific current price.
+
+Include an overall 'confidenceLevel' ('High', 'Medium', 'Low') for these collective predictions.
+Provide 'reasoning' as described above, explaining the general basis for your predictions considering factors like simulated market trends, potential catalysts, and coin-specific sentiment.
 Ensure the 'disclaimer' is included.
 The 'coinName' in the output should match the input.
 
@@ -75,7 +82,7 @@ Format your response strictly according to the JSON output schema.
 Example for a prediction (if current price was $0.000020 USD): { timeframe: "1 Month", predictedPrice: "$0.000025" }
 Example for a prediction (if current price was $2.00 USD): { timeframe: "1 Week", predictedPrice: "$2.15" }
 
-Make the predictions sound plausible for a meme coin but clearly speculative, and **DIRECTLY AND LOGICALLY RELATED** to the current price if one is given.
+Make the predictions sound plausible for a meme coin but clearly speculative, and **ALWAYS DIRECTLY AND LOGICALLY RELATED** to the current price ({{{currentPriceUSD}}} USD) if one is given, both in text and in predicted values.
 `,
 });
 
