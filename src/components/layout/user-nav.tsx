@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogIn, LogOut, User, Settings, CreditCard, Loader2 } from "lucide-react";
 import { useState, useEffect } from 'react';
-import { auth } from '@/lib/firebase'; // Import Firebase auth
+import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, signOut, type User as FirebaseUser } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -24,29 +24,19 @@ export function UserNav() {
   const router = useRouter();
   const { toast } = useToast();
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Start with loading true
+  const [authLoading, setAuthLoading] = useState(true); // Renamed for clarity
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true); // Set to true after the component mounts on the client
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setFirebaseUser(user);
-      setIsLoading(false);
+      setAuthLoading(false);
     });
-    return () => unsubscribe(); // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      toast({ title: "Logged Out", description: "You have been successfully logged out." });
-      // Optional: redirect to login or home page after logout
-      router.push('/login'); 
-    } catch (error: any) {
-      console.error("Logout error:", error);
-      toast({ title: "Logout Failed", description: error.message || "Could not log out.", variant: "destructive" });
-    }
-  };
-
-  if (isLoading) {
+  if (!isMounted || authLoading) { // Check isMounted here
     return (
       <Button variant="ghost" size="icon" className="relative h-10 w-10 rounded-full">
         <Loader2 className="h-5 w-5 animate-spin" />
@@ -63,6 +53,17 @@ export function UserNav() {
       </Button>
     );
   }
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast({ title: "Logged Out", description: "You have been successfully logged out." });
+      router.push('/login'); 
+    } catch (error: any) {
+      console.error("Logout error:", error);
+      toast({ title: "Logout Failed", description: error.message || "Could not log out.", variant: "destructive" });
+    }
+  };
 
   const displayName = firebaseUser.displayName || firebaseUser.email?.split('@')[0] || "User";
   const userEmail = firebaseUser.email || "No email provided";
