@@ -49,7 +49,7 @@ export function AiChatAssistant() {
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: "bot",
-        text: result.adviceDetail, // Corrected based on GetCoinAdviceOutputSchema
+        text: result.adviceDetail,
       };
       setMessages((prev) => [...prev, botMessage]);
     } catch (err) {
@@ -75,7 +75,7 @@ export function AiChatAssistant() {
   }, [messages]);
 
   return (
-    <Card className="shadow-lg w-full max-w-2xl mx-auto flex flex-col min-h-[60vh] sm:min-h-[500px] sm:h-[65vh] sm:max-h-[700px]">
+    <Card className="shadow-lg w-full max-w-2xl flex flex-col min-h-[60vh] sm:min-h-[500px] sm:h-[65vh] sm:max-h-[700px]"> {/* Removed mx-auto */}
       <CardHeader>
         <CardTitle className="flex items-center text-2xl text-primary">
           <Bot className="mr-2 h-6 w-6" /> AI Coin Advisor
@@ -104,7 +104,7 @@ export function AiChatAssistant() {
                 )}
                 <div
                   className={cn(
-                    "max-w-[70%] rounded-lg p-3 text-sm shadow",
+                    "max-w-[70%] rounded-lg p-3 text-base sm:text-sm shadow", // Ensure mobile text is base
                     msg.type === "user"
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground"

@@ -53,7 +53,7 @@ export function RoiCalculator() {
   };
 
   return (
-    <Card className="shadow-lg w-full max-w-lg mx-auto">
+    <Card className="shadow-lg w-full max-w-lg"> {/* Removed mx-auto to allow full width on mobile via parent */}
       <CardHeader>
         <CardTitle className="flex items-center text-2xl text-primary">
           <Calculator className="mr-2 h-6 w-6" /> AI Meme Coin ROI Calculator
@@ -149,10 +149,9 @@ export function RoiCalculator() {
             
             <div>
               <h4 className="font-semibold text-primary flex items-center"><Info className="w-4 h-4 mr-2"/>Reasoning:</h4>
-              <p className="text-base sm:text-sm text-muted-foreground mt-1 p-2 bg-muted rounded-md whitespace-pre-wrap">{roiData.detailedReasoning || "No reasoning provided."}</p> {/* Updated from roiData.reasoning */}
+              <p className="text-base sm:text-sm text-muted-foreground mt-1 p-2 bg-muted rounded-md whitespace-pre-wrap">{roiData.detailedReasoning || "No reasoning provided."}</p>
             </div>
-            {/* Display alternative scenarios, risks, catalysts if needed - structure similar to reasoning */}
-             {roiData.disclaimer && (
+            {roiData.disclaimer && (
                 <p className="text-xs text-muted-foreground pt-2 border-t border-dashed mt-3">{roiData.disclaimer}</p>
             )}
           </div>
