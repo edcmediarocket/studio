@@ -54,6 +54,9 @@ export default function AppLayout({ children }: PropsWithChildren) {
           <main className="flex-1 py-2 px-0 sm:p-4 md:p-6 overflow-y-auto overflow-x-hidden">
             {children}
           </main>
+          <footer className="py-4 px-4 sm:px-6 md:px-8 border-t border-border/40 text-center text-xs text-muted-foreground">
+            ©️ 2025 Designed By EDC Media
+          </footer>
         </SidebarInset>
       </SidebarProvider>
     </TierProvider>
