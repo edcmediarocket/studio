@@ -124,7 +124,7 @@ const InsightCategoryCard: React.FC<InsightCategoryCardProps> = ({ title, icon, 
                 <CardTitle className="text-lg">{title}</CardTitle>
             </CardHeader>
             <CardContent>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{content || "No specific insights available from AI for this category."}</p>
+                <p className="text-base sm:text-sm text-muted-foreground whitespace-pre-wrap">{content || "No specific insights available from AI for this category."}</p>
             </CardContent>
         </Card>
     );

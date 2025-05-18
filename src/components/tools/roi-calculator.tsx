@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -148,8 +149,12 @@ export function RoiCalculator() {
             
             <div>
               <h4 className="font-semibold text-primary flex items-center"><Info className="w-4 h-4 mr-2"/>Reasoning:</h4>
-              <p className="text-sm text-muted-foreground mt-1 p-2 bg-muted rounded-md whitespace-pre-wrap">{roiData.reasoning || "No reasoning provided."}</p>
+              <p className="text-base sm:text-sm text-muted-foreground mt-1 p-2 bg-muted rounded-md whitespace-pre-wrap">{roiData.detailedReasoning || "No reasoning provided."}</p> {/* Updated from roiData.reasoning */}
             </div>
+            {/* Display alternative scenarios, risks, catalysts if needed - structure similar to reasoning */}
+             {roiData.disclaimer && (
+                <p className="text-xs text-muted-foreground pt-2 border-t border-dashed mt-3">{roiData.disclaimer}</p>
+            )}
           </div>
         )}
       </CardContent>

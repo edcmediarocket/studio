@@ -89,10 +89,10 @@ export function PriceTrendAnalysisCard() {
             <div>
               <h4 className="font-medium text-muted-foreground flex items-center mb-1"><HelpCircle className="text-primary mr-2 h-4 w-4"/>Key Driving Factors:</h4>
               {analysis.keyDrivingFactors.length > 0 ? (
-                <ul className="list-disc list-inside space-y-1 pl-2 text-sm text-muted-foreground">
+                <ul className="list-disc list-inside space-y-1 pl-2 text-base sm:text-sm text-muted-foreground">
                   {analysis.keyDrivingFactors.map((factor, index) => <li key={index}>{factor}</li>)}
                 </ul>
-              ) : <p className="text-sm text-muted-foreground italic">No specific key factors identified by AI.</p>}
+              ) : <p className="text-base sm:text-sm text-muted-foreground italic">No specific key factors identified by AI.</p>}
             </div>
 
             <InfoItem icon={<HelpCircle className="text-primary"/>} label="Potential Scenarios" value={analysis.potentialScenarios} />
@@ -127,6 +127,6 @@ interface InfoItemProps {
 const InfoItem: React.FC<InfoItemProps> = ({ icon, label, value}) => (
     <div>
         <h4 className="font-medium text-muted-foreground flex items-center mb-1">{icon} <span className="ml-2">{label}:</span></h4>
-        <p className="text-sm text-muted-foreground whitespace-pre-wrap pl-2">{value}</p>
+        <p className="text-base sm:text-sm text-muted-foreground whitespace-pre-wrap pl-2">{value}</p>
     </div>
 );

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -74,7 +75,7 @@ export function AiChatAssistant() {
   }, [messages]);
 
   return (
-    <Card className="shadow-lg w-full max-w-2xl mx-auto flex flex-col h-[65vh] min-h-[400px] max-h-[700px]">
+    <Card className="shadow-lg w-full max-w-2xl mx-auto flex flex-col min-h-[60vh] sm:min-h-[500px] sm:h-[65vh] sm:max-h-[700px]">
       <CardHeader>
         <CardTitle className="flex items-center text-2xl text-primary">
           <Bot className="mr-2 h-6 w-6" /> AI Coin Advisor

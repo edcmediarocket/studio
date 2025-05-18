@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -110,7 +111,7 @@ export function SentimentAnalysisCard() {
                 <CardTitle className="text-lg flex items-center"><Newspaper className="mr-2 h-5 w-5 text-primary" />Sentiment Breakdown</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{sentimentData.sentimentBreakdown || "No breakdown available."}</p>
+                <p className="text-base sm:text-sm text-muted-foreground whitespace-pre-wrap">{sentimentData.sentimentBreakdown || "No breakdown available."}</p>
               </CardContent>
             </Card>
             
@@ -119,7 +120,7 @@ export function SentimentAnalysisCard() {
                 <CardTitle className="text-lg flex items-center"><MessageSquareText className="mr-2 h-5 w-5 text-primary" />Key Discussion Points</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{sentimentData.keyDiscussionPoints || "No key discussion points identified."}</p>
+                <p className="text-base sm:text-sm text-muted-foreground whitespace-pre-wrap">{sentimentData.keyDiscussionPoints || "No key discussion points identified."}</p>
               </CardContent>
             </Card>
           </div>

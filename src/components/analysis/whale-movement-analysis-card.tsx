@@ -81,10 +81,10 @@ export function WhaleMovementAnalysisCard() {
             <div>
               <h4 className="font-medium text-muted-foreground flex items-center mb-1"><Search className="text-primary mr-2 h-4 w-4"/>Potential Detection Indicators:</h4>
               {analysis.detectionIndicators.length > 0 ? (
-                <ul className="list-disc list-inside space-y-1 pl-2 text-sm text-muted-foreground">
+                <ul className="list-disc list-inside space-y-1 pl-2 text-base sm:text-sm text-muted-foreground">
                   {analysis.detectionIndicators.map((indicator, index) => <li key={index}>{indicator}</li>)}
                 </ul>
-              ) : <p className="text-sm text-muted-foreground italic">No specific indicators identified by AI.</p>}
+              ) : <p className="text-base sm:text-sm text-muted-foreground italic">No specific indicators identified by AI.</p>}
             </div>
             
             {analysis.dataCaveat && (
@@ -112,6 +112,6 @@ interface InfoItemProps {
 const InfoItem: React.FC<InfoItemProps> = ({ icon, label, value}) => (
     <div>
         <h4 className="font-medium text-muted-foreground flex items-center mb-1">{icon} <span className="ml-2">{label}:</span></h4>
-        <p className="text-sm text-muted-foreground whitespace-pre-wrap pl-2">{value}</p>
+        <p className="text-base sm:text-sm text-muted-foreground whitespace-pre-wrap pl-2">{value}</p>
     </div>
 );
