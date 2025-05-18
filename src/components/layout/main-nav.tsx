@@ -43,22 +43,22 @@ export function MainNav() {
     <SidebarMenu>
       {navItems.map((item) => {
         let styleAsLocked = false;
+        let featureLockedForAria = false; // For aria-disabled
         let tooltipText = item.label;
-        let featureLocked = false;
         
         if (item.isPremiumFeature) {
-            if (currentTier !== "Premium" && currentTier !== "Pro") { // Pro also gets premium features
+            if (currentTier !== "Premium" && currentTier !== "Pro") { 
                 styleAsLocked = true;
-                featureLocked = true;
-                tooltipText = `${item.label} (Premium Feature)`;
+                featureLockedForAria = true;
+                tooltipText = `${item.label} (Premium Feature - Upgrade to Access)`;
             } else {
                  tooltipText = `${item.label} (Premium Feature)`;
             }
         } else if (item.isProFeature) {
-            if (currentTier !== "Pro" && currentTier !== "Premium") { // Premium also gets pro features
+            if (currentTier !== "Pro" && currentTier !== "Premium") { 
                 styleAsLocked = true;
-                featureLocked = true;
-                tooltipText = `${item.label} (Pro/Premium Feature)`;
+                featureLockedForAria = true;
+                tooltipText = `${item.label} (Pro/Premium Feature - Upgrade to Access)`;
             } else {
                 tooltipText = `${item.label} (Pro/Premium Feature)`;
             }
@@ -73,9 +73,13 @@ export function MainNav() {
                 children: tooltipText, 
                 className: "bg-popover text-popover-foreground"
               }}
-              className={cn(styleAsLocked && "opacity-60 hover:bg-sidebar-accent/70")}
+              className={cn(
+                styleAsLocked 
+                  ? "opacity-50 blur-sm pointer-events-none" 
+                  : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              )}
             >
-              <Link href={item.href} aria-disabled={featureLocked} tabIndex={featureLocked ? -1 : undefined}>
+              <Link href={item.href} aria-disabled={featureLockedForAria} tabIndex={featureLockedForAria ? -1 : undefined}>
                 <item.icon />
                 <span className="flex items-center">
                   {item.label}
@@ -89,4 +93,3 @@ export function MainNav() {
     </SidebarMenu>
   );
 }
-
