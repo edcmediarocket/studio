@@ -1,8 +1,10 @@
+
 import { RoiCalculator } from "@/components/tools/roi-calculator";
 import { AiChatAssistant } from "@/components/tools/ai-chat-assistant";
 import { CoinComparisonTool } from "@/components/tools/coin-comparison-tool";
+import { OnChainDataVisualizer } from "@/components/tools/on-chain-data-visualizer"; // New import
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calculator, BotMessageSquare, GitCompareArrows, Settings2 } from "lucide-react";
+import { Calculator, BotMessageSquare, GitCompareArrows, Settings2, Activity } from "lucide-react"; // Added Activity
 
 export default function ToolsPage() {
   return (
@@ -17,7 +19,7 @@ export default function ToolsPage() {
       </div>
 
       <Tabs defaultValue="roi-calculator" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 mb-6">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6"> {/* Updated grid classes */}
           <TabsTrigger value="roi-calculator" className="text-base py-3">
             <Calculator className="mr-2 h-5 w-5" /> ROI Calculator
           </TabsTrigger>
@@ -26,6 +28,9 @@ export default function ToolsPage() {
           </TabsTrigger>
           <TabsTrigger value="coin-comparison" className="text-base py-3">
             <GitCompareArrows className="mr-2 h-5 w-5" /> Coin Comparison
+          </TabsTrigger>
+          <TabsTrigger value="on-chain-visualizer" className="text-base py-3"> {/* New Tab Trigger */}
+            <Activity className="mr-2 h-5 w-5" /> On-Chain Data
           </TabsTrigger>
         </TabsList>
         
@@ -38,24 +43,10 @@ export default function ToolsPage() {
         <TabsContent value="coin-comparison" id="coin-comparison">
           <CoinComparisonTool />
         </TabsContent>
+        <TabsContent value="on-chain-visualizer" id="on-chain-visualizer"> {/* New Tab Content */}
+          <OnChainDataVisualizer />
+        </TabsContent>
       </Tabs>
-
-      {/* Placeholder for Real-time On-chain Data Visualization */}
-      {/* <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center text-2xl text-primary">
-            <Activity className="mr-2 h-6 w-6" /> On-Chain Data Visualization (Coming Soon)
-          </CardTitle>
-          <CardDescription>
-            Visualize real-time blockchain data for meme coins.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            This section will feature tools for visualizing on-chain metrics like holder distribution, transaction volume, and smart contract interactions.
-          </p>
-        </CardContent>
-      </Card> */}
     </div>
   );
 }
