@@ -26,7 +26,7 @@ const navItems: NavItem[] = [
   { href: "/narrative-engine", label: "Narrative Engine", icon: Lightbulb, isPremiumFeature: true }, 
   { href: "/onchain-intelligence", label: "On-Chain Intel", icon: DatabaseZap, isPremiumFeature: true }, 
   { href: "/market-anomalies", label: "Market Anomalies", icon: Siren, isPremiumFeature: true },
-  { href: "/confidence-dashboard", label: "Confidence Dashboard", icon: ShieldQuestion, isPremiumFeature: true }, // New
+  { href: "/confidence-dashboard", label: "Confidence Dashboard", icon: ShieldQuestion, isPremiumFeature: true },
   { href: "/watchlist", label: "Watchlist", icon: Eye },
   { href: "/roi-calculator", label: "ROI Calculator", icon: Calculator },
   { href: "/ai-advisor", label: "AI Advisor", icon: BotMessageSquare, isProFeature: true },
@@ -44,15 +44,22 @@ export function MainNav() {
       {navItems.map((item) => {
         let styleAsLocked = false;
         let tooltipText = item.label;
+        let featureLocked = false;
         
         if (item.isPremiumFeature) {
-            if (currentTier !== "Premium") {
+            if (currentTier !== "Premium" && currentTier !== "Pro") { // Pro also gets premium features
                 styleAsLocked = true;
+                featureLocked = true;
                 tooltipText = `${item.label} (Premium Feature)`;
+            } else {
+                 tooltipText = `${item.label} (Premium Feature)`;
             }
         } else if (item.isProFeature) {
-            if (currentTier !== "Pro" && currentTier !== "Premium") {
+            if (currentTier !== "Pro" && currentTier !== "Premium") { // Premium also gets pro features
                 styleAsLocked = true;
+                featureLocked = true;
+                tooltipText = `${item.label} (Pro/Premium Feature)`;
+            } else {
                 tooltipText = `${item.label} (Pro/Premium Feature)`;
             }
         }
@@ -66,10 +73,9 @@ export function MainNav() {
                 children: tooltipText, 
                 className: "bg-popover text-popover-foreground"
               }}
-              className={cn(styleAsLocked && "opacity-60 hover:bg-sidebar-accent/70 cursor-not-allowed")}
-              disabled={styleAsLocked} // Disable button if feature is locked
+              className={cn(styleAsLocked && "opacity-60 hover:bg-sidebar-accent/70")}
             >
-              <Link href={item.href} aria-disabled={styleAsLocked} tabIndex={styleAsLocked ? -1 : undefined}>
+              <Link href={item.href} aria-disabled={featureLocked} tabIndex={featureLocked ? -1 : undefined}>
                 <item.icon />
                 <span className="flex items-center">
                   {item.label}
@@ -83,3 +89,4 @@ export function MainNav() {
     </SidebarMenu>
   );
 }
+

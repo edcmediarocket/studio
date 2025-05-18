@@ -3,8 +3,17 @@
 
 import { NarrativeEngine } from "@/components/tools/narrative-engine";
 import { Lightbulb } from "lucide-react"; // Or MessagesSquare, Brain
+import { useTier } from "@/context/tier-context";
+import { UpgradePrompt } from "@/components/shared/upgrade-prompt";
 
 export default function NarrativeEnginePage() {
+  const { currentTier } = useTier();
+
+  // Premium or Pro can access this feature
+  if (currentTier !== "Premium" && currentTier !== "Pro") {
+    return <UpgradePrompt featureName="AI Narrative Engine" requiredTier="Premium" />;
+  }
+
   return (
     <div className="space-y-8">
       <div className="mb-6 md:mb-8">
@@ -19,3 +28,4 @@ export default function NarrativeEnginePage() {
     </div>
   );
 }
+

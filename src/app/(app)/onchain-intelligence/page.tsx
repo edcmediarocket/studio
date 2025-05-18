@@ -3,8 +3,17 @@
 
 import { OnChainIntelligenceScorer } from "@/components/tools/onchain-intelligence-scorer";
 import { DatabaseZap } from "lucide-react";
+import { useTier } from "@/context/tier-context";
+import { UpgradePrompt } from "@/components/shared/upgrade-prompt";
 
 export default function OnChainIntelligencePage() {
+  const { currentTier } = useTier();
+
+  // Premium or Pro can access this feature
+  if (currentTier !== "Premium" && currentTier !== "Pro") {
+    return <UpgradePrompt featureName="AI On-Chain Intelligence Scoring" requiredTier="Premium" />;
+  }
+
   return (
     <div className="space-y-8">
       <div className="mb-6 md:mb-8">
@@ -19,3 +28,4 @@ export default function OnChainIntelligencePage() {
     </div>
   );
 }
+
