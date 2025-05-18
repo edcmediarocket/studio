@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Provides AI-generated speculative future price predictions for a meme coin, considering its current price.
@@ -19,7 +18,7 @@ export type GetFuturePricePredictionInput = z.infer<typeof GetFuturePricePredict
 
 const PredictionTimeframeSchema = z.object({
   timeframe: z.string().describe('The prediction horizon (e.g., "1 Week", "1 Month").'),
-  predictedPrice: z.string().describe('The AI-estimated price for this timeframe (e.g., "$0.1234", "Could reach $1.00").'),
+  predictedPrice: z.string().describe('The AI-estimated price for this timeframe (e.g., "$0.1234", "Could reach $1.00"). This price MUST be a plausible future value relative to the currentPriceUSD if provided.'),
 });
 
 const GetFuturePricePredictionOutputSchema = z.object({
@@ -60,14 +59,16 @@ Generate predictions for the following timeframes:
 - 1 Year (if plausible to speculate this far for a meme coin)
 
 For each timeframe, provide a 'predictedPrice' as a string (e.g., "$0.1234", "May test $0.50").
+IMPORTANT: If a 'currentPriceUSD' of {{{currentPriceUSD}}} USD is provided, your 'predictedPrice' for each timeframe MUST be a plausible future value that logically evolves from this current price. For example, if current price is $1.00, a 1-week prediction might be $1.10 or $0.90, not $0.0001.
+
 Also include an overall 'confidenceLevel' ('High', 'Medium', 'Low') for these collective predictions.
-Provide 'reasoning' that explains the general basis for your predictions, mentioning factors like simulated market trends, potential catalysts (e.g., hype cycles, roadmap milestones if known for meme coins), and coin-specific sentiment. Critically, this reasoning must emphasize the highly speculative nature of meme coin price movements. If a current price was provided, factor that into your reasoning and targets.
+Provide 'reasoning' that explains the general basis for your predictions, mentioning factors like simulated market trends, potential catalysts (e.g., hype cycles, roadmap milestones if known for meme coins), and coin-specific sentiment. Critically, this reasoning must emphasize the highly speculative nature of meme coin price movements. Your reasoning should also consider the provided 'currentPriceUSD' if available.
 Ensure the 'disclaimer' is included.
 The 'coinName' in the output should match the input.
 
 Format your response strictly according to the JSON output schema.
-Example for a prediction: { timeframe: "1 Month", predictedPrice: "$0.000025" }
-Make the predictions sound plausible for a meme coin but clearly speculative.
+Example for a prediction (assuming current price was $0.000020): { timeframe: "1 Month", predictedPrice: "$0.000025" }
+Make the predictions sound plausible for a meme coin but clearly speculative, and directly related to the current price if one is given.
 `,
 });
 
