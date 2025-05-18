@@ -1,3 +1,4 @@
+
 import { config } from 'dotenv';
 config();
 
@@ -11,3 +12,4 @@ import '@/ai/flows/get-whale-movement-analysis.ts';
 import '@/ai/flows/get-coin-trading-signal.ts';
 import '@/ai/flows/get-customized-coin-trading-signal.ts';
 import '@/ai/flows/get-aggregated-coin-buzz.ts';
+import '@/ai/flows/detect-market-anomalies.ts';

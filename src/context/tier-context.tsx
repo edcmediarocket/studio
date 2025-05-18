@@ -14,7 +14,7 @@ interface TierContextType {
 const TierContext = createContext<TierContextType | undefined>(undefined);
 
 export function TierProvider({ children }: PropsWithChildren) {
-  const [currentTier, setCurrentTier] = useState<UserTier>("Free"); // Default to Free
+  const [currentTier, setCurrentTier] = useState<UserTier>("Premium"); // Default to Premium
 
   const value = useMemo(() => ({
     currentTier,
@@ -31,3 +31,4 @@ export function useTier() {
   }
   return context;
 }
+
