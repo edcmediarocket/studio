@@ -40,7 +40,7 @@ export default function LoginPage() {
           <Link href="/" className="inline-block mx-auto mb-4">
             <Logo className="h-12 w-auto" />
           </Link>
-          <CardTitle className="text-2xl">Welcome Back, Prophet!</CardTitle>
+          <CardTitle className="text-2xl">Welcome Back to Rocket Meme!</CardTitle>
           <CardDescription>
             Enter your credentials or sign in with Google to access your dashboard.
           </CardDescription>
@@ -65,7 +65,7 @@ export default function LoginPage() {
               <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input id="email" type="email" placeholder="prophet@example.com" required className="pl-10" />
+                <Input id="email" type="email" placeholder="user@rocketmeme.com" required className="pl-10" />
               </div>
             </div>
             <div className="grid gap-2">

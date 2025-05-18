@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Meme Prophet',
+  title: 'Rocket Meme',
   description: 'AI-Powered Meme Coin Analysis & Signals',
 };
 

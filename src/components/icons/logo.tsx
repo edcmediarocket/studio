@@ -7,7 +7,7 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
       viewBox="0 0 200 50"
       width="120"
       height="30"
-      aria-label="Meme Prophet Logo"
+      aria-label="Rocket Meme Logo"
       {...props}
     >
       <defs>
@@ -17,6 +17,7 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
         </linearGradient>
       </defs>
       <rect width="200" height="50" fill="transparent" />
+      {/* Simplified graphic for "Rocket Meme" - could be a stylized R or rocket shape */}
       <path d="M10 40 Q 15 10 20 40 L 25 15 L 30 40 Q 35 10 40 40" stroke="url(#logoGradient)" strokeWidth="3" fill="none" />
       <text
         x="50"
@@ -26,7 +27,7 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
         fontWeight="bold"
         fill="hsl(var(--foreground))"
       >
-        Meme Prophet
+        Rocket Meme
       </text>
     </svg>
   );

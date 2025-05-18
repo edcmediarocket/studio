@@ -14,7 +14,7 @@ import { useTier } from '@/context/tier-context'; // Import useTier
 export default function AccountPage() {
   const { currentTier, setCurrentTier } = useTier(); // Use the tier context
   const [userName, setUserName] = useState("Meme Lord");
-  const [userEmail, setUserEmail] = useState("lord@memeprophet.com");
+  const [userEmail, setUserEmail] = useState("lord@rocketmeme.com"); // Updated email domain
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   // Simulate fetching user data
@@ -30,7 +30,7 @@ export default function AccountPage() {
           <UserCircle className="mr-3 h-8 w-8" /> Account Management
         </h1>
         <p className="text-lg text-muted-foreground">
-          Manage your profile, subscription, and settings. Current Tier: <span className="font-semibold text-neon">{currentTier}</span>
+          Manage your profile, subscription, and settings for Rocket Meme. Current Tier: <span className="font-semibold text-neon">{currentTier}</span>
         </p>
       </div>
 
@@ -88,7 +88,7 @@ export default function AccountPage() {
           <CardTitle className="text-2xl text-primary flex items-center">
             <ShoppingCart className="mr-2 h-6 w-6" /> Subscription Plans
           </CardTitle>
-          <CardDescription>Choose the plan that best fits your meme coin trading strategy. Your current tier is <span className="font-semibold text-neon">{currentTier}</span>.</CardDescription>
+          <CardDescription>Choose the plan that best fits your Rocket Meme trading strategy. Your current tier is <span className="font-semibold text-neon">{currentTier}</span>.</CardDescription>
         </CardHeader>
         <CardContent>
             {/* Pass currentTier and setCurrentTier to SubscriptionTiers */}
