@@ -114,12 +114,15 @@ export default function CoinDetailPage() {
   }, [coinId]);
 
   useEffect(() => {
-    if (coinDetail?.name) {
+    if (coinDetail?.name && coinDetail.market_data?.current_price?.usd !== undefined) {
       const fetchTradingSignal = async () => {
         setSignalLoading(true);
         setSignalError(null);
         try {
-          const signal = await getCoinTradingSignal({ coinName: coinDetail.name });
+          const signal = await getCoinTradingSignal({ 
+            coinName: coinDetail.name,
+            currentPriceUSD: coinDetail.market_data.current_price.usd 
+          });
           setTradingSignal(signal);
         } catch (err) {
           console.error("Error fetching trading signal:", err);
@@ -130,7 +133,7 @@ export default function CoinDetailPage() {
       };
       fetchTradingSignal();
     }
-  }, [coinDetail?.name]);
+  }, [coinDetail]);
 
 
   if (loading) {
