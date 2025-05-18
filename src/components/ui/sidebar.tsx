@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -68,7 +69,7 @@ const SidebarProvider = React.forwardRef<
     ref
   ) => {
     const isMobile = useIsMobile()
-    const [openMobile, setOpenMobile] = React.useState(true) // Default open on mobile
+    const [openMobile, setOpenMobile] = React.useState(false) // Default closed on mobile
 
     const [_open, _setOpen] = React.useState(defaultOpen)
     const open = openProp ?? _open
@@ -747,3 +748,4 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
