@@ -20,11 +20,11 @@ export type GetCoinTradingSignalInput = z.infer<typeof GetCoinTradingSignalInput
 const GetCoinTradingSignalOutputSchema = z.object({
   recommendation: z.enum(['Buy', 'Sell', 'Hold']).describe('The trading recommendation: Buy, Sell, or Hold.'),
   reasoning: z.string().describe('A concise summary of the main reason for the recommendation.'),
-  rocketScore: z.number().min(1).max(5).int().describe('A score from 1 to 5 rockets, indicating bullish potential or strength of the signal. 5 is highest.'),
+  rocketScore: z.number().min(1).max(5).int().describe('A score from 1 to 5 rockets, indicating bullish potential or strength of the signal. 5 is highest. This also reflects the AI\'s confidence.'),
   detailedAnalysis: z.string().describe('In-depth analysis of the factors influencing the signal. This should be a comprehensive summary reflecting analysis of market sentiment, technical indicators, on-chain data, whale activity, and tokenomics, as if derived from a sophisticated AI model trained on extensive crypto datasets.'),
   futurePriceOutlook: z.object({
-    shortTermTarget: z.string().optional().describe('Speculative short-term price target (e.g., "$0.05 in 1 week", "0.1234 USD"). This should be relative to the current price.'),
-    midTermTarget: z.string().optional().describe('Speculative mid-term price target (e.g., "$0.10 in 1-3 months", "1.50 USD"). This should be relative to the current price.')
+    shortTermTarget: z.string().optional().describe('Speculative short-term price target (e.g., "$0.05 in 1 week", "0.1234 USD"). This should be relative to the current price. Include indicative predictions for timeframes like 1h, 6h, or 24h if possible.'),
+    midTermTarget: z.string().optional().describe('Speculative mid-term price target (e.g., "$0.10 in 1-3 months", "1.50 USD"). This should be relative to the current price. Include an indicative prediction for a timeframe like 7d if possible.')
   }).describe('Speculative future price targets based on current analysis and the provided current price.'),
   tradingTargets: z.object({
     entryPoint: z.string().optional().describe('Suggested entry price range (e.g., "$0.040-$0.042", "0.038 USD"), relative to the current price if applicable for a "Buy" signal.'),
@@ -46,39 +46,37 @@ const prompt = ai.definePrompt({
   name: 'getCoinTradingSignalPrompt',
   input: {schema: GetCoinTradingSignalInputSchema},
   output: {schema: GetCoinTradingSignalOutputSchema},
-  prompt: `You are an advanced AI crypto signal engine, "Meme Prophet".
+  prompt: `You are "Meme Prophet", a highly advanced AI model trained to identify high-potential meme coins and altcoins. Your analysis is based on simulating real-time market data, on-chain activity, social sentiment, and whale transactions.
 For the meme coin "{{coinName}}", which is currently trading at approximately {{{currentPriceUSD}}} USD, perform a comprehensive analysis.
-Your analysis should simulate insights as if derived from a sophisticated training pipeline using the following conceptual data points:
-- Real-time and historical price data (price_usd, price_change_pct_1h, price_change_pct_24h) - with {{{currentPriceUSD}}} as the latest price.
-- Market fundamentals (volume_24h, market_cap, liquidity_score).
-- Whale activity (whale_alerts_count, avg_whale_txn_value_usd).
-- Social sentiment (social_sentiment_score from Twitter/Reddit, mentions_count).
-- On-chain metrics (onchain_txn_count_24h, unique_wallets_24h).
-- Smart contract integrity (contract_risk_score).
-- Technical indicators (RSI, MACD, EMA12/26, Bollinger Bands within a 'technicals' JSON object).
 
-Based on your multi-faceted analysis of these inputs, and referencing the current price of {{{currentPriceUSD}}} USD, provide a trading signal for "{{coinName}}". Your response MUST adhere to the JSON output schema.
+Imagine you have access to and have analyzed the following types of data:
+- Historical price action and volume spikes.
+- Social media dynamics: Twitter/X trending topics, Telegram/Reddit mentions, and general sentiment shifts.
+- Blockchain activity: Data from platforms like Ethereum, BSC, and Solana, including new/active wallets and specific whale trades (buys/sells and amounts).
+- Technical Indicators: Including MACD, RSI, and Bollinger Bands.
+- News Sentiment: Overall bullish, bearish, or neutral sentiment from recent news.
+- Behavioral Triggers: Indicators of FOMO (Fear Of Missing Out) or FUD (Fear, Uncertainty, Doubt) patterns.
 
-Specifically, in your 'detailedAnalysis' field, articulate how these simulated factors (market conditions, sentiment, on-chain activity, whale movements, technicals, tokenomics, and the current price of {{{currentPriceUSD}}} USD) contribute to your overall recommendation. For instance, you might state: "Given the current price of {{{currentPriceUSD}}} USD, and observing X, Y, Z factors..."
+Based on your simulated multi-faceted analysis of these inputs, and referencing the current price of {{{currentPriceUSD}}} USD, provide a trading signal for "{{coinName}}". Your response MUST adhere to the JSON output schema.
 
 Ensure all output fields are populated:
 1.  'recommendation': "Buy", "Sell", or "Hold".
-2.  'reasoning': A concise (1-2 sentence) summary for the recommendation, factoring in the current price.
-3.  'rocketScore': An integer from 1 to 5 indicating bullish potential (5 is most bullish).
-4.  'detailedAnalysis': A comprehensive explanation.
+2.  'reasoning': A concise (1-2 sentence) summary for the recommendation. This should briefly touch upon the key simulated data points (e.g., technicals, sentiment, whale activity) that led to the signal.
+3.  'rocketScore': An integer from 1 to 5. This score indicates bullish potential (5 is most bullish) AND your confidence level in the signal (5 is most confident).
+4.  'detailedAnalysis': A comprehensive explanation. Articulate how the simulated factors (historical price, volume, social media, on-chain activity, whale movements, technical indicators like MACD/RSI/Bollinger Bands, news sentiment, FOMO/FUD patterns, tokenomics, and the current price of {{{currentPriceUSD}}} USD) contribute to your recommendation. Be specific in your rationale.
 5.  'futurePriceOutlook':
-    *   'shortTermTarget': A speculative price target relative to {{{currentPriceUSD}}}.
-    *   'midTermTarget': A speculative price target relative to {{{currentPriceUSD}}}.
+    *   'shortTermTarget': A speculative short-term price target string (e.g., "$0.05", "0.1234 USD"). If possible, provide indicative predictions for timeframes like 1h, 6h, or 24h within this field or the detailedAnalysis.
+    *   'midTermTarget': A speculative mid-term price target string (e.g., "$0.10", "1.50 USD"). If possible, provide an indicative prediction for a timeframe like 7d within this field or the detailedAnalysis.
 6.  'tradingTargets': All targets should be sensible given the current price {{{currentPriceUSD}}}.
-    *   'entryPoint': Suggested price range for entering a trade if 'Buy'.
-    *   'stopLoss': Crucial price level to limit losses.
-    *   'takeProfit1': First price level for profit-taking.
+    *   'entryPoint': Suggested price range (e.g., "$0.040-$0.042", "0.038 USD") for entering a trade if 'Buy'.
+    *   'stopLoss': Suggested stop-loss price (e.g., "$0.035", "0.030 USD").
+    *   'takeProfit1': First take-profit target price (e.g., "$0.055", "0.060 USD").
     *   'takeProfit2', 'takeProfit3': Optional subsequent take-profit levels.
-7.  'investmentAdvice': Specific guidance.
+7.  'investmentAdvice': Specific investment advice or strategy for this coin based on the current signal and analysis.
 8.  'disclaimer': The standard disclaimer.
 
-When providing price targets, entry points, stop-loss, or take-profit levels, ensure they are specific numerical currency values (e.g., '$0.1234', '1.50 USD') and are contextually relevant to the current price of {{{currentPriceUSD}}} USD.
-Your analysis should be insightful and actionable, reflecting the sophistication of a highly trained AI model.
+When providing price targets, entry points, stop-loss, or take-profit levels, ensure they are specific numerical currency values and are contextually relevant to the current price of {{{currentPriceUSD}}} USD.
+Your goal is to explain your rationale clearly, as if drawing conclusions from the rich (simulated) dataset described.
 `,
 });
 
