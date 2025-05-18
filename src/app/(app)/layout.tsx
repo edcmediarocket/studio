@@ -18,7 +18,7 @@ import Link from 'next/link';
 export default function AppLayout({ children }: PropsWithChildren) {
   return (
     <SidebarProvider defaultOpen={true}>
-      <Sidebar collapsible="icon" variant="sidebar" className="border-r border-sidebar-border">
+      <Sidebar collapsible="none" variant="sidebar" className="border-r border-sidebar-border">
         <SidebarHeader className="p-4">
           <Link href="/" className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
             <Logo className="h-8 w-auto" />
