@@ -3,11 +3,11 @@
 
 import { SignalCard } from "@/components/dashboard/signal-card";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button"; // Import Button
-import { Signal as SignalIcon, Zap } from "lucide-react"; // Renamed to avoid conflict, Added Zap
+import { Button } from "@/components/ui/button"; 
+import { Signal as SignalIcon, Zap } from "lucide-react"; 
 import { useState, useEffect } from 'react';
-import { useTier, type UserTier } from "@/context/tier-context"; // Import useTier and UserTier
-import Link from "next/link"; // Import Link
+import { useTier, type UserTier } from "@/context/tier-context"; 
+import Link from "next/link"; 
 
 // Placeholder signal data - now with more detailed analysis
 const allSignals = [
@@ -68,16 +68,16 @@ const allSignals = [
 ];
 
 const getTieredSignals = (tier: UserTier) => {
-  if (tier === 'Pro') {
+  if (tier === 'Premium' || tier === 'Pro') { // Premium also gets all signals
     return allSignals;
   } else if (tier === 'Basic') {
-    return allSignals.slice(0, 3); // Basic users get top 3
+    return allSignals.slice(0, 3); // Basic users get top 3 (adjust as needed for your plan)
   }
   return allSignals.slice(0, 1); // Free users get 1
 };
 
 export default function SignalsPage() {
-  const { currentTier, setCurrentTier } = useTier(); // Use TierContext
+  const { currentTier, setCurrentTier } = useTier(); 
   const [signalsToShow, setSignalsToShow] = useState(getTieredSignals(currentTier));
 
   useEffect(() => {
@@ -95,7 +95,7 @@ export default function SignalsPage() {
         </p>
       </div>
 
-      {/* Demo buttons to change tier - remove in production */}
+      
       <Card className="shadow-md">
         <CardHeader>
             <CardTitle className="text-lg">Demo: Simulate Tier Change</CardTitle>
@@ -104,6 +104,7 @@ export default function SignalsPage() {
             <Button onClick={() => setCurrentTier('Free')} variant={currentTier === 'Free' ? 'default' : 'outline'} size="sm" className="text-xs">Set to Free</Button>
             <Button onClick={() => setCurrentTier('Basic')} variant={currentTier === 'Basic' ? 'default' : 'outline'} size="sm" className="text-xs">Set to Basic</Button>
             <Button onClick={() => setCurrentTier('Pro')} variant={currentTier === 'Pro' ? 'default' : 'outline'} size="sm" className="text-xs">Set to Pro</Button>
+            <Button onClick={() => setCurrentTier('Premium')} variant={currentTier === 'Premium' ? 'default' : 'outline'} size="sm" className="text-xs">Set to Premium</Button> {/* Added Premium Button */}
             <p className="text-sm self-center ml-auto">Current Tier: <span className="font-semibold text-neon">{currentTier}</span></p>
         </CardContent>
       </Card>
@@ -114,7 +115,7 @@ export default function SignalsPage() {
           <CardTitle className="text-2xl">Active Signals & Analysis</CardTitle>
           <CardDescription>
             Displaying {signalsToShow.length} signal(s) with detailed AI analysis based on your <span className="text-neon">{currentTier}</span> tier.
-            {currentTier !== 'Pro' && (
+            {(currentTier !== 'Pro' && currentTier !== 'Premium') && ( // Show upgrade if not Pro or Premium
                 <Button asChild variant="link" className="px-1 text-neon hover:text-neon/80">
                     <Link href="/account#subscription">
                         Upgrade for more signals and deeper insights <Zap className="ml-1 h-4 w-4" />

@@ -9,7 +9,8 @@ import { UpgradePrompt } from "@/components/shared/upgrade-prompt";
 export default function AiAdvisorPage() {
   const { currentTier } = useTier();
 
-  if (currentTier !== "Pro") {
+  // Pro or Premium can access this feature
+  if (currentTier !== "Pro" && currentTier !== "Premium") {
     return <UpgradePrompt featureName="AI Advisor" requiredTier="Pro" />;
   }
 

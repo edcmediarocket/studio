@@ -4,7 +4,7 @@
 import type { PropsWithChildren } from 'react';
 import React, { createContext, useState, useContext, useMemo } from 'react';
 
-export type UserTier = "Free" | "Basic" | "Pro";
+export type UserTier = "Free" | "Basic" | "Pro" | "Premium"; // Added Premium
 
 interface TierContextType {
   currentTier: UserTier;

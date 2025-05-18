@@ -9,7 +9,8 @@ import { UpgradePrompt } from "@/components/shared/upgrade-prompt";
 export default function CustomSignalsPage() {
   const { currentTier } = useTier();
 
-  if (currentTier !== "Pro") {
+  // Pro or Premium can access this feature
+  if (currentTier !== "Pro" && currentTier !== "Premium") {
     return <UpgradePrompt featureName="Customizable AI Signals" requiredTier="Pro" />;
   }
 

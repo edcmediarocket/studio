@@ -5,10 +5,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Rocket, Zap } from "lucide-react";
+import type { UserTier } from "@/context/tier-context"; // Import UserTier
 
 interface UpgradePromptProps {
   featureName: string;
-  requiredTier?: "Pro" | "Basic"; // Or more specific if needed
+  requiredTier?: UserTier | string; // Allow string for "Pro or Premium" etc.
 }
 
 export function UpgradePrompt({ featureName, requiredTier = "Pro" }: UpgradePromptProps) {
@@ -17,7 +18,7 @@ export function UpgradePrompt({ featureName, requiredTier = "Pro" }: UpgradeProm
       <CardHeader className="text-center">
         <Rocket className="h-16 w-16 text-neon mx-auto mb-4" />
         <CardTitle className="text-2xl sm:text-3xl text-neon">
-          Unlock {featureName} with {requiredTier} Tier!
+          Unlock {featureName} with {requiredTier}!
         </CardTitle>
         <CardDescription className="text-base sm:text-lg text-muted-foreground mt-2">
           This advanced feature is available for our {requiredTier} subscribers.
