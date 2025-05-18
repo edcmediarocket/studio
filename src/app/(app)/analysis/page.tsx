@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { SentimentAnalysisCard } from "@/components/analysis/sentiment-analysis-card";
 import { PriceTrendAnalysisCard } from "@/components/analysis/price-trend-analysis-card";
 import { WhaleMovementAnalysisCard } from "@/components/analysis/whale-movement-analysis-card";
+import { FuturePricePredictionCard } from "@/components/analysis/future-price-prediction-card"; // Added
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,19 +13,19 @@ import { Label } from "@/components/ui/label";
 import { BarChartHorizontalBig, Loader2, Search } from "lucide-react";
 
 export default function AnalysisPage() {
-  const [coinInput, setCoinInput] = useState(""); // For the input field
+  const [coinInput, setCoinInput] = useState("");
   const [selectedCoinForAnalysis, setSelectedCoinForAnalysis] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false); // General loading state for analysis submission
 
   const handleCoinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true); // Indicate loading when form is submitted
+    setIsLoading(true); 
     if (coinInput.trim()) {
       setSelectedCoinForAnalysis(coinInput.trim());
     } else {
       setSelectedCoinForAnalysis(null);
     }
-    // Simulate some delay as if an API call was made, or let useEffect in cards handle their own loading
+    // Simulate some delay or let useEffect in cards handle their own loading
     setTimeout(() => setIsLoading(false), 500); 
   };
 
@@ -64,10 +65,11 @@ export default function AnalysisPage() {
         </CardContent>
       </Card>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6"> {/* Adjusted grid for 2x2 on XL */}
         <SentimentAnalysisCard coinName={selectedCoinForAnalysis} />
         <PriceTrendAnalysisCard coinName={selectedCoinForAnalysis} />
         <WhaleMovementAnalysisCard coinName={selectedCoinForAnalysis} />
+        <FuturePricePredictionCard coinName={selectedCoinForAnalysis} /> {/* Added new card */}
       </div>
     </div>
   );
