@@ -30,41 +30,51 @@ export default function AnalysisPage() {
   useEffect(() => {
     if (!selectedCoinForAnalysis) {
       setChartData([]); // Clear chart if no coin is selected
+      setChartError(null); // Clear error as well
       return;
     }
 
     const fetchChartData = async () => {
       setChartLoading(true);
       setChartError(null);
-      setChartData([]); // Clear previous data
+      setChartData([]); 
 
-      // Attempt to format coin name as a potential CoinGecko ID
       const coinId = selectedCoinForAnalysis.toLowerCase().replace(/\s+/g, '-');
 
       try {
         const response = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}/ohlc?vs_currency=usd&days=30`);
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || `Failed to fetch chart data for ${selectedCoinForAnalysis}. Status: ${response.status}`);
-        }
-        const data: [number, number, number, number, number][] = await response.json();
         
-        if (data.length === 0) {
-          throw new Error(`No OHLC data found for ${selectedCoinForAnalysis}. The coin ID might be incorrect or it's not listed on CoinGecko with that ID.`);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: "Invalid JSON response from server" })); // Catch JSON parsing errors
+          const errorMessage = errorData.error || `Failed to fetch chart data (Status: ${response.status})`;
+          console.warn(`Chart data fetch failed for ${coinId}: ${errorMessage}`);
+          setChartError(`Could not load chart for "${selectedCoinForAnalysis}": ${errorMessage}. Please ensure the coin ID is correct on CoinGecko or try a different coin.`);
+          setChartData([]);
+          // No throw here, error is set for UI
+        } else {
+          const data: [number, number, number, number, number][] = await response.json();
+          
+          if (data.length === 0) {
+            console.warn(`No OHLC data found for ${coinId}.`);
+            setChartError(`No chart data available for "${selectedCoinForAnalysis}". The coin might be new or data is not tracked by CoinGecko.`);
+            setChartData([]);
+          } else {
+            setChartData(data.map(item => ({
+              timestamp: item[0],
+              open: item[1],
+              high: item[2],
+              low: item[3],
+              close: item[4],
+            })));
+            setChartError(null); // Clear any previous error on success
+          }
         }
-
-        setChartData(data.map(item => ({
-          timestamp: item[0],
-          open: item[1],
-          high: item[2],
-          low: item[3],
-          close: item[4],
-        })));
-      } catch (err) {
-        console.error(err);
-        let message = "An unknown error occurred while fetching chart data.";
+      } catch (err) { // Catches network errors or other unexpected issues
+        console.error("Unexpected error fetching chart data:", err);
+        let message = "An unexpected error occurred while fetching chart data. Please check your connection or try again later.";
+        // err instanceof Error is fine here for unexpected errors
         if (err instanceof Error) {
-          message = err.message;
+            message = err.message;
         }
         setChartError(message);
         setChartData([]);
