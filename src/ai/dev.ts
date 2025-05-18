@@ -9,3 +9,4 @@ import '@/ai/flows/compare-meme-coins.ts';
 import '@/ai/flows/get-onchain-insights.ts';
 import '@/ai/flows/get-price-trend-analysis.ts';
 import '@/ai/flows/get-whale-movement-analysis.ts';
+import '@/ai/flows/get-coin-trading-signal.ts';

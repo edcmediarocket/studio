@@ -10,8 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableRow, TableHead, TableHeader } from '@/components/ui/table';
+import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from '@/ai/flows/get-coin-trading-signal';
+import { cn } from '@/lib/utils';
 
 interface CoinDetail {
   id: string;
@@ -72,11 +74,21 @@ const StatItem: React.FC<{ label: string; value: string | number | undefined | n
   return (
     <div className={cn("flex justify-between py-2 border-b border-muted/50 last:border-b-0", className)}>
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className={`text-sm font-semibold ${valueColor}`}>{displayValue}</span>
+      <span className={cn("text-sm font-semibold", valueColor)}>{displayValue}</span>
     </div>
   );
 };
 
+const RocketScoreDisplay: React.FC<{ score: number }> = ({ score }) => (
+  <div className="flex">
+    {Array.from({ length: 5 }).map((_, i) => (
+      <Rocket
+        key={i}
+        className={cn("h-5 w-5", i < score ? "text-neon fill-neon" : "text-muted-foreground/50")}
+      />
+    ))}
+  </div>
+);
 
 export default function CoinDetailPage() {
   const params = useParams();
@@ -85,6 +97,10 @@ export default function CoinDetailPage() {
   const [coinDetail, setCoinDetail] = useState<CoinDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [tradingSignal, setTradingSignal] = useState<GetCoinTradingSignalOutput | null>(null);
+  const [signalLoading, setSignalLoading] = useState(false);
+  const [signalError, setSignalError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!coinId) return;
@@ -115,6 +131,26 @@ export default function CoinDetailPage() {
     fetchCoinDetail();
   }, [coinId]);
 
+  useEffect(() => {
+    if (coinDetail?.name) {
+      const fetchTradingSignal = async () => {
+        setSignalLoading(true);
+        setSignalError(null);
+        try {
+          const signal = await getCoinTradingSignal({ coinName: coinDetail.name });
+          setTradingSignal(signal);
+        } catch (err) {
+          console.error("Error fetching trading signal:", err);
+          setSignalError("Failed to fetch AI trading signal. Please try again later.");
+        } finally {
+          setSignalLoading(false);
+        }
+      };
+      fetchTradingSignal();
+    }
+  }, [coinDetail?.name]);
+
+
   if (loading) {
     return (
       <div className="space-y-6 p-4">
@@ -131,7 +167,7 @@ export default function CoinDetailPage() {
             <Skeleton className="h-10 w-full" />
           </CardContent>
         </Card>
-        {[...Array(3)].map((_, i) => (
+        {[...Array(4)].map((_, i) => ( // Increased to 4 for AI signal card skeleton
           <Card key={i} className="shadow-lg">
             <CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader>
             <CardContent className="space-y-3">
@@ -173,9 +209,14 @@ export default function CoinDetailPage() {
   const currentPrice = market_data.current_price.usd;
   const priceChange24h = market_data.price_change_percentage_24h_in_currency.usd;
 
-  // Sanitize description (very basic, consider a library for robust sanitization)
   const cleanDescription = description.en?.replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" class="text-primary hover:underline" ');
 
+  const getRecommendationBadgeVariant = (recommendation?: 'Buy' | 'Sell' | 'Hold') => {
+    if (recommendation === 'Buy') return 'default'; // primary color
+    if (recommendation === 'Sell') return 'destructive';
+    if (recommendation === 'Hold') return 'secondary';
+    return 'outline';
+  };
 
   return (
     <div className="space-y-6">
@@ -229,7 +270,6 @@ export default function CoinDetailPage() {
                   </a>
                 </Button>
               )}
-              {/* Add more links like Twitter, Telegram, Reddit if needed and available */}
             </div>
           </SectionCard>
         </div>
@@ -251,9 +291,46 @@ export default function CoinDetailPage() {
             <StatItem label="30 Days" value={market_data.price_change_percentage_30d_in_currency.usd} isPercentage />
             <StatItem label="1 Year" value={market_data.price_change_percentage_1y_in_currency.usd} isPercentage />
           </SectionCard>
+
+          <SectionCard title="AI Trading Signal" icon={<BrainCircuit />} className="bg-card">
+            {signalLoading && (
+              <div className="space-y-3 py-4">
+                <div className="flex items-center justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <p className="ml-2 text-muted-foreground">Fetching AI Signal...</p>
+                </div>
+                <Skeleton className="h-5 w-1/4 mx-auto" /> 
+                <Skeleton className="h-4 w-1/2 mx-auto" /> 
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-4 w-full" />
+              </div>
+            )}
+            {signalError && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Signal Error</AlertTitle>
+                <AlertDescription>{signalError}</AlertDescription>
+              </Alert>
+            )}
+            {tradingSignal && !signalLoading && !signalError && (
+              <div className="space-y-3">
+                <div className="flex flex-col items-center space-y-2">
+                  <Badge variant={getRecommendationBadgeVariant(tradingSignal.recommendation)} className="text-lg px-4 py-1">
+                    {tradingSignal.recommendation}
+                  </Badge>
+                  <RocketScoreDisplay score={tradingSignal.rocketScore} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Reasoning:</p>
+                  <p className="text-sm text-foreground bg-muted/50 p-3 rounded-md whitespace-pre-wrap">{tradingSignal.reasoning}</p>
+                </div>
+                <p className="text-xs text-muted-foreground pt-2 border-t border-muted/30 mt-3">{tradingSignal.disclaimer}</p>
+              </div>
+            )}
+          </SectionCard>
+
         </div>
       </div>
-
     </div>
   );
 }
