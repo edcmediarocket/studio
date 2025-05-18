@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link'; // Import Link
 import {
   Table,
   TableBody,
@@ -13,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Star } from "lucide-react";
+import { Star, LineChart } from "lucide-react"; // Changed ExternalLink to LineChart
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from 'lucide-react';
@@ -27,7 +28,6 @@ interface CoinData {
   market_cap: number;
   total_volume: number;
   price_change_percentage_24h: number;
-  // trending_tags?: string[]; // Removed as not easily available from the chosen API endpoint
 }
 
 export function MarketDataTable() {
@@ -47,9 +47,8 @@ export function MarketDataTable() {
           throw new Error(`Failed to fetch coin data: ${response.statusText}`);
         }
         const data = await response.json();
-        // Ensure data is an array before setting
         if (Array.isArray(data)) {
-          setCoins(data.map((coin: any) => ({ // Map to our CoinData interface
+          setCoins(data.map((coin: any) => ({ 
             id: coin.id,
             name: coin.name,
             symbol: coin.symbol,
@@ -69,7 +68,7 @@ export function MarketDataTable() {
         } else {
           setError("An unknown error occurred while fetching coin data.");
         }
-        setCoins([]); // Clear coins on error
+        setCoins([]);
       } finally {
         setLoading(false);
       }
@@ -88,7 +87,6 @@ export function MarketDataTable() {
         if (typeof valA === 'number' && typeof valB === 'number') {
             return sortConfig.direction === 'ascending' ? valA - valB : valB - valA;
         }
-        // Fallback for string sorting if needed, though current keys are numbers or already strings like name/symbol
         if (String(valA) < String(valB)) {
           return sortConfig.direction === 'ascending' ? -1 : 1;
         }
@@ -179,7 +177,6 @@ export function MarketDataTable() {
                 </TableCell>
                 <TableCell>
                   <div className="font-medium">{coin.name} ({coin.symbol.toUpperCase()})</div>
-                  {/* Trending tags removed as it's not directly available from this API endpoint */}
                 </TableCell>
                 <TableCell className="text-right font-mono">${coin.current_price !== null && coin.current_price !== undefined ? coin.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: coin.current_price > 0.01 ? 2 : 8 }) : 'N/A'}</TableCell>
                 <TableCell className={`text-right font-mono ${coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -192,11 +189,10 @@ export function MarketDataTable() {
                     <Button variant="ghost" size="icon" title="Add to Watchlist">
                       <Star className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" title="Analyze Coin" asChild>
-                      {/* This link currently goes to a general analysis page. It could be updated to a specific coin detail page later. */}
-                      <a href={`/analysis?coin=${coin.symbol.toLowerCase()}`} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
+                    <Button variant="ghost" size="icon" title="View Details" asChild>
+                      <Link href={`/coin/${coin.id}`}>
+                        <LineChart className="h-4 w-4" />
+                      </Link>
                     </Button>
                   </div>
                 </TableCell>
@@ -214,5 +210,3 @@ export function MarketDataTable() {
     </div>
   );
 }
-
-    
