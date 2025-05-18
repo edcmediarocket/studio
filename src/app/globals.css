@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -68,5 +69,23 @@ body {
     @apply bg-background text-foreground;
     min-height: 100vh;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Added for the scrolling ticker */
+@layer utilities {
+  .animate-scroll-horizontal {
+    animation: scroll-horizontal 40s linear infinite; /* Adjust duration as needed */
+  }
+  .pause-animation {
+    animation-play-state: paused;
+  }
+  @keyframes scroll-horizontal {
+    0% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(-50%); /* Scroll by half the width (since items are duplicated) */
+    }
   }
 }

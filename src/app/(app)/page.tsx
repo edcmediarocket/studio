@@ -3,9 +3,10 @@
 
 import { MarketDataTable } from "@/components/dashboard/market-data-table";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, TrendingUp, TrendingDown, Info } from "lucide-react"; 
+import { LayoutDashboard, TrendingUp, TrendingDown, Info, Flame } from "lucide-react"; 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSidebar } from "@/components/ui/sidebar"; 
+import { HotCoinsTicker } from "@/components/dashboard/hot-coins-ticker"; // Import the new ticker
 
 // Placeholder data for Market Overview
 const topGainers = [
@@ -40,7 +41,9 @@ export default function DashboardPage() {
             </Button>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-bold mb-1 text-neon">
+          <HotCoinsTicker /> 
+
+          <h1 className="text-2xl sm:text-3xl font-bold mt-6 mb-1 text-neon">
             Market Overview
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground mb-4">
