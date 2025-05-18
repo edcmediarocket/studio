@@ -25,7 +25,7 @@ interface CoinPriceChartProps {
 export function CoinPriceChart({ coinName, data, loading, error }: CoinPriceChartProps) {
   if (loading) {
     return (
-      <Card className="shadow-lg min-h-[400px] flex items-center justify-center">
+      <Card className="shadow-lg min-h-[300px] sm:min-h-[400px] flex items-center justify-center">
         <CardContent className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
           <p className="text-muted-foreground">Loading price chart for {coinName}...</p>
@@ -36,7 +36,7 @@ export function CoinPriceChart({ coinName, data, loading, error }: CoinPriceChar
 
   if (error) {
     return (
-      <Card className="shadow-lg min-h-[400px] flex items-center justify-center">
+      <Card className="shadow-lg min-h-[300px] sm:min-h-[400px] flex items-center justify-center">
         <CardContent className="text-center">
           <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
           <CardTitle className="text-destructive mb-2">Chart Error</CardTitle>
@@ -48,7 +48,7 @@ export function CoinPriceChart({ coinName, data, loading, error }: CoinPriceChar
 
   if (!coinName || data.length === 0) {
     return (
-       <Card className="shadow-lg min-h-[400px] flex items-center justify-center">
+       <Card className="shadow-lg min-h-[300px] sm:min-h-[400px] flex items-center justify-center">
          <CardContent className="text-center">
             <BarChartHorizontalBig className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">Price chart will appear here once a coin is selected and data is fetched.</p>
@@ -69,21 +69,24 @@ export function CoinPriceChart({ coinName, data, loading, error }: CoinPriceChar
     price: item.close,
   }));
 
+  // Determine if prices are very small to adjust Y-axis formatting
+  const hasVerySmallPrices = data.some(d => d.close < 0.01 && d.close !== 0);
+
   return (
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle className="text-xl text-primary">Price Chart: {coinName}</CardTitle>
         <CardDescription>Closing prices over the last 30 days (USD).</CardDescription>
       </CardHeader>
-      <CardContent className="h-[400px] p-0 sm:p-2 md:p-4">
+      <CardContent className="h-[50vh] sm:h-[400px] p-0 sm:p-2 md:p-4">
         <ChartContainer config={chartConfig} className="w-full h-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={formattedData}
               margin={{
                 top: 5,
-                right: 20, // Increased right margin for Y-axis labels
-                left: 10, // Increased left margin for Y-axis labels
+                right: 5, 
+                left: 0, 
                 bottom: 5,
               }}
             >
@@ -94,24 +97,38 @@ export function CoinPriceChart({ coinName, data, loading, error }: CoinPriceChar
                 tickLine={false}
                 axisLine={false}
                 dy={5}
+                fontSize={10} 
               />
               <YAxis
                 stroke="hsl(var(--muted-foreground))"
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => `$${value.toLocaleString()}`}
+                tickFormatter={(value) => {
+                    const numValue = Number(value);
+                    if (isNaN(numValue)) return '$--';
+                    // If any price is very small, use more precision for all Y-axis ticks for consistency on that chart
+                    const fixedDigits = hasVerySmallPrices ? (numValue === 0 ? 2 : 6) : (numValue < 1 && numValue !== 0 ? 4 : 2);
+                    return `$${numValue.toFixed(fixedDigits)}`;
+                }}
                 domain={['auto', 'auto']}
-                width={80} // Explicit width for Y-axis to prevent label cutoff
+                width={60} 
+                fontSize={10}
               />
               <Tooltip
                 content={<ChartTooltipContent 
                             indicator="dot" 
-                            formatter={(value, name) => [`$${Number(value).toFixed(2)}`, name]}
+                            formatter={(value, name) => {
+                                const numValue = Number(value);
+                                if (name === 'price') {
+                                    return [`$${numValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: numValue < 0.01 && numValue !== 0 ? 8 : 2})}`, name];
+                                }
+                                return [numValue.toLocaleString(), name];
+                            }}
                             cursorStyle={{ stroke: 'hsl(var(--neon-accent-hsl))', strokeWidth: 2 }}
                         />}
                 wrapperStyle={{ outline: "none" }}
               />
-              <Legend />
+              <Legend wrapperStyle={{fontSize: "12px"}}/>
               <Line
                 type="monotone"
                 dataKey="price"
