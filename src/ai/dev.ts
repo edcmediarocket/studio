@@ -10,3 +10,5 @@ import '@/ai/flows/get-onchain-insights.ts';
 import '@/ai/flows/get-price-trend-analysis.ts';
 import '@/ai/flows/get-whale-movement-analysis.ts';
 import '@/ai/flows/get-coin-trading-signal.ts';
+import '@/ai/flows/get-customized-coin-trading-signal.ts';
+
