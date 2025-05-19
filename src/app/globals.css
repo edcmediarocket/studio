@@ -66,12 +66,12 @@ body {
     @apply border-border;
   }
   body {
-    @apply text-foreground; /* Apply base text color */
+    color: hsl(var(--foreground)); /* Apply base text color */
     min-height: 100vh;
     font-feature-settings: "rlig" 1, "calt" 1;
 
     /* Animated Starry Background */
-    background-color: hsl(var(--background)); /* Explicitly black or dark base */
+    background-color: hsl(var(--background)); /* Explicitly black or dark base FOR THE VERY BOTTOM LAYER */
     background-image:
       /* Layer 1: Small, dense stars */
       radial-gradient(1px 1px at 10% 30%, hsl(var(--foreground)), transparent),
@@ -120,3 +120,4 @@ body {
     background-position: -10000px 5000px; 
   }
 }
+
