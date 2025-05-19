@@ -2,19 +2,20 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { getCoinAdvice, type GetCoinAdviceOutput } from "@/ai/flows/get-coin-advice";
+import { getCoinAdvice, type GetCoinAdviceOutput, type GetCoinAdviceInput } from "@/ai/flows/get-coin-advice";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Bot, User, Send, Sparkles, Info } from "lucide-react";
+import { Loader2, Bot, User, Send, Sparkles, Info, AlertTriangle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { useToast } from "@/hooks/use-toast"; // Import useToast
 
 interface Message {
   id: string;
-  type: "user" | "bot";
+  type: "user" | "bot" | "system";
   text: string;
   coinName?: string;
 }
@@ -25,26 +26,62 @@ export function AiChatAssistant() {
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast(); // Initialize toast
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentQuestion.trim() || isLoading) return;
 
+    const userMessageText = currentQuestion;
+    const coinContext = currentCoin.trim();
+
     const userMessage: Message = {
       id: Date.now().toString(),
       type: "user",
-      text: currentQuestion,
-      coinName: currentCoin.trim() || undefined,
+      text: userMessageText,
+      coinName: coinContext || undefined,
     };
     setMessages((prev) => [...prev, userMessage]);
     
     setIsLoading(true);
     setCurrentQuestion(""); // Clear input after sending
 
+    let fetchedPriceUSD: number | undefined = undefined;
+    let priceFetchAttempted = false;
+
+    if (coinContext) {
+      priceFetchAttempted = true;
+      toast({ title: "Context Update", description: `Fetching live price for ${coinContext}...` });
+      try {
+        let coinId = coinContext.toLowerCase();
+        const coinIdMappings: { [key: string]: string } = {
+          "xrp": "ripple", "shiba inu": "shiba-inu", "dogecoin": "dogecoin",
+        };
+        coinId = coinIdMappings[coinId] || coinId.replace(/\s+/g, '-');
+        
+        const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data[coinId] && data[coinId].usd !== undefined) {
+            fetchedPriceUSD = data[coinId].usd;
+            toast({ title: "Context Updated", description: `Using live price for ${coinContext}: $${fetchedPriceUSD.toLocaleString()}` });
+          } else {
+            toast({ title: "Price Fetch Warning", description: `Could not fetch live price for ${coinContext}. AI advice will be more general.`, variant: "default" });
+          }
+        } else {
+           toast({ title: "Price Fetch Warning", description: `Could not fetch live price for ${coinContext}. AI advice will be more general. (API Status: ${response.status})`, variant: "default" });
+        }
+      } catch (fetchErr) {
+        console.warn("Price fetch error for AI Advisor:", fetchErr);
+        toast({ title: "Price Fetch Error", description: `Network error fetching price for ${coinContext}. AI advice will be general.`, variant: "default" });
+      }
+    }
+
     try {
-      const adviceParams = {
-        coinName: currentCoin.trim() || "general crypto", // Default if no coin specified
+      const adviceParams: GetCoinAdviceInput = {
+        coinName: coinContext || "general crypto",
         question: userMessage.text,
+        currentPriceUSD: fetchedPriceUSD,
       };
       const result: GetCoinAdviceOutput = await getCoinAdvice(adviceParams);
       const botMessage: Message = {
@@ -53,6 +90,7 @@ export function AiChatAssistant() {
         text: result.adviceDetail,
       };
       setMessages((prev) => [...prev, botMessage]);
+
     } catch (err) {
       console.error("Error getting advice:", err);
       const errorMessage: Message = {
@@ -91,14 +129,13 @@ export function AiChatAssistant() {
             <PopoverContent className="w-64 text-sm">
               <p>
                 Ask our AI any question about a specific meme coin (e.g., "What are the risks for Dogecoin?") 
-                or general crypto topics (e.g., "Explain Bitcoin halving"). The AI will provide detailed advice, 
-                reasoning, and potential risks.
+                or general crypto topics (e.g., "Explain Bitcoin halving"). If you provide a coin name, the AI will use its current live price for context.
               </p>
             </PopoverContent>
           </Popover>
         </div>
         <CardDescription>
-          Ask questions about specific meme coins or general crypto topics.
+          Ask questions about specific meme coins (live price context used if coin specified) or general crypto topics.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden flex flex-col">
@@ -119,11 +156,20 @@ export function AiChatAssistant() {
                     </AvatarFallback>
                   </Avatar>
                 )}
+                 {msg.type === "system" && (
+                  <Avatar className="h-8 w-8 opacity-70">
+                    <AvatarFallback className="bg-muted text-muted-foreground border border-dashed">
+                      <Info className="h-4 w-4"/>
+                    </AvatarFallback>
+                  </Avatar>
+                )}
                 <div
                   className={cn(
                     "max-w-[70%] rounded-lg p-3 text-base sm:text-sm shadow",
                     msg.type === "user"
                       ? "bg-primary text-primary-foreground"
+                      : msg.type === "system" 
+                      ? "bg-background border border-dashed text-muted-foreground text-xs italic"
                       : "bg-muted text-muted-foreground"
                   )}
                 >
@@ -139,7 +185,7 @@ export function AiChatAssistant() {
                 )}
               </div>
             ))}
-            {isLoading && (
+            {isLoading && ( // This now represents the combined loading state (price fetch + AI response)
               <div className="flex items-center space-x-2 justify-start">
                 <Avatar className="h-8 w-8">
                    <AvatarFallback className="bg-primary text-primary-foreground">
