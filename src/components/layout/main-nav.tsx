@@ -67,24 +67,18 @@ export function MainNav() {
     <SidebarMenu>
       {navItemsToDisplay.map((item) => {
         let tooltipText = item.label;
-        let featureLockedForCurrentUser = false;
-
-        if (item.href === "/admin/dashboard") {
-          // No tier-based locking for admin, only visibility based on isAdmin
-        } else if (item.isPremiumFeature) {
-          tooltipText = `${item.label} (Premium Feature)`;
-          if (currentTier !== "Premium" && currentTier !== "Pro") { // Pro gets access to Premium features
-            tooltipText = `${item.label} (Upgrade to Premium/Pro)`;
-            featureLockedForCurrentUser = true;
-          }
-        } else if (item.isProFeature) {
-          tooltipText = `${item.label} (Pro/Premium Feature)`;
-          if (currentTier !== "Pro" && currentTier !== "Premium") {
-            tooltipText = `${item.label} (Upgrade to Pro/Premium)`;
-            featureLockedForCurrentUser = true;
-          }
-        }
         
+        // Determine if feature is locked for the current user
+        let featureIsEffectivelyLocked = false;
+        if (item.isPremiumFeature && currentTier !== "Premium" && currentTier !== "Pro") {
+          tooltipText = `${item.label} (Upgrade to Premium/Pro)`;
+          featureIsEffectivelyLocked = true;
+        } else if (item.isProFeature && currentTier !== "Pro" && currentTier !== "Premium") {
+           tooltipText = `${item.label} (Upgrade to Pro/Premium)`;
+           featureIsEffectivelyLocked = true;
+        }
+
+
         return (
           <SidebarMenuItem key={item.href}>
             <SidebarMenuButton
@@ -96,6 +90,7 @@ export function MainNav() {
               }}
               className={cn(
                 "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                // No blur/opacity here, locking is handled on the page itself
               )}
               aria-disabled={false} 
             >
@@ -103,7 +98,9 @@ export function MainNav() {
                 <item.icon />
                 <span className="flex items-center">
                   {item.label}
-                  {(item.isProFeature || item.isPremiumFeature) && item.href !== "/admin/dashboard" && <Rocket className="ml-auto h-3.5 w-3.5 text-neon opacity-80 group-data-[collapsible=icon]:hidden" />}
+                  {(item.isProFeature || item.isPremiumFeature) && item.href !== "/admin/dashboard" && (
+                     <Rocket className="ml-auto h-3.5 w-3.5 text-neon opacity-80 group-data-[collapsible=icon]:hidden" />
+                  )}
                 </span>
               </Link>
             </SidebarMenuButton>
