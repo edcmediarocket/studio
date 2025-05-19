@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, BarChart2, Eye, UserCircle, BotMessageSquare, Signal, Calculator, GitCompareArrows, Activity, SlidersHorizontal, Newspaper, Rocket, Siren, Lightbulb, DatabaseZap, ShieldQuestion, ShieldAlert, Wand2 } from "lucide-react";
+import { LayoutDashboard, BarChart2, Eye, UserCircle, BotMessageSquare, Signal, Calculator, GitCompareArrows, Activity, SlidersHorizontal, Newspaper, Rocket, Siren, Lightbulb, DatabaseZap, ShieldQuestion, ShieldAlert, Flame } from "lucide-react";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
 import { useTier } from "@/context/tier-context";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
@@ -21,8 +21,9 @@ interface NavItem {
 const baseNavItems: NavItem[] = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/signals", label: "AI Signals", icon: Signal },
+  { href: "/alpha-feed", label: "Alpha Feed", icon: Flame, isPremiumFeature: true },
   { href: "/custom-signals", label: "Custom Signals", icon: SlidersHorizontal, isProFeature: true },
-  { href: "/ai-advisor", label: "AI Advisor", icon: BotMessageSquare, isProFeature: true }, // Added AI Advisor
+  { href: "/ai-advisor", label: "AI Advisor", icon: BotMessageSquare, isProFeature: true }, 
   { href: "/analysis", label: "AI Analysis", icon: BarChart2 },
   { href: "/news-buzz", label: "News & Buzz", icon: Newspaper },
   { href: "/narrative-engine", label: "Narrative Engine", icon: Lightbulb, isPremiumFeature: true },
@@ -66,30 +67,24 @@ export function MainNav() {
     <SidebarMenu>
       {navItemsToDisplay.map((item) => {
         let tooltipText = item.label;
-        let featureLocked = false;
-        let styleAsLocked = false;
+        let featureLockedForCurrentUser = false;
 
         if (item.href === "/admin/dashboard") {
-          // No special locking for admin based on tier, only visibility
+          // No tier-based locking for admin, only visibility based on isAdmin
         } else if (item.isPremiumFeature) {
           tooltipText = `${item.label} (Premium Feature)`;
-          if (currentTier !== "Premium" && currentTier !== "Pro") { // Pro has access to Premium
-            tooltipText = `${item.label} (Premium Feature - Upgrade to Access)`;
-            featureLocked = true; // This determines if the page content is locked
-            styleAsLocked = true; // This determines if the nav link itself is styled as locked
+          if (currentTier !== "Premium" && currentTier !== "Pro") { // Pro gets access to Premium features
+            tooltipText = `${item.label} (Upgrade to Premium/Pro)`;
+            featureLockedForCurrentUser = true;
           }
         } else if (item.isProFeature) {
           tooltipText = `${item.label} (Pro/Premium Feature)`;
           if (currentTier !== "Pro" && currentTier !== "Premium") {
-            tooltipText = `${item.label} (Pro/Premium Feature - Upgrade to Access)`;
-            featureLocked = true;
-            styleAsLocked = true;
+            tooltipText = `${item.label} (Upgrade to Pro/Premium)`;
+            featureLockedForCurrentUser = true;
           }
         }
         
-        // Override styleAsLocked to false, making nav links always appear active
-        styleAsLocked = false;
-
         return (
           <SidebarMenuItem key={item.href}>
             <SidebarMenuButton
@@ -101,9 +96,8 @@ export function MainNav() {
               }}
               className={cn(
                 "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                // styleAsLocked && "blur-sm opacity-50 pointer-events-none" // Removed conditional blur
               )}
-              aria-disabled={false} // Always false now to ensure links are not visually treated as disabled by assistive tech
+              aria-disabled={false} 
             >
               <Link href={item.href} onClick={handleLinkClick}>
                 <item.icon />
