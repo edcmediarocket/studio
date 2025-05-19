@@ -10,10 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon } from 'lucide-react';
 import { Table, TableBody, TableCell, TableRow, TableHead, TableHeader } from '@/components/ui/table';
 import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from '@/ai/flows/get-coin-trading-signal';
 import { getCoinRiskAssessment, type GetCoinRiskAssessmentOutput } from '@/ai/flows/get-coin-risk-assessment';
+import { getViralPrediction, type GetViralPredictionOutput } from '@/ai/flows/get-viral-prediction'; // Added
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { StatItem } from '@/components/shared/stat-item';
@@ -113,6 +114,10 @@ export default function CoinDetailPage() {
   const [riskLoading, setRiskLoading] = useState(false);
   const [riskError, setRiskError] = useState<string | null>(null);
 
+  const [viralPrediction, setViralPrediction] = useState<GetViralPredictionOutput | null>(null);
+  const [viralPredictionLoading, setViralPredictionLoading] = useState(false);
+  const [viralPredictionError, setViralPredictionError] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (!coinId) return;
@@ -121,9 +126,11 @@ export default function CoinDetailPage() {
       setLoading(true);
       setSignalLoading(true);
       setRiskLoading(true);
+      setViralPredictionLoading(true); // Start loading for viral prediction
       setError(null);
       setSignalError(null);
       setRiskError(null);
+      setViralPredictionError(null); // Reset viral prediction error
 
       try {
         // Fetch main coin details
@@ -136,21 +143,28 @@ export default function CoinDetailPage() {
         setCoinDetail(detailData);
         setLoading(false);
 
-        // Once main details are fetched, fetch AI signal and risk assessment
-        if (detailData?.name && detailData.market_data?.current_price?.usd !== undefined) {
-          try {
-            const signal = await getCoinTradingSignal({ 
-              coinName: detailData.name,
-              currentPriceUSD: detailData.market_data.current_price.usd 
-            });
-            setTradingSignal(signal);
-          } catch (err) {
-            console.error("Error fetching trading signal:", err);
-            setSignalError(err instanceof Error && err.message.toLowerCase().includes('failed to fetch') ? "Network error: Failed to fetch AI trading signal." : "Failed to fetch AI trading signal. Please try again later.");
-          } finally {
-            setSignalLoading(false);
+        // Once main details are fetched, fetch AI analyses
+        if (detailData?.name) {
+          // Trading Signal
+          if (detailData.market_data?.current_price?.usd !== undefined) {
+            try {
+              const signal = await getCoinTradingSignal({ 
+                coinName: detailData.name,
+                currentPriceUSD: detailData.market_data.current_price.usd 
+              });
+              setTradingSignal(signal);
+            } catch (err) {
+              console.error("Error fetching trading signal:", err);
+              setSignalError(err instanceof Error && err.message.toLowerCase().includes('failed to fetch') ? "Network error: Failed to fetch AI trading signal." : "Failed to fetch AI trading signal. Please try again later.");
+            } finally {
+              setSignalLoading(false);
+            }
+          } else {
+            setSignalLoading(false); // No signal if price is missing
+            setSignalError("Current price data missing, cannot generate trading signal.");
           }
 
+          // Risk Assessment
           try {
             const risk = await getCoinRiskAssessment({ coinName: detailData.name });
             setRiskAssessment(risk);
@@ -160,9 +174,26 @@ export default function CoinDetailPage() {
           } finally {
             setRiskLoading(false);
           }
+
+          // Viral Prediction
+          try {
+            const prediction = await getViralPrediction({ coinName: detailData.name });
+            setViralPrediction(prediction);
+          } catch (err) {
+            console.error("Error fetching viral prediction:", err);
+            setViralPredictionError(err instanceof Error && err.message.toLowerCase().includes('failed to fetch') ? "Network error: Failed to fetch AI virality prediction." : "Failed to fetch AI virality prediction. Please try again later.");
+          } finally {
+            setViralPredictionLoading(false);
+          }
+
         } else {
-          setSignalLoading(false); // No signal if price is missing
-          setRiskLoading(false); // No risk assessment if name is missing
+          setSignalLoading(false); 
+          setRiskLoading(false); 
+          setViralPredictionLoading(false);
+          const errorMsg = "Coin name missing from fetched data, cannot proceed with AI analyses.";
+          setSignalError(errorMsg);
+          setRiskError(errorMsg);
+          setViralPredictionError(errorMsg);
         }
 
       } catch (err) {
@@ -174,6 +205,7 @@ export default function CoinDetailPage() {
         setLoading(false);
         setSignalLoading(false);
         setRiskLoading(false);
+        setViralPredictionLoading(false);
       }
     };
 
@@ -181,10 +213,10 @@ export default function CoinDetailPage() {
   }, [coinId]);
 
 
-  if (loading && !coinDetail) { // Show main skeleton only if coinDetail is not yet fetched
+  if (loading && !coinDetail) { 
     return (
       <div className="space-y-6 p-4">
-        <Skeleton className="h-8 w-32 mb-4" /> {/* Back button */}
+        <Skeleton className="h-8 w-32 mb-4" /> 
         <div className="p-4 bg-card rounded-lg shadow-lg">
           <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-4">
             <Skeleton className="h-16 w-16 rounded-full" />
@@ -198,7 +230,7 @@ export default function CoinDetailPage() {
             </div>
           </div>
         </div>
-        {[...Array(4)].map((_, i) => (
+        {[...Array(5)].map((_, i) => ( // Increased skeleton cards
           <Card key={i} className="shadow-lg">
             <CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader>
             <CardContent className="space-y-3">
@@ -296,7 +328,7 @@ export default function CoinDetailPage() {
             <div className="space-y-1">
                  <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><Target className="mr-2 h-5 w-5"/>Future Price Outlook</h4>
                  <StatItem label="Short-Term Target" value={tradingSignal.futurePriceOutlook?.shortTermTarget} className="px-3 py-1.5 bg-muted/30 rounded-t-md border-b-0" labelClassName="text-xs" valueClassName="text-sm"/>
-                 <StatItem label="Long-Term Target" value={tradingSignal.futurePriceOutlook?.longTermTarget} className="px-3 py-1.5 bg-muted/30 rounded-b-md" labelClassName="text-xs" valueClassName="text-sm"/>
+                 <StatItem label="Mid-Term Target" value={tradingSignal.futurePriceOutlook?.midTermTarget} className="px-3 py-1.5 bg-muted/30 rounded-b-md" labelClassName="text-xs" valueClassName="text-sm"/>
             </div>
              <div className="space-y-1">
                 <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><ShieldCheck className="mr-2 h-5 w-5"/>Trading Targets</h4>
@@ -317,7 +349,7 @@ export default function CoinDetailPage() {
         </div>
       );
     }
-    return null;
+    return <p className="text-muted-foreground text-sm text-center">No AI trading signal available for this coin.</p>;
   };
 
   const aiSignalInfo = (
@@ -325,14 +357,14 @@ export default function CoinDetailPage() {
       <h4 className="font-semibold mb-2 text-base">About AI Trading Signal</h4>
       <p>
         This section provides an AI-generated trading signal (Buy, Sell, or Hold) for the selected coin, 
-        based on simulated analysis of various market factors. It includes:
+        based on simulated analysis of various market factors including current price. It includes:
       </p>
       <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
         <li><strong>Recommendation:</strong> The AI's suggested action.</li>
         <li><strong>Reasoning:</strong> A brief explanation for the signal.</li>
         <li><strong>Rocket Score:</strong> A 1-5 score indicating bullish potential and AI confidence.</li>
         <li><strong>Detailed Analysis:</strong> In-depth factors influencing the signal.</li>
-        <li><strong>Future Price Outlook:</strong> Speculative short and long-term price targets.</li>
+        <li><strong>Future Price Outlook:</strong> Speculative short and mid-term price targets.</li>
         <li><strong>Trading Targets:</strong> Suggested entry, stop-loss, and take-profit levels.</li>
         <li><strong>Investment Advice:</strong> General strategy notes.</li>
       </ul>
@@ -346,7 +378,7 @@ export default function CoinDetailPage() {
     switch (level) {
       case 'Low': return 'bg-green-500 hover:bg-green-600 text-white';
       case 'Medium': return 'bg-yellow-500 hover:bg-yellow-600 text-black';
-      case 'High': return 'bg-orange-500 hover:bg-orange-600 text-white'; // Assuming orange is desired for High
+      case 'High': return 'bg-orange-500 hover:bg-orange-600 text-white';
       case 'Very High': return 'bg-red-600 hover:bg-red-700 text-white';
       case 'Degenerate Gambler Zone': return 'bg-purple-600 hover:bg-purple-700 text-white';
       default: return 'bg-muted text-muted-foreground';
@@ -386,7 +418,7 @@ export default function CoinDetailPage() {
             </Badge>
             <p className="text-sm text-muted-foreground mt-1">Overall Risk Score: {riskAssessment.riskScore}/100</p>
             <Progress value={riskAssessment.riskScore} className="h-2 mt-1 max-w-xs mx-auto [&>div]:bg-primary" />
-             <p className="text-xs text-muted-foreground mt-1">Assessed on: {riskAssessment.assessmentDate}</p>
+             <p className="text-xs text-muted-foreground mt-1">Assessed on: {new Date(riskAssessment.assessmentDate).toLocaleDateString()}</p>
           </div>
 
           <Separator />
@@ -417,7 +449,7 @@ export default function CoinDetailPage() {
         </div>
       );
     }
-    return null;
+    return <p className="text-muted-foreground text-sm text-center">No AI risk assessment available for this coin.</p>;
   };
 
    const aiRiskMeterInfo = (
@@ -435,6 +467,91 @@ export default function CoinDetailPage() {
       </ul>
       <p className="mt-2 text-xs">
         This information is AI-generated, speculative, and not financial advice. Always DYOR.
+      </p>
+    </>
+  );
+
+  const getConfidenceBadgeColor = (confidence?: 'High' | 'Medium' | 'Low') => {
+    if (confidence === 'High') return 'bg-green-500 hover:bg-green-600 text-white';
+    if (confidence === 'Medium') return 'bg-yellow-500 hover:bg-yellow-600 text-black';
+    if (confidence === 'Low') return 'bg-red-500 hover:bg-red-600 text-white';
+    return 'bg-muted text-muted-foreground';
+  };
+
+  const renderViralPredictionContent = () => {
+    if (viralPredictionLoading) {
+      return (
+        <div className="space-y-3 py-4">
+          <div className="flex items-center justify-center">
+             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+             <p className="ml-3 text-muted-foreground text-lg">Predicting Virality Potential...</p>
+          </div>
+          <Skeleton className="h-6 w-1/4 mx-auto" />
+          <Skeleton className="h-4 w-1/2 mx-auto mb-2" />
+          <Skeleton className="h-16 w-full" />
+        </div>
+      );
+    }
+    if (viralPredictionError) {
+      return (
+        <Alert variant="destructive" className="my-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Virality Prediction Error</AlertTitle>
+          <AlertDescription>{viralPredictionError}</AlertDescription>
+        </Alert>
+      );
+    }
+    if (viralPrediction) {
+      return (
+        <div className="space-y-4">
+          <div className="text-center">
+            <Badge variant="outline" className="text-lg px-4 py-1.5 font-semibold border-neon text-neon">
+              {viralPrediction.timeToTrendEstimate}
+            </Badge>
+            <p className="text-sm text-muted-foreground mt-1">
+              AI Confidence: 
+              <Badge className={`ml-1.5 text-xs ${getConfidenceBadgeColor(viralPrediction.confidence)}`}>
+                {viralPrediction.confidence}
+              </Badge>
+            </p>
+          </div>
+
+          <Separator />
+          
+          <div>
+            <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><ViralityIcon className="mr-1.5 h-5 w-5"/>Reasoning:</h4>
+            <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md whitespace-pre-wrap">{viralPrediction.reasoning}</p>
+          </div>
+
+          <div>
+            <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><ListChecks className="mr-1.5 h-5 w-5"/>Key Factors:</h4>
+            <ul className="list-disc list-inside space-y-1 pl-4 text-sm text-muted-foreground">
+              {viralPrediction.keyFactors.map((factor, index) => (
+                <li key={`viral-factor-${index}`}>{factor}</li>
+              ))}
+            </ul>
+          </div>
+          <p className="text-xs text-muted-foreground pt-3 border-t border-muted/30 mt-3">{viralPrediction.disclaimer}</p>
+        </div>
+      );
+    }
+    return <p className="text-muted-foreground text-sm text-center">No AI virality prediction available for this coin.</p>;
+  };
+
+  const aiViralityInfo = (
+    <>
+      <h4 className="font-semibold mb-2 text-base">About AI Time-to-Viral Predictor</h4>
+      <p>
+        This AI feature simulates monitoring social media volume, mentions, influencer activity, and market catalysts to estimate a coin's potential to trend or "go viral."
+      </p>
+      <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
+        <li><strong>Time to Trend Estimate:</strong> AI's speculative timeframe for potential virality.</li>
+        <li><strong>Confidence:</strong> The AI's confidence in this prediction.</li>
+        <li><strong>Key Factors:</strong> Simulated drivers behind the prediction.</li>
+        <li><strong>Reasoning:</strong> AI's explanation.</li>
+      </ul>
+      <p className="mt-2 text-xs">
+        This is a highly speculative AI feature. Not financial advice. DYOR.
       </p>
     </>
   );
@@ -486,6 +603,15 @@ export default function CoinDetailPage() {
                 infoPopoverContent={aiRiskMeterInfo}
               >
               {renderRiskAssessmentContent()}
+            </SectionCard>
+            
+            <SectionCard
+              title="AI Time-to-Viral Predictor"
+              icon={<ViralityIcon className="h-5 w-5" />}
+              noPadding
+              infoPopoverContent={aiViralityInfo}
+            >
+              {renderViralPredictionContent()}
             </SectionCard>
 
           <SectionCard title="Description" icon={<BookOpen className="h-5 w-5"/>}>
@@ -562,3 +688,5 @@ export default function CoinDetailPage() {
     </div>
   );
 }
+
+    
