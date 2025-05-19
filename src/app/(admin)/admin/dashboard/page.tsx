@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShieldAlert, Users, Settings } from "lucide-react";
+import { Loader2, ShieldAlert, Users, Settings, BarChart3, ShoppingCart, Users2 } from "lucide-react";
 import type { UserTier } from "@/context/tier-context";
 
 interface SimulatedUser {
@@ -27,6 +27,19 @@ const simulatedUsers: SimulatedUser[] = [
   { id: "user5", email: "another.user@example.com", displayName: "Jane Doe", tier: "Free", joinedDate: "2024-05-01" },
   { id: "user6", email: "admin@rocketmeme.com", displayName: "Admin User", tier: "Premium", joinedDate: "2023-12-01" },
 ];
+
+// Simulated statistics
+const siteStats = {
+  totalUsers: 1258,
+  activeSubscriptions: {
+    Free: 800,
+    Basic: 250,
+    Pro: 150,
+    Premium: 58,
+  },
+  dailyActiveUsers: 312,
+};
+
 
 export default function AdminDashboardPage() {
   const { isAdmin, user, loading } = useAdminAuth();
@@ -50,20 +63,21 @@ export default function AdminDashboardPage() {
   }
 
   const getTierBadgeVariant = (tier: UserTier) => {
-    if (tier === 'Premium') return 'default'; 
-    if (tier === 'Pro') return 'default'; 
+    if (tier === 'Premium') return 'default';
+    if (tier === 'Pro') return 'default';
     if (tier === 'Basic') return 'secondary';
     return 'outline';
   };
-  
+
   const getTierBadgeClassName = (tier: UserTier) => {
     if (tier === 'Premium') return 'bg-purple-500 hover:bg-purple-600 text-white';
     if (tier === 'Pro') return 'bg-neon text-background hover:bg-neon/90';
+    if (tier === 'Basic') return 'bg-primary/80 text-primary-foreground hover:bg-primary/70'; // Using primary for Basic
     return '';
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 p-4 md:p-6">
       <div>
         <h1 className="text-3xl md:text-4xl font-bold text-neon mb-2 flex items-center">
           <ShieldAlert className="mr-3 h-8 w-8" /> Admin Dashboard
@@ -72,6 +86,50 @@ export default function AdminDashboardPage() {
           Welcome, Admin {user?.displayName || user?.email}! Manage users and oversee app activity.
         </p>
       </div>
+
+      {/* Site Statistics Section */}
+      <section>
+        <h2 className="text-2xl font-semibold text-primary mb-4">Site Statistics (Simulated)</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card className="shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Users</CardTitle>
+              <Users2 className="h-5 w-5 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-foreground">{siteStats.totalUsers.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">+50 in the last 7 days</p>
+            </CardContent>
+          </Card>
+          <Card className="shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Active Subscriptions</CardTitle>
+              <ShoppingCart className="h-5 w-5 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-foreground">
+                {Object.values(siteStats.activeSubscriptions).reduce((a, b) => a + b, 0) - siteStats.activeSubscriptions.Free}
+              </div>
+              <div className="text-xs text-muted-foreground space-y-0.5 mt-1">
+                <p>Premium: {siteStats.activeSubscriptions.Premium}</p>
+                <p>Pro: {siteStats.activeSubscriptions.Pro}</p>
+                <p>Basic: {siteStats.activeSubscriptions.Basic}</p>
+                <p>Free: {siteStats.activeSubscriptions.Free}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Daily Active Users (DAU)</CardTitle>
+              <BarChart3 className="h-5 w-5 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-foreground">{siteStats.dailyActiveUsers.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">Trending up by 5%</p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
 
       <Card className="shadow-lg">
         <CardHeader>
@@ -105,7 +163,7 @@ export default function AdminDashboardPage() {
                   <TableCell className="font-medium">{simUser.displayName || "N/A"}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{simUser.email}</TableCell>
                   <TableCell className="text-center hidden sm:table-cell">
-                    <Badge 
+                    <Badge
                       variant={getTierBadgeVariant(simUser.tier)}
                       className={getTierBadgeClassName(simUser.tier)}
                     >
