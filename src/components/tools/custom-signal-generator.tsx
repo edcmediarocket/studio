@@ -112,6 +112,7 @@ export function CustomSignalGenerator() {
     try {
       const result = await getCustomizedCoinTradingSignal({
         coinName: coinName.trim(),
+        currentPriceUSD: currentCoinPrice !== null ? currentCoinPrice : undefined, // Pass current price
         timeframe,
         riskProfile,
       });
