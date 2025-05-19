@@ -37,6 +37,15 @@ export default function LoginPage() {
     event.preventDefault();
     setIsLoading(true);
     setError(null);
+
+    if (!auth) {
+      console.error("Firebase auth is not initialized for email/password action.");
+      setError("Authentication service is not ready. Please try again in a moment.");
+      toast({ title: "Error", description: "Authentication service not ready.", variant: "destructive" });
+      setIsLoading(false);
+      return;
+    }
+
     try {
       if (isSignUpMode) {
         await createUserWithEmailAndPassword(auth, email, password);
@@ -58,6 +67,15 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     setError(null);
+
+    if (!auth) {
+      console.error("Firebase auth is not initialized for Google Sign-In.");
+      setError("Authentication service is not ready. Please try again in a moment.");
+      toast({ title: "Error", description: "Authentication service not ready.", variant: "destructive" });
+      setIsLoading(false);
+      return;
+    }
+
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
@@ -101,7 +119,7 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent className="grid gap-4">
           <Button variant="outline" className="w-full text-lg py-6" onClick={handleGoogleLogin} disabled={isLoading}>
-            {isLoading && !isSignUpMode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
+            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
             Sign in with Google
           </Button>
           <div className="relative">
@@ -171,5 +189,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    
