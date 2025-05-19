@@ -25,13 +25,16 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'coin-images.coingecko.com', // Already present
+        hostname: 'coin-images.coingecko.com',
+        port: '',
+        pathname: '/**',
+      },
+      { // Added for the rocket image
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
         port: '',
         pathname: '/**',
       }
-      // assets.coingecko.com is used for `thumb` images in the trending API
-      // No need to add it again if it's already covered by a broader rule.
-      // It is already present and covered by the existing entry.
     ],
   },
 };

@@ -4,7 +4,8 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from '@/components/layout/providers';
-import { PwaRegistration } from '@/components/layout/pwa-registration'; // Import PWA registration component
+import { PwaRegistration } from '@/components/layout/pwa-registration';
+import { AnimatedGalaxyBackground } from '@/components/layout/animated-galaxy-background'; // Added import
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -19,7 +20,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Rocket Meme',
   description: 'AI-Powered Meme Coin Analysis & Signals',
-  manifest: '/manifest.json', // Added manifest link to metadata
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -44,13 +45,13 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="192x192" href="https://placehold.co/192x192.png" data-ai-hint="app icon" />
         <link rel="icon" type="image/png" sizes="512x512" href="https://placehold.co/512x512.png" data-ai-hint="app icon large" />
         
-        {/* Link to manifest is now handled by Next.js Metadata API via metadata.manifest */}
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
+        <AnimatedGalaxyBackground /> {/* Added the new background component here */}
         <Providers>
           {children}
           <Toaster />
-          <PwaRegistration /> {/* Add PWA registration component */}
+          <PwaRegistration />
         </Providers>
       </body>
     </html>

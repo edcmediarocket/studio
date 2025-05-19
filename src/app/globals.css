@@ -66,29 +66,11 @@ body {
     @apply border-border;
   }
   body {
+    background-color: hsl(var(--background)); /* Explicitly black or dark base */
     color: hsl(var(--foreground)); /* Apply base text color */
     min-height: 100vh;
     font-feature-settings: "rlig" 1, "calt" 1;
-
-    /* Animated Starry Background */
-    background-color: hsl(var(--background)); /* Explicitly black or dark base FOR THE VERY BOTTOM LAYER */
-    background-image:
-      /* Layer 1: Small, dense stars */
-      radial-gradient(1px 1px at 10% 30%, hsl(var(--foreground)), transparent),
-      radial-gradient(1px 1px at 70% 10%, hsl(var(--foreground)), transparent),
-      radial-gradient(1.5px 1.5px at 50% 50%, hsla(var(--foreground), 0.8), transparent),
-      radial-gradient(1px 1px at 30% 80%, hsla(var(--foreground), 0.7), transparent),
-      radial-gradient(1.5px 1.5px at 90% 60%, hsl(var(--foreground)), transparent),
-      /* Layer 2: Medium, less dense stars */
-      radial-gradient(2px 2px at 20% 50%, hsl(var(--foreground)), transparent),
-      radial-gradient(2.5px 2.5px at 80% 70%, hsla(var(--foreground), 0.9), transparent),
-      /* Layer 3: Larger, sparse stars (optional for depth) */
-      radial-gradient(3px 3px at 40% 20%, hsla(var(--foreground), 0.7), transparent),
-      radial-gradient(2.5px 2.5px at 60% 90%, hsl(var(--foreground)), transparent);
-    background-repeat: repeat;
-    background-size: 600px 600px; /* Size of the repeating pattern tile for all layers */
-    background-attachment: fixed; /* Stars stay fixed during page scroll */
-    animation: animatedStarfield 240s linear infinite; /* Adjust time for speed of star movement */
+    /* Old starfield animation removed from here */
   }
 }
 
@@ -110,14 +92,49 @@ body {
   }
 }
 
-@keyframes animatedStarfield {
-  from {
-    background-position: 0 0;
+/* New animations for Galaxy Background */
+@keyframes shootingStar {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
   }
-  to {
-    /* Large values create a slow diagonal drift. Adjust for different speeds/directions */
-    /* This single background-position will apply to all layers of stars */
-    background-position: -10000px 5000px; 
+  100% {
+    transform: translate(calc(80vw + 100px), calc(40vh + 50px)) scale(0.5); /* Adjusted travel distance */
+    opacity: 0;
   }
 }
 
+@keyframes blastoff {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  20% {
+    transform: translateY(0) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-150vh) scale(0.5);
+    opacity: 0;
+  }
+}
+
+.animate-shooting-star-1 {
+  animation: shootingStar 5s linear infinite;
+}
+.animate-shooting-star-2 {
+  animation: shootingStar 7s linear infinite 1.2s; /* Varied delays */
+}
+.animate-shooting-star-3 {
+  animation: shootingStar 6s linear infinite 2.5s;
+}
+.animate-shooting-star-4 {
+  animation: shootingStar 8s linear infinite 0.7s;
+}
+.animate-shooting-star-5 {
+  animation: shootingStar 5.5s linear infinite 3s;
+}
+
+.animate-blastoff {
+  animation: blastoff 6s ease-in forwards 1s; /* Added 1s delay before blastoff */
+}
