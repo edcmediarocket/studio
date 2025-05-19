@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { getAlphaFeedIdeas, type GetAlphaFeedIdeasOutput, type TradeIdea, AlphaIdeaTypeEnum } from "@/ai/flows/get-alpha-feed-ideas";
+import { getAlphaFeedIdeas, type GetAlphaFeedIdeasOutput, type TradeIdea, AlphaIdeaTypeOptions } from "@/ai/flows/get-alpha-feed-ideas";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle, Info, RefreshCw, Sparkles, Target, ShieldHalf, CalendarDays, Brain, TrendingUp, Zap, Filter, X } from "lucide-react";
@@ -19,7 +19,7 @@ export function AlphaFeedDisplay() {
   const [error, setError] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string | undefined>(undefined);
 
-  const ideaTypes = AlphaIdeaTypeEnum.options;
+  const ideaTypes = AlphaIdeaTypeOptions; // Use the exported options array
 
   const fetchFeed = useCallback(async (filter?: string) => {
     setIsLoading(true);
@@ -223,3 +223,5 @@ declare module "@/ai/flows/get-alpha-feed-ideas" {
     lastGeneratedTime?: string;
   }
 }
+
+    

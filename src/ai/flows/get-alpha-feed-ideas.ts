@@ -17,14 +17,15 @@ const GetAlphaFeedIdeasInputSchema = z.object({
 export type GetAlphaFeedIdeasInput = z.infer<typeof GetAlphaFeedIdeasInputSchema>;
 
 const IdeaTypeEnum = z.enum([
-    "High Potential Upside", 
-    "Narrative Play", 
-    "Contrarian Bet", 
+    "High Potential Upside",
+    "Narrative Play",
+    "Contrarian Bet",
     "Short-Term Momentum",
     "Undervalued Gem",
     "Ecosystem Growth"
 ]);
 export type IdeaType = z.infer<typeof IdeaTypeEnum>;
+export const AlphaIdeaTypeOptions = IdeaTypeEnum.options; // Export options array
 
 
 const TradeIdeaSchema = z.object({
@@ -33,8 +34,8 @@ const TradeIdeaSchema = z.object({
   ideaType: IdeaTypeEnum.describe('The category or type of trade idea.'),
   signal: z.enum(["Buy", "Accumulate", "Watch", "Consider Short"]).describe('The suggested trading action.'),
   riskRewardProfile: z.enum([
-      "High Risk / High Reward", 
-      "Medium Risk / Medium Reward", 
+      "High Risk / High Reward",
+      "Medium Risk / Medium Reward",
       "Low Risk / Calculated Reward",
       "Speculative / Asymmetric Upside"
     ]).describe('The assessed risk vs. reward profile of the idea.'),
@@ -102,5 +103,8 @@ const getAlphaFeedIdeasFlow = ai.defineFlow(
   }
 );
 
-// Exporting IdeaTypeEnum for use in frontend filters
-export { IdeaTypeEnum as AlphaIdeaTypeEnum };
+// Removed: export { IdeaTypeEnum as AlphaIdeaTypeEnum };
+// The type `IdeaType` is still exported correctly.
+// The options for the enum are now exported as AlphaIdeaTypeOptions above.
+
+    
