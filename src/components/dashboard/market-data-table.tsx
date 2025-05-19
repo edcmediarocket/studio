@@ -31,6 +31,8 @@ interface CoinData {
   price_change_percentage_24h: number;
 }
 
+const FAVORITES_STORAGE_KEY = "rocketMemeWatchlistFavorites";
+
 export function MarketDataTable() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: keyof CoinData | null; direction: 'ascending' | 'descending' }>({ key: 'market_cap', direction: 'descending' });
@@ -38,6 +40,29 @@ export function MarketDataTable() {
   const [error, setError] = useState<string | null>(null);
   const [coins, setCoins] = useState<CoinData[]>([]);
   const [favoritedCoins, setFavoritedCoins] = useState(new Set<string>());
+
+  // Load favorites from localStorage on mount
+  useEffect(() => {
+    try {
+      const storedFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY);
+      if (storedFavorites) {
+        setFavoritedCoins(new Set(JSON.parse(storedFavorites)));
+      }
+    } catch (e) {
+      console.error("Failed to load favorites from localStorage", e);
+      // In a real app, you might want to handle this more gracefully
+    }
+  }, []);
+
+  // Save favorites to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(Array.from(favoritedCoins)));
+    } catch (e) {
+      console.error("Failed to save favorites to localStorage", e);
+    }
+  }, [favoritedCoins]);
+
 
   useEffect(() => {
     const fetchCoinData = async () => {
@@ -89,7 +114,6 @@ export function MarketDataTable() {
       }
       return newFavorites;
     });
-    // In a real app, you'd persist this to localStorage or a backend.
   };
 
   const sortedCoins = useMemo(() => {
