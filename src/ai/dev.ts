@@ -17,4 +17,5 @@ import '@/ai/flows/get-future-price-prediction.ts';
 import '@/ai/flows/get-market-narratives.ts';
 import '@/ai/flows/get-onchain-intelligence.ts';
 import '@/ai/flows/get-prediction-confidence-insights.ts';
-import '@/ai/flows/get-alpha-feed-ideas.ts'; // Added new flow
+import '@/ai/flows/get-alpha-feed-ideas.ts';
+import '@/ai/flows/get-coin-risk-assessment.ts'; // Added new flow

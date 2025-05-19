@@ -10,13 +10,15 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap } from 'lucide-react';
 import { Table, TableBody, TableCell, TableRow, TableHead, TableHeader } from '@/components/ui/table';
 import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from '@/ai/flows/get-coin-trading-signal';
+import { getCoinRiskAssessment, type GetCoinRiskAssessmentOutput } from '@/ai/flows/get-coin-risk-assessment';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { StatItem } from '@/components/shared/stat-item';
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Progress } from '@/components/ui/progress';
 
 interface CoinDetail {
   id: string;
@@ -107,65 +109,79 @@ export default function CoinDetailPage() {
   const [signalLoading, setSignalLoading] = useState(false);
   const [signalError, setSignalError] = useState<string | null>(null);
 
+  const [riskAssessment, setRiskAssessment] = useState<GetCoinRiskAssessmentOutput | null>(null);
+  const [riskLoading, setRiskLoading] = useState(false);
+  const [riskError, setRiskError] = useState<string | null>(null);
+
+
   useEffect(() => {
     if (!coinId) return;
 
-    const fetchCoinDetail = async () => {
+    const fetchAllCoinData = async () => {
       setLoading(true);
+      setSignalLoading(true);
+      setRiskLoading(true);
       setError(null);
+      setSignalError(null);
+      setRiskError(null);
+
       try {
-        const response = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`);
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: "Failed to parse error response" }));
-          throw new Error(errorData.error || `Failed to fetch coin data: ${response.statusText}`);
+        // Fetch main coin details
+        const detailResponse = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`);
+        if (!detailResponse.ok) {
+          const errorData = await detailResponse.json().catch(() => ({ error: "Failed to parse error response" }));
+          throw new Error(errorData.error || `Failed to fetch coin data: ${detailResponse.statusText}`);
         }
-        const data = await response.json();
-        setCoinDetail(data);
-      } catch (err) {
-        console.error("Error in fetchCoinDetail:", err);
-        if (err instanceof TypeError && err.message.toLowerCase().includes('failed to fetch')) {
-          setError(`Network error: Could not connect to fetch coin data for ${coinId}. Please check your internet connection and try again.`);
-        } else if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("An unknown error occurred while fetching coin data.");
-        }
-      } finally {
+        const detailData = await detailResponse.json();
+        setCoinDetail(detailData);
         setLoading(false);
+
+        // Once main details are fetched, fetch AI signal and risk assessment
+        if (detailData?.name && detailData.market_data?.current_price?.usd !== undefined) {
+          try {
+            const signal = await getCoinTradingSignal({ 
+              coinName: detailData.name,
+              currentPriceUSD: detailData.market_data.current_price.usd 
+            });
+            setTradingSignal(signal);
+          } catch (err) {
+            console.error("Error fetching trading signal:", err);
+            setSignalError(err instanceof Error && err.message.toLowerCase().includes('failed to fetch') ? "Network error: Failed to fetch AI trading signal." : "Failed to fetch AI trading signal. Please try again later.");
+          } finally {
+            setSignalLoading(false);
+          }
+
+          try {
+            const risk = await getCoinRiskAssessment({ coinName: detailData.name });
+            setRiskAssessment(risk);
+          } catch (err) {
+            console.error("Error fetching risk assessment:", err);
+            setRiskError(err instanceof Error && err.message.toLowerCase().includes('failed to fetch') ? "Network error: Failed to fetch AI risk assessment." : "Failed to fetch AI risk assessment. Please try again later.");
+          } finally {
+            setRiskLoading(false);
+          }
+        } else {
+          setSignalLoading(false); // No signal if price is missing
+          setRiskLoading(false); // No risk assessment if name is missing
+        }
+
+      } catch (err) {
+        console.error("Error in fetchAllCoinData:", err);
+        const specificError = err instanceof TypeError && err.message.toLowerCase().includes('failed to fetch') 
+          ? `Network error: Could not connect to fetch coin data for ${coinId}. Please check your internet connection and try again.`
+          : err instanceof Error ? err.message : "An unknown error occurred while fetching coin data.";
+        setError(specificError);
+        setLoading(false);
+        setSignalLoading(false);
+        setRiskLoading(false);
       }
     };
 
-    fetchCoinDetail();
+    fetchAllCoinData();
   }, [coinId]);
 
-  useEffect(() => {
-    if (coinDetail?.name && coinDetail.market_data?.current_price?.usd !== undefined) {
-      const fetchTradingSignal = async () => {
-        setSignalLoading(true);
-        setSignalError(null);
-        try {
-          const signal = await getCoinTradingSignal({ 
-            coinName: coinDetail.name,
-            currentPriceUSD: coinDetail.market_data.current_price.usd 
-          });
-          setTradingSignal(signal);
-        } catch (err) {
-          console.error("Error fetching trading signal:", err);
-          if (err instanceof TypeError && err.message.toLowerCase().includes('failed to fetch')) {
-             setSignalError("Network error: Failed to fetch AI trading signal. Please check your internet connection.");
-          } else {
-            setSignalError("Failed to fetch AI trading signal. Please try again later.");
-          }
-        } finally {
-          setSignalLoading(false);
-        }
-      };
-      fetchTradingSignal();
-    }
-  }, [coinDetail]);
 
-
-  if (loading) {
+  if (loading && !coinDetail) { // Show main skeleton only if coinDetail is not yet fetched
     return (
       <div className="space-y-6 p-4">
         <Skeleton className="h-8 w-32 mb-4" /> {/* Back button */}
@@ -280,7 +296,7 @@ export default function CoinDetailPage() {
             <div className="space-y-1">
                  <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><Target className="mr-2 h-5 w-5"/>Future Price Outlook</h4>
                  <StatItem label="Short-Term Target" value={tradingSignal.futurePriceOutlook?.shortTermTarget} className="px-3 py-1.5 bg-muted/30 rounded-t-md border-b-0" labelClassName="text-xs" valueClassName="text-sm"/>
-                 <StatItem label="Mid-Term Target" value={tradingSignal.futurePriceOutlook?.midTermTarget} className="px-3 py-1.5 bg-muted/30 rounded-b-md" labelClassName="text-xs" valueClassName="text-sm"/>
+                 <StatItem label="Long-Term Target" value={tradingSignal.futurePriceOutlook?.longTermTarget} className="px-3 py-1.5 bg-muted/30 rounded-b-md" labelClassName="text-xs" valueClassName="text-sm"/>
             </div>
              <div className="space-y-1">
                 <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><ShieldCheck className="mr-2 h-5 w-5"/>Trading Targets</h4>
@@ -316,12 +332,109 @@ export default function CoinDetailPage() {
         <li><strong>Reasoning:</strong> A brief explanation for the signal.</li>
         <li><strong>Rocket Score:</strong> A 1-5 score indicating bullish potential and AI confidence.</li>
         <li><strong>Detailed Analysis:</strong> In-depth factors influencing the signal.</li>
-        <li><strong>Future Price Outlook:</strong> Speculative short and mid-term price targets.</li>
+        <li><strong>Future Price Outlook:</strong> Speculative short and long-term price targets.</li>
         <li><strong>Trading Targets:</strong> Suggested entry, stop-loss, and take-profit levels.</li>
         <li><strong>Investment Advice:</strong> General strategy notes.</li>
       </ul>
       <p className="mt-2 text-xs">
         All information is AI-generated and for informational purposes only. DYOR.
+      </p>
+    </>
+  );
+
+  const getRiskLevelBadgeClasses = (level?: GetCoinRiskAssessmentOutput['riskLevel']) => {
+    switch (level) {
+      case 'Low': return 'bg-green-500 hover:bg-green-600 text-white';
+      case 'Medium': return 'bg-yellow-500 hover:bg-yellow-600 text-black';
+      case 'High': return 'bg-orange-500 hover:bg-orange-600 text-white'; // Assuming orange is desired for High
+      case 'Very High': return 'bg-red-600 hover:bg-red-700 text-white';
+      case 'Degenerate Gambler Zone': return 'bg-purple-600 hover:bg-purple-700 text-white';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
+  
+  const renderRiskAssessmentContent = () => {
+    if (riskLoading) {
+      return (
+        <div className="space-y-3 py-4">
+          <div className="flex items-center justify-center">
+             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+             <p className="ml-3 text-muted-foreground text-lg">Assessing Coin Risk...</p>
+          </div>
+          <Skeleton className="h-6 w-1/4 mx-auto" />
+          <Skeleton className="h-4 w-1/2 mx-auto mb-2" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-16 w-full" />
+        </div>
+      );
+    }
+    if (riskError) {
+      return (
+        <Alert variant="destructive" className="my-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Risk Assessment Error</AlertTitle>
+          <AlertDescription>{riskError}</AlertDescription>
+        </Alert>
+      );
+    }
+    if (riskAssessment) {
+      return (
+        <div className="space-y-4">
+          <div className="text-center">
+            <Badge className={`text-lg px-4 py-1.5 font-semibold ${getRiskLevelBadgeClasses(riskAssessment.riskLevel)}`}>
+              {riskAssessment.riskLevel}
+            </Badge>
+            <p className="text-sm text-muted-foreground mt-1">Overall Risk Score: {riskAssessment.riskScore}/100</p>
+            <Progress value={riskAssessment.riskScore} className="h-2 mt-1 max-w-xs mx-auto [&>div]:bg-primary" />
+             <p className="text-xs text-muted-foreground mt-1">Assessed on: {riskAssessment.assessmentDate}</p>
+          </div>
+
+          <Separator />
+          
+          <div>
+            <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><RiskIcon className="mr-1.5 h-5 w-5"/>Overall Assessment:</h4>
+            <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md whitespace-pre-wrap">{riskAssessment.overallAssessment}</p>
+          </div>
+
+          <div>
+            <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><ListChecks className="mr-1.5 h-5 w-5"/>Key Contributing Factors:</h4>
+            <ul className="list-disc list-inside space-y-1 pl-4 text-sm text-muted-foreground">
+              {riskAssessment.contributingFactors.map((factor, index) => (
+                <li key={`factor-${index}`}>{factor}</li>
+              ))}
+            </ul>
+          </div>
+          
+          <div>
+            <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><Zap className="mr-1.5 h-5 w-5"/>Mitigation Suggestions:</h4>
+             <ul className="list-disc list-inside space-y-1 pl-4 text-sm text-muted-foreground">
+              {riskAssessment.mitigationSuggestions.map((suggestion, index) => (
+                <li key={`suggestion-${index}`}>{suggestion}</li>
+              ))}
+            </ul>
+          </div>
+          <p className="text-xs text-muted-foreground pt-3 border-t border-muted/30 mt-3">{riskAssessment.disclaimer}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+   const aiRiskMeterInfo = (
+    <>
+      <h4 className="font-semibold mb-2 text-base">About AI Risk Meter</h4>
+      <p>
+        The AI Risk Meter provides a simulated risk assessment for the selected coin, considering factors like volatility, liquidity, market cap, and on-chain metrics (simulated).
+      </p>
+      <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
+        <li><strong>Risk Level:</strong> Categorical risk assessment (e.g., Low, High, Degenerate Gambler Zone).</li>
+        <li><strong>Risk Score:</strong> A numerical score from 0-100.</li>
+        <li><strong>Contributing Factors:</strong> Key elements influencing the risk.</li>
+        <li><strong>Mitigation Suggestions:</strong> General tips for managing risk.</li>
+        <li><strong>Overall Assessment:</strong> AI's summary of the risk profile.</li>
+      </ul>
+      <p className="mt-2 text-xs">
+        This information is AI-generated, speculative, and not financial advice. Always DYOR.
       </p>
     </>
   );
@@ -365,6 +478,15 @@ export default function CoinDetailPage() {
            >
              {renderSignalContent()}
            </SectionCard>
+
+            <SectionCard 
+                title="AI Risk Meter" 
+                icon={<RiskIcon className="h-5 w-5"/>} 
+                noPadding
+                infoPopoverContent={aiRiskMeterInfo}
+              >
+              {renderRiskAssessmentContent()}
+            </SectionCard>
 
           <SectionCard title="Description" icon={<BookOpen className="h-5 w-5"/>}>
             {cleanDescription ? (
@@ -440,4 +562,3 @@ export default function CoinDetailPage() {
     </div>
   );
 }
-
