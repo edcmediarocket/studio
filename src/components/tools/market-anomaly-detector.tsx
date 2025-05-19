@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 
-const marketSegments = ["Meme Coins", "Top 100 Crypto", "DeFi Tokens", "Gaming Tokens", "AI & Big Data Tokens"];
+const marketSegments = ["Meme Coins", "Top 100 Crypto", "DeFi Tokens", "Gaming Tokens", "AI & Big Data Tokens", "Low Cap Gems"];
 
 export function MarketAnomalyDetector() {
   const [marketSegment, setMarketSegment] = useState<string | undefined>(undefined);
@@ -44,9 +44,9 @@ export function MarketAnomalyDetector() {
 
   const getSeverityBadgeVariant = (severity?: "Critical" | "High" | "Medium" | "Low") => {
     if (severity === 'Critical') return 'destructive';
-    if (severity === 'High') return 'destructive'; // Or a different shade of red
-    if (severity === 'Medium') return 'secondary'; // Using secondary for yellow/orange feel
-    if (severity === 'Low') return 'default'; // Using default for green/blue feel
+    if (severity === 'High') return 'destructive'; 
+    if (severity === 'Medium') return 'secondary'; 
+    if (severity === 'Low') return 'default'; 
     return 'outline';
   };
   
@@ -55,7 +55,7 @@ export function MarketAnomalyDetector() {
     if (type.includes("Volume")) return <Activity className="h-4 w-4 mr-1.5" />;
     if (type.includes("Sentiment")) return <MessageSquare className="h-4 w-4 mr-1.5" />;
     if (type.includes("Security")) return <ShieldCheck className="h-4 w-4 mr-1.5" />;
-    return <Siren className="h-4 w-4 mr-1.5" />; // Default icon
+    return <Siren className="h-4 w-4 mr-1.5" />; 
   };
 
 
@@ -66,7 +66,7 @@ export function MarketAnomalyDetector() {
           <Search className="mr-2 h-6 w-6" /> Anomaly Scan Configuration
         </CardTitle>
         <CardDescription>
-          Select a market segment for the AI to scan for unusual activities or anomalies.
+          Select a market segment for the AI to scan for unusual activities or anomalies, including volume surges.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -142,6 +142,11 @@ export function MarketAnomalyDetector() {
                     <CardDescription className="text-xs text-muted-foreground">{anomaly.anomalyType} - Detected {anomaly.timestamp}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
+                    {anomaly.anomalyType === "High Trading Volume" && anomaly.volumeChangePercentage ? (
+                        <p className="text-sm font-semibold text-primary leading-relaxed">
+                            Volume Spike Detected: ${anomaly.symbol.toUpperCase()} up {anomaly.volumeChangePercentage}% vs. 24hr average.
+                        </p>
+                    ) : null}
                     <p className="text-sm text-muted-foreground leading-relaxed">{anomaly.description}</p>
                     <div>
                         <span className="text-xs font-medium text-muted-foreground">AI Confidence: </span>
@@ -177,3 +182,4 @@ export function MarketAnomalyDetector() {
     </Card>
   );
 }
+
