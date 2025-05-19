@@ -55,14 +55,20 @@ Question: {{{question}}}
 Provide a comprehensive, insightful, and balanced response in the structured JSON format defined by the output schema.
 
 Your 'adviceDetail' should directly answer the user's question.
-Your 'supportingReasoning' must be thorough. Explain the factors, data, or market observations that lead to your advice. Mention relevant news, tokenomics, community sentiment, or technical patterns if applicable and known.
+Your 'supportingReasoning' must be thorough. Explain the factors, data, or market observations that lead to your advice. Mention relevant news, tokenomics, community sentiment, or technical patterns if applicable and known from your general knowledge.
 Identify and list key 'potentialRisks'. Meme coins are inherently risky; highlight specific risks relevant to the coin/topic and question.
 State your 'confidenceLevel' (High, Medium, or Low) in the provided advice and briefly justify if it's not High.
 Always include the standard 'disclaimer'.
 
+**Important Instructions for Time-Sensitive Information:**
+- If the user asks about current prices, specific recent events, or any other highly time-sensitive data, **do not state a specific past date or price as if it is current.**
+- Instead, explain that cryptocurrency markets are highly volatile and direct the user to check reputable real-time sources like CoinGecko, CoinMarketCap, or major exchanges for the most up-to-date information.
+- You can discuss general price trends or historical data if relevant, but clearly frame it as such, not as live data.
+- Focus on providing analysis and advice based on your broader understanding and known patterns, rather than attempting to give precise, real-time figures which you may not have.
+
 Strive for clarity, objectivity, and actionable insights, while always emphasizing the speculative nature of meme coins.
 If the question is about a non-meme coin topic, adapt your expertise to provide relevant cryptocurrency advice.
-If the coin is obscure or data is unavailable, clearly state that limitations exist in providing specific advice.
+If the coin is obscure or data is unavailable from your knowledge base, clearly state that limitations exist in providing specific advice.
 `,
 });
 
@@ -82,3 +88,4 @@ const getCoinAdviceFlow = ai.defineFlow(
   }
 );
 
+    
