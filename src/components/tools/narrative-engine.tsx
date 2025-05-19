@@ -2,12 +2,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { getMarketNarratives, type GetMarketNarrativesOutput, type MarketNarrative } from "@/ai/flows/get-market-narratives";
+import { getMarketNarratives, type GetMarketNarrativesOutput } from "@/ai/flows/get-market-narratives";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Lightbulb, Sparkles, AlertTriangle, Info, MessageSquare, TrendingUp, FileText } from "lucide-react";
+import { Loader2, Lightbulb, Sparkles, AlertTriangle, Info, MessageSquare, TrendingUp, FileText, BarChart } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -39,24 +39,11 @@ export function NarrativeEngine() {
     }
   };
   
-  const getSentimentColor = (sentiment: MarketNarrative['sentiment']) => {
-    switch (sentiment) {
-      case 'Positive': return 'text-green-400 border-green-400/50';
-      case 'Negative': return 'text-red-400 border-red-400/50';
-      case 'Neutral': return 'text-yellow-400 border-yellow-400/50';
-      case 'Mixed': return 'text-blue-400 border-blue-400/50'; // Example for Mixed
-      default: return 'text-muted-foreground border-muted-foreground/50';
-    }
-  };
-
-  const getStrengthColor = (strength: MarketNarrative['strength']) => {
-    switch (strength) {
-      case 'Strong': return 'bg-green-500/20 text-green-400';
-      case 'Growing': return 'bg-sky-500/20 text-sky-400';
-      case 'Fading': return 'bg-amber-500/20 text-amber-400';
-      case 'Speculative': return 'bg-purple-500/20 text-purple-400';
-      default: return 'bg-muted/20 text-muted-foreground';
-    }
+  const getConfidenceBadgeVariant = (confidence: 'High' | 'Medium' | 'Low' | undefined) => {
+    if (confidence === 'High') return 'default'; // Greenish in default theme
+    if (confidence === 'Medium') return 'secondary'; // Yellowish
+    if (confidence === 'Low') return 'destructive'; // Reddish
+    return 'outline';
   };
 
 
@@ -67,7 +54,7 @@ export function NarrativeEngine() {
           <Lightbulb className="mr-2 h-6 w-6" /> Narrative Analysis Input
         </CardTitle>
         <CardDescription>
-          Enter a topic (e.g., "Meme Coins", "Ethereum Staking", "Dogecoin") to detect underlying market narratives.
+          Enter a topic (e.g., "Meme Coins", "Ethereum Staking", "Dogecoin") for the AI to generate a detailed narrative insight.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -84,12 +71,12 @@ export function NarrativeEngine() {
               className="mt-1"
             />
           </div>
-          <Button type="submit" disabled={isLoading} className="w-full bg-primary hover:bg-primary/90">
+          <Button type="submit" disabled={isLoading || !topic.trim()} className="w-full bg-primary hover:bg-primary/90">
             {isLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <>
-                <Sparkles className="mr-2 h-4 w-4" /> Detect Narratives
+                <Sparkles className="mr-2 h-4 w-4" /> Generate Narrative Insight
               </>
             )}
           </Button>
@@ -103,64 +90,47 @@ export function NarrativeEngine() {
           </Alert>
         )}
 
-        {narrativeData && (
+        {narrativeData && narrativeData.narrativeInsight && (
           <div className="mt-8 space-y-6">
             <Separator />
             <div className="text-center">
               <h3 className="text-xl font-semibold text-neon">
-                AI Narrative Analysis for: {narrativeData.analyzedTopic}
+                AI Narrative Insight for: {narrativeData.narrativeInsight.analyzedTopic}
               </h3>
-              <p className="text-sm text-muted-foreground">Analysis Date: {narrativeData.analysisDate}</p>
-              <div className="text-sm mt-1"> {/* Changed from p to div */}
-                AI Confidence: <Badge variant={narrativeData.confidence === 'High' ? 'default' : narrativeData.confidence === 'Medium' ? 'secondary' : 'destructive'} className="text-xs">{narrativeData.confidence}</Badge>
+              <div className="text-sm text-muted-foreground mt-1">
+                Analysis Date: {narrativeData.narrativeInsight.analysisDate} | AI Confidence: 
+                <Badge variant={getConfidenceBadgeVariant(narrativeData.narrativeInsight.confidence)} className="ml-1 text-xs">
+                    {narrativeData.narrativeInsight.confidence}
+                </Badge>
               </div>
             </div>
 
-            <Card className="bg-card shadow-sm">
-                <CardHeader className="pb-2 pt-4">
-                    <CardTitle className="text-lg text-primary flex items-center">
-                        <MessageSquare className="mr-2 h-5 w-5" /> Overall Market Psychology
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-base sm:text-sm text-muted-foreground whitespace-pre-wrap">{narrativeData.overallMarketPsychology}</p>
-                </CardContent>
-            </Card>
+            <InfoBlock icon={<FileText className="h-5 w-5"/>} title="Generated Narrative">
+              <p className="text-base sm:text-sm text-muted-foreground whitespace-pre-wrap">{narrativeData.narrativeInsight.generatedNarrative}</p>
+            </InfoBlock>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <InfoBlock icon={<BarChart className="h-5 w-5"/>} title="Market Tone">
+                <p className="text-base sm:text-sm text-muted-foreground">{narrativeData.narrativeInsight.marketTone}</p>
+                </InfoBlock>
 
-            <h4 className="text-lg font-semibold text-primary mt-6 mb-3">Detected Narratives:</h4>
-            {narrativeData.detectedNarratives.length > 0 ? (
-              narrativeData.detectedNarratives.map((item, index) => (
-                <Card key={index} className="bg-muted/30 shadow-md">
-                  <CardHeader className="pb-3 pt-4">
-                    <CardTitle className="text-md text-foreground flex items-center justify-between">
-                      <span>{item.narrative}</span>
-                       <Badge variant="outline" className={`ml-auto text-xs ${getStrengthColor(item.strength)}`}>{item.strength}</Badge>
-                    </CardTitle>
-                     <CardDescription className="text-xs">
-                       Sentiment: <span className={`font-semibold ${getSentimentColor(item.sentiment)}`}>{item.sentiment}</span>
-                     </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div>
-                        <p className="text-xs font-semibold text-muted-foreground mb-1">Potential Impact:</p>
-                        <p className="text-sm text-muted-foreground leading-relaxed">{item.potentialImpact}</p>
-                    </div>
-                    {item.keyEvidenceSnippets.length > 0 && (
-                        <div>
-                            <p className="text-xs font-semibold text-muted-foreground mb-1 mt-2">Simulated Key Evidence:</p>
-                            <ul className="space-y-1">
-                                {item.keyEvidenceSnippets.map((snippet, sIndex) =>(
-                                    <li key={sIndex} className="text-xs text-muted-foreground/80 italic p-1.5 bg-background/30 rounded-sm border-l-2 border-primary/50">"{snippet}"</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <p className="text-muted-foreground text-center py-4">No specific narratives detected by AI for this topic.</p>
-            )}
+                <InfoBlock icon={<TrendingUp className="h-5 w-5"/>} title="Strategic Outlook">
+                <p className="text-base sm:text-sm text-muted-foreground">{narrativeData.narrativeInsight.strategicOutlook}</p>
+                </InfoBlock>
+            </div>
+
+
+            <InfoBlock icon={<MessageSquare className="h-5 w-5"/>} title="Key Catalysts or Concerns">
+              {narrativeData.narrativeInsight.keyCatalystsOrConcerns.length > 0 ? (
+                <ul className="list-disc list-inside space-y-1 text-base sm:text-sm text-muted-foreground">
+                  {narrativeData.narrativeInsight.keyCatalystsOrConcerns.map((item, index) => <li key={index}>{item}</li>)}
+                </ul>
+              ) : <p className="text-sm text-muted-foreground italic">No specific catalysts or concerns identified.</p>}
+            </InfoBlock>
+
+            <InfoBlock icon={<Lightbulb className="h-5 w-5"/>} title="Probable Storyline">
+              <p className="text-base sm:text-sm text-muted-foreground whitespace-pre-wrap">{narrativeData.narrativeInsight.probableStoryline}</p>
+            </InfoBlock>
             
             {narrativeData.disclaimer && (
               <Alert variant="default" className="mt-6 border-primary/30 text-sm">
@@ -173,16 +143,34 @@ export function NarrativeEngine() {
          {!isLoading && !narrativeData && !error && (
             <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center bg-muted/10 mt-6">
                 <Lightbulb className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <p className="text-muted-foreground">Enter a topic above for the AI to analyze emerging market narratives.</p>
+                <p className="text-muted-foreground">Enter a topic above for the AI to generate a detailed narrative insight.</p>
             </div>
         )}
       </CardContent>
       <CardFooter className="mt-auto pt-4">
          <p className="text-xs text-muted-foreground">
-           Narrative analysis is speculative and AI-generated. Always DYOR.
+           Narrative insights are speculative and AI-generated. Always DYOR.
          </p>
       </CardFooter>
     </Card>
   );
 }
 
+interface InfoBlockProps {
+    icon: React.ReactNode;
+    title: string;
+    children: React.ReactNode;
+}
+const InfoBlock: React.FC<InfoBlockProps> = ({icon, title, children}) => (
+    <Card className="bg-card shadow-sm">
+        <CardHeader className="pb-2 pt-4">
+            <CardTitle className="text-lg text-primary flex items-center">
+                {React.cloneElement(icon as React.ReactElement, { className: "mr-2 h-5 w-5" })} 
+                {title}
+            </CardTitle>
+        </CardHeader>
+        <CardContent>
+            {children}
+        </CardContent>
+    </Card>
+);
