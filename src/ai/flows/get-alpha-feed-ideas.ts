@@ -4,7 +4,7 @@
  * @fileOverview An AI agent that generates "alpha" trade ideas.
  *
  * - getAlphaFeedIdeas - A function that generates a feed of trade ideas.
- * - GetAlphaFeedIdeasInput - The input type (currently empty for a general feed).
+ * - GetAlphaFeedIdeasInput - The input type (now includes optional filter).
  * - GetAlphaFeedIdeasOutput - The return type.
  */
 
@@ -12,22 +12,25 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GetAlphaFeedIdeasInputSchema = z.object({
-  // No specific inputs for now, could add filters like category later
-  filter: z.string().optional().describe("Optional filter for the feed, e.g., 'meme coins', 'DeFi'.")
+  filter: z.string().optional().describe("Optional filter for the feed, focusing on a specific ideaType (e.g., 'Narrative Play', 'Undervalued Gem').")
 });
 export type GetAlphaFeedIdeasInput = z.infer<typeof GetAlphaFeedIdeasInputSchema>;
+
+const IdeaTypeEnum = z.enum([
+    "High Potential Upside", 
+    "Narrative Play", 
+    "Contrarian Bet", 
+    "Short-Term Momentum",
+    "Undervalued Gem",
+    "Ecosystem Growth"
+]);
+export type IdeaType = z.infer<typeof IdeaTypeEnum>;
+
 
 const TradeIdeaSchema = z.object({
   coinName: z.string().describe('The name of the coin or token.'),
   symbol: z.string().describe('The ticker symbol for the coin (e.g., BTC, DOGE).'),
-  ideaType: z.enum([
-      "High Potential Upside", 
-      "Narrative Play", 
-      "Contrarian Bet", 
-      "Short-Term Momentum",
-      "Undervalued Gem",
-      "Ecosystem Growth"
-    ]).describe('The category or type of trade idea.'),
+  ideaType: IdeaTypeEnum.describe('The category or type of trade idea.'),
   signal: z.enum(["Buy", "Accumulate", "Watch", "Consider Short"]).describe('The suggested trading action.'),
   riskRewardProfile: z.enum([
       "High Risk / High Reward", 
@@ -61,11 +64,11 @@ const prompt = ai.definePrompt({
   output: {schema: GetAlphaFeedIdeasOutputSchema},
   prompt: `You are an AI Crypto Strategist specializing in identifying "alpha" - high-potential trade ideas with a unique edge.
 Generate a feed of 3-5 distinct and actionable trade ideas for various meme coins, altcoins, or crypto narratives.
-{{#if filter}}Focus your ideas related to: {{filter}}{{/if}}
+{{#if filter}}Focus your ideas related to the idea type: {{filter}}. Ensure the generated 'ideaType' matches this filter.{{/if}}
 
 For each trade idea, provide:
 - 'coinName' and 'symbol'.
-- 'ideaType': Classify the idea (e.g., "High Potential Upside", "Narrative Play", "Contrarian Bet", "Short-Term Momentum", "Undervalued Gem", "Ecosystem Growth").
+- 'ideaType': Classify the idea (e.g., "High Potential Upside", "Narrative Play", "Contrarian Bet", "Short-Term Momentum", "Undervalued Gem", "Ecosystem Growth"). {{#if filter}}This MUST be "{{filter}}"{{/if}}
 - 'signal': "Buy", "Accumulate", "Watch", or "Consider Short".
 - 'riskRewardProfile': Assess the risk/reward (e.g., "High Risk / High Reward", "Speculative / Asymmetric Upside").
 - 'marketConditionContext': Briefly explain relevant current market conditions.
@@ -98,3 +101,6 @@ const getAlphaFeedIdeasFlow = ai.defineFlow(
     return output!;
   }
 );
+
+// Exporting IdeaTypeEnum for use in frontend filters
+export { IdeaTypeEnum as AlphaIdeaTypeEnum };
