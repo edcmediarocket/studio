@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { StatItem } from '@/components/shared/stat-item';
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
 export function CustomSignalGenerator() {
   const [coinName, setCoinName] = useState("");
@@ -40,12 +41,10 @@ export function CustomSignalGenerator() {
       setCurrentCoinPrice(null);
 
       let coinId = coinName.trim().toLowerCase();
-      // Common coin ID mappings
       const coinIdMappings: { [key: string]: string } = {
         "xrp": "ripple",
         "shiba inu": "shiba-inu",
         "dogecoin": "dogecoin",
-        // Add more mappings as needed
       };
       coinId = coinIdMappings[coinId] || coinId.replace(/\s+/g, '-');
 
@@ -136,9 +135,26 @@ export function CustomSignalGenerator() {
   return (
     <Card className="shadow-lg w-full">
       <CardHeader>
-        <CardTitle className="flex items-center text-2xl text-primary">
-          <Wand2 className="mr-2 h-6 w-6" /> Custom Signal Wizard
-        </CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="flex items-center text-2xl text-primary">
+            <Wand2 className="mr-2 h-6 w-6" /> Custom Signal Wizard
+          </CardTitle>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
+                <Info className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 text-sm">
+              <p>
+                Generate tailored AI trading signals by specifying a coin,
+                your desired trading timeframe (e.g., 1H, 4H, 1D), and your
+                personal risk profile (Low, Medium, High). The AI provides
+                a recommendation, analysis, and specific trading targets.
+              </p>
+            </PopoverContent>
+          </Popover>
+        </div>
         <CardDescription>
           Define your parameters and let our AI craft a trading signal tailored to your needs.
         </CardDescription>

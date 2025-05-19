@@ -16,6 +16,7 @@ import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from '@/ai/flow
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { StatItem } from '@/components/shared/stat-item';
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
 interface CoinDetail {
   id: string;
@@ -49,13 +50,35 @@ interface CoinDetail {
   };
 }
 
-const SectionCard: React.FC<{ title: string; icon?: React.ReactNode; children: React.ReactNode; className?: string; noPadding?: boolean; titleClassName?: string }> = ({ title, icon, children, className, noPadding, titleClassName }) => (
+interface SectionCardProps {
+  title: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+  noPadding?: boolean;
+  titleClassName?: string;
+  infoPopoverContent?: React.ReactNode;
+}
+
+const SectionCard: React.FC<SectionCardProps> = ({ title, icon, children, className, noPadding, titleClassName, infoPopoverContent }) => (
   <Card className={cn("shadow-lg", className)}>
-    <CardHeader className={cn(noPadding ? "pb-2 pt-4 px-4" : "pb-3")}>
+    <CardHeader className={cn(noPadding ? "pb-2 pt-4 px-4" : "pb-3", "flex flex-row justify-between items-center")}>
       <CardTitle className={cn("flex items-center text-xl text-primary", titleClassName)}>
         {icon}
         <span className={cn(icon && "ml-2")}>{title}</span>
       </CardTitle>
+      {infoPopoverContent && (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7 ml-2 text-muted-foreground hover:text-foreground">
+              <Info className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 text-sm">
+            {infoPopoverContent}
+          </PopoverContent>
+        </Popover>
+      )}
     </CardHeader>
     <CardContent className={cn(noPadding ? "p-0" : "text-sm", noPadding && "px-4 pb-4")}>{children}</CardContent>
   </Card>
@@ -153,7 +176,7 @@ export default function CoinDetailPage() {
             </div>
           </div>
         </div>
-        {[...Array(4)].map((_, i) => ( // Increased skeleton count for new sections
+        {[...Array(4)].map((_, i) => (
           <Card key={i} className="shadow-lg">
             <CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader>
             <CardContent className="space-y-3">
@@ -275,6 +298,28 @@ export default function CoinDetailPage() {
     return null;
   };
 
+  const aiSignalInfo = (
+    <>
+      <h4 className="font-semibold mb-2 text-base">About AI Trading Signal</h4>
+      <p>
+        This section provides an AI-generated trading signal (Buy, Sell, or Hold) for the selected coin, 
+        based on simulated analysis of various market factors. It includes:
+      </p>
+      <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
+        <li><strong>Recommendation:</strong> The AI's suggested action.</li>
+        <li><strong>Reasoning:</strong> A brief explanation for the signal.</li>
+        <li><strong>Rocket Score:</strong> A 1-5 score indicating bullish potential and AI confidence.</li>
+        <li><strong>Detailed Analysis:</strong> In-depth factors influencing the signal.</li>
+        <li><strong>Future Price Outlook:</strong> Speculative short and mid-term price targets.</li>
+        <li><strong>Trading Targets:</strong> Suggested entry, stop-loss, and take-profit levels.</li>
+        <li><strong>Investment Advice:</strong> General strategy notes.</li>
+      </ul>
+      <p className="mt-2 text-xs">
+        All information is AI-generated and for informational purposes only. DYOR.
+      </p>
+    </>
+  );
+
 
   return (
     <div className="space-y-6">
@@ -306,7 +351,12 @@ export default function CoinDetailPage() {
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-           <SectionCard title="AI Trading Signal & Analysis" icon={<BrainCircuit className="h-5 w-5"/>} noPadding>
+           <SectionCard 
+             title="AI Trading Signal & Analysis" 
+             icon={<BrainCircuit className="h-5 w-5"/>} 
+             noPadding 
+             infoPopoverContent={aiSignalInfo}
+           >
              {renderSignalContent()}
            </SectionCard>
 

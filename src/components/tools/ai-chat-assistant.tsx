@@ -7,9 +7,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Bot, User, Send, Sparkles } from "lucide-react";
+import { Loader2, Bot, User, Send, Sparkles, Info } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
 interface Message {
   id: string;
@@ -75,11 +76,27 @@ export function AiChatAssistant() {
   }, [messages]);
 
   return (
-    <Card className="shadow-lg w-full max-w-2xl flex flex-col min-h-[60vh] sm:min-h-[500px] sm:h-[65vh] sm:max-h-[700px]"> {/* Removed mx-auto */}
+    <Card className="shadow-lg w-full max-w-2xl flex flex-col min-h-[60vh] sm:min-h-[500px] sm:h-[65vh] sm:max-h-[700px]">
       <CardHeader>
-        <CardTitle className="flex items-center text-2xl text-primary">
-          <Bot className="mr-2 h-6 w-6" /> AI Coin Advisor
-        </CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="flex items-center text-2xl text-primary">
+            <Bot className="mr-2 h-6 w-6" /> AI Coin Advisor
+          </CardTitle>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
+                <Info className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 text-sm">
+              <p>
+                Ask our AI any question about a specific meme coin (e.g., "What are the risks for Dogecoin?") 
+                or general crypto topics (e.g., "Explain Bitcoin halving"). The AI will provide detailed advice, 
+                reasoning, and potential risks.
+              </p>
+            </PopoverContent>
+          </Popover>
+        </div>
         <CardDescription>
           Ask questions about specific meme coins or general crypto topics.
         </CardDescription>
@@ -104,7 +121,7 @@ export function AiChatAssistant() {
                 )}
                 <div
                   className={cn(
-                    "max-w-[70%] rounded-lg p-3 text-base sm:text-sm shadow", // Ensure mobile text is base
+                    "max-w-[70%] rounded-lg p-3 text-base sm:text-sm shadow",
                     msg.type === "user"
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground"
