@@ -16,7 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 export default function AnalysisPage() {
   const [coinInput, setCoinInput] = useState("");
   const [selectedCoinForAnalysis, setSelectedCoinForAnalysis] = useState<string | null>(null);
-  const [isLoadingAnalysis, setIsLoadingAnalysis] = useState(false); // General loading state for analysis submission
+  const [isLoadingAnalysis, setIsLoadingAnalysis] = useState(false); 
 
   const [currentCoinPrice, setCurrentCoinPrice] = useState<number | null>(null);
   const [priceLoading, setPriceLoading] = useState(false);
@@ -38,6 +38,7 @@ export default function AnalysisPage() {
         "xrp": "ripple",
         "shiba inu": "shiba-inu",
         "dogecoin": "dogecoin",
+        "xdc": "xdce-crowd-sale", // Added mapping for XDC
       };
       coinId = coinIdMappings[coinId] || coinId.replace(/\s+/g, '-');
 
@@ -46,10 +47,10 @@ export default function AnalysisPage() {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ error: "Failed to parse error response" }));
           const apiErrorMessage = errorData?.error || `CoinGecko API error (Status: ${response.status})`;
-          if (response.status === 404 || apiErrorMessage.toLowerCase().includes('could not find coin with id')) {
-            setPriceError(`Could not find current price for "${selectedCoinForAnalysis}". CoinGecko might use a different ID (e.g., 'ripple' for XRP). AI predictions needing price may be affected.`);
+          if (response.status === 404 || (apiErrorMessage && apiErrorMessage.toLowerCase().includes('could not find coin with id'))) {
+            setPriceError(`Could not find current price for "${selectedCoinForAnalysis}". CoinGecko might use a different ID (e.g., 'ripple' for XRP, 'xdce-crowd-sale' for XDC).`);
           } else {
-            setPriceError(`Failed to fetch current price: ${apiErrorMessage}. AI predictions needing price may be affected.`);
+            setPriceError(`Failed to fetch current price: ${apiErrorMessage}.`);
           }
           setCurrentCoinPrice(null);
         } else {
@@ -119,7 +120,7 @@ export default function AnalysisPage() {
               <Input
                 id="coinName-analysis-shared"
                 type="text"
-                placeholder="Enter coin name or ID (e.g. bitcoin, dogecoin, xrp)"
+                placeholder="Enter coin name or ID (e.g. bitcoin, dogecoin, xdc)"
                 value={coinInput}
                 onChange={(e) => setCoinInput(e.target.value)}
                 className="text-base"
@@ -138,7 +139,7 @@ export default function AnalysisPage() {
           {priceError && selectedCoinForAnalysis && (
             <Alert variant="destructive" className="mt-3 text-xs py-2 px-3">
               <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>{priceError}</AlertDescription>
+              <AlertDescription>{priceError} AI predictions needing price may be affected.</AlertDescription>
             </Alert>
           )}
           {currentCoinPrice !== null && selectedCoinForAnalysis && !priceError && (
