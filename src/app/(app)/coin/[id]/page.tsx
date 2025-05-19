@@ -116,17 +116,19 @@ export default function CoinDetailPage() {
       try {
         const response = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`);
         if (!response.ok) {
-          const errorData = await response.json();
+          const errorData = await response.json().catch(() => ({ error: "Failed to parse error response" }));
           throw new Error(errorData.error || `Failed to fetch coin data: ${response.statusText}`);
         }
         const data = await response.json();
         setCoinDetail(data);
       } catch (err) {
-        console.error(err);
-        if (err instanceof Error) {
+        console.error("Error in fetchCoinDetail:", err);
+        if (err instanceof TypeError && err.message.toLowerCase().includes('failed to fetch')) {
+          setError(`Network error: Could not connect to fetch coin data for ${coinId}. Please check your internet connection and try again.`);
+        } else if (err instanceof Error) {
           setError(err.message);
         } else {
-          setError("An unknown error occurred.");
+          setError("An unknown error occurred while fetching coin data.");
         }
       } finally {
         setLoading(false);
@@ -149,7 +151,11 @@ export default function CoinDetailPage() {
           setTradingSignal(signal);
         } catch (err) {
           console.error("Error fetching trading signal:", err);
-          setSignalError("Failed to fetch AI trading signal. Please try again later.");
+          if (err instanceof TypeError && err.message.toLowerCase().includes('failed to fetch')) {
+             setSignalError("Network error: Failed to fetch AI trading signal. Please check your internet connection.");
+          } else {
+            setSignalError("Failed to fetch AI trading signal. Please try again later.");
+          }
         } finally {
           setSignalLoading(false);
         }
