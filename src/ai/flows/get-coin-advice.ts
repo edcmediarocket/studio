@@ -16,6 +16,7 @@ const GetCoinAdviceInputSchema = z.object({
   coinName: z.string().describe('The name of the meme coin to get advice on (e.g., Dogecoin, SHIB). Can be "general crypto" for non-specific questions.'),
   question: z.string().describe('The specific question the user has about the meme coin or crypto topic.'),
   currentPriceUSD: z.number().optional().describe('The current market price of the coin in USD, if available. The AI should use this for context if the question pertains to it.'),
+  currentPriceTimestamp: z.string().optional().describe('The timestamp (e.g., human-readable string like "May 16, 2025, 10:30 AM") when the currentPriceUSD was observed. The AI should mention this if available and currentPriceUSD is present.'),
 });
 export type GetCoinAdviceInput = z.infer<typeof GetCoinAdviceInputSchema>;
 
@@ -52,23 +53,25 @@ const prompt = ai.definePrompt({
 A user is asking for advice.
 Coin/Topic: {{{coinName}}}
 Question: {{{question}}}
+
 {{#if currentPriceUSD}}
-For your context, the current approximate market price for {{{coinName}}} is {{{currentPriceUSD}}} USD. You can use this price to inform your response if relevant to the question, but always clarify that prices are highly volatile.
+The user has provided context that {{{coinName}}} was observed trading around {{{currentPriceUSD}}} USD{{#if currentPriceTimestamp}} as of {{{currentPriceTimestamp}}}{{/if}}.
+When formulating your 'adviceDetail', if relevant, you should acknowledge this observation. For example: "Regarding {{{coinName}}}, which was noted at approximately {{{currentPriceUSD}}} USD (as of {{{currentPriceTimestamp}}}), the current outlook is..." or "Considering the price of {{{coinName}}} was around {{{currentPriceUSD}}} USD (observed at {{{currentPriceTimestamp}}}), here's the advice:".
+Always clarify that cryptocurrency prices are highly volatile and can change rapidly, and the provided price was an observation at a specific time.
 {{/if}}
 
 Provide a comprehensive, insightful, and balanced response in the structured JSON format defined by the output schema.
 
 Your 'adviceDetail' should directly answer the user's question.
-Your 'supportingReasoning' must be thorough. Explain the factors, data, or market observations that lead to your advice. Mention relevant news, tokenomics, community sentiment, or technical patterns if applicable and known from your general knowledge. If you reference the provided 'currentPriceUSD', do so naturally within your reasoning.
+Your 'supportingReasoning' must be thorough. Explain the factors, data, or market observations that lead to your advice. Mention relevant news, tokenomics, community sentiment, or technical patterns if applicable and known from your general knowledge.
 Identify and list key 'potentialRisks'. Meme coins are inherently risky; highlight specific risks relevant to the coin/topic and question.
 State your 'confidenceLevel' (High, Medium, or Low) in the provided advice and briefly justify if it's not High.
 Always include the standard 'disclaimer'.
 
 **Important Instructions for Time-Sensitive Information:**
-- If the user asks about current prices, specific recent events, or any other highly time-sensitive data, **do not state a specific past date or price as if it is current, even if a 'currentPriceUSD' was provided to you (as it might be slightly delayed).**
-- Instead, explain that cryptocurrency markets are highly volatile and direct the user to check reputable real-time sources like CoinGecko, CoinMarketCap, or major exchanges for the most up-to-date information for precise figures.
-- You can discuss general price trends or historical data if relevant, but clearly frame it as such, not as live data.
-- Focus on providing analysis and advice based on your broader understanding and known patterns, rather than attempting to give precise, real-time figures which you may not have.
+- If you are discussing current prices, specific recent events, or any other highly time-sensitive data (even if a 'currentPriceUSD' was provided as context), **clearly state that this information is dynamic and advise the user to check reputable real-time sources** like CoinGecko, CoinMarketCap, or major exchanges for the most up-to-date figures.
+- Frame your analysis based on your broader understanding and known patterns, rather than attempting to give precise, live figures you don't have.
+- Your 'adviceDetail' should naturally incorporate the provided price and timestamp context if it was given for a specific coin, as guided above.
 
 Strive for clarity, objectivity, and actionable insights, while always emphasizing the speculative nature of meme coins.
 If the question is about a non-meme coin topic, adapt your expertise to provide relevant cryptocurrency advice.

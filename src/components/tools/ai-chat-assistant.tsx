@@ -11,7 +11,7 @@ import { Loader2, Bot, User, Send, Sparkles, Info, AlertTriangle } from "lucide-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { useToast } from "@/hooks/use-toast"; // Import useToast
+import { useToast } from "@/hooks/use-toast"; 
 
 interface Message {
   id: string;
@@ -26,7 +26,7 @@ export function AiChatAssistant() {
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast(); // Initialize toast
+  const { toast } = useToast(); 
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,13 +44,13 @@ export function AiChatAssistant() {
     setMessages((prev) => [...prev, userMessage]);
     
     setIsLoading(true);
-    setCurrentQuestion(""); // Clear input after sending
+    setCurrentQuestion(""); 
 
     let fetchedPriceUSD: number | undefined = undefined;
-    let priceFetchAttempted = false;
+    let priceTimestamp: string | undefined = undefined;
+    
 
     if (coinContext) {
-      priceFetchAttempted = true;
       toast({ title: "Context Update", description: `Fetching live price for ${coinContext}...` });
       try {
         let coinId = coinContext.toLowerCase();
@@ -64,12 +64,13 @@ export function AiChatAssistant() {
           const data = await response.json();
           if (data[coinId] && data[coinId].usd !== undefined) {
             fetchedPriceUSD = data[coinId].usd;
-            toast({ title: "Context Updated", description: `Using live price for ${coinContext}: $${fetchedPriceUSD.toLocaleString()}` });
+            priceTimestamp = new Date().toLocaleString(); // Capture timestamp here
+            // Toast for price fetch success is removed as price will be in bot's message
           } else {
-            toast({ title: "Price Fetch Warning", description: `Could not fetch live price for ${coinContext}. AI advice will be more general.`, variant: "default" });
+            toast({ title: "Price Fetch Warning", description: `Could not confirm live price for ${coinContext}. AI advice will be more general.`, variant: "default" });
           }
         } else {
-           toast({ title: "Price Fetch Warning", description: `Could not fetch live price for ${coinContext}. AI advice will be more general. (API Status: ${response.status})`, variant: "default" });
+           toast({ title: "Price Fetch Warning", description: `Could not confirm live price for ${coinContext}. AI advice will be more general. (API Status: ${response.status})`, variant: "default" });
         }
       } catch (fetchErr) {
         console.warn("Price fetch error for AI Advisor:", fetchErr);
@@ -82,12 +83,13 @@ export function AiChatAssistant() {
         coinName: coinContext || "general crypto",
         question: userMessage.text,
         currentPriceUSD: fetchedPriceUSD,
+        currentPriceTimestamp: priceTimestamp, // Pass the timestamp
       };
       const result: GetCoinAdviceOutput = await getCoinAdvice(adviceParams);
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: "bot",
-        text: result.adviceDetail,
+        text: result.adviceDetail, // The AI will now be prompted to include price/date in this detail
       };
       setMessages((prev) => [...prev, botMessage]);
 
@@ -185,7 +187,7 @@ export function AiChatAssistant() {
                 )}
               </div>
             ))}
-            {isLoading && ( // This now represents the combined loading state (price fetch + AI response)
+            {isLoading && ( 
               <div className="flex items-center space-x-2 justify-start">
                 <Avatar className="h-8 w-8">
                    <AvatarFallback className="bg-primary text-primary-foreground">
