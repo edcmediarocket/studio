@@ -1,8 +1,10 @@
+
 import type {Metadata} from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from '@/components/layout/providers';
+import { PwaRegistration } from '@/components/layout/pwa-registration'; // Import PWA registration component
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -17,6 +19,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Rocket Meme',
   description: 'AI-Powered Meme Coin Analysis & Signals',
+  manifest: '/manifest.json', // Added manifest link to metadata
 };
 
 export default function RootLayout({
@@ -26,10 +29,28 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <meta name="application-name" content="Rocket Meme" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Rocket Meme" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-TileColor" content="#000000" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <meta name="theme-color" content="#000000" />
+
+        <link rel="apple-touch-icon" href="https://placehold.co/192x192.png" data-ai-hint="app icon" />
+        <link rel="icon" type="image/png" sizes="192x192" href="https://placehold.co/192x192.png" data-ai-hint="app icon" />
+        <link rel="icon" type="image/png" sizes="512x512" href="https://placehold.co/512x512.png" data-ai-hint="app icon large" />
+        
+        {/* Link to manifest is now handled by Next.js Metadata API via metadata.manifest */}
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
         <Providers>
           {children}
           <Toaster />
+          <PwaRegistration /> {/* Add PWA registration component */}
         </Providers>
       </body>
     </html>
