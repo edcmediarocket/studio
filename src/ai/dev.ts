@@ -19,5 +19,6 @@ import '@/ai/flows/get-onchain-intelligence.ts';
 import '@/ai/flows/get-prediction-confidence-insights.ts';
 import '@/ai/flows/get-alpha-feed-ideas.ts';
 import '@/ai/flows/get-coin-risk-assessment.ts';
-import '@/ai/flows/get-viral-prediction.ts'; // Added new flow
+import '@/ai/flows/get-viral-prediction.ts';
+import '@/ai/flows/get-signal-of-the-day.ts'; // Added new flow
 `,

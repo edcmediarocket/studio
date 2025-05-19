@@ -1,17 +1,19 @@
 
 "use client"; 
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react'; // Added useCallback
 import Image from 'next/image';
 import Link from 'next/link';
 import { MarketDataTable } from "@/components/dashboard/market-data-table";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, TrendingUp, TrendingDown, Info, Flame, Loader2, AlertTriangle } from "lucide-react"; 
+import { LayoutDashboard, TrendingUp, TrendingDown, Info, Flame, Loader2, AlertTriangle, RefreshCw } from "lucide-react"; 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSidebar } from "@/components/ui/sidebar"; 
 import { HotCoinsTicker } from "@/components/dashboard/hot-coins-ticker";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getSignalOfTheDay, type GetSignalOfTheDayOutput } from '@/ai/flows/get-signal-of-the-day';
+import { SignalOfTheDayCard } from '@/components/dashboard/signal-of-the-day-card';
 
 interface MarketMoverItem {
   id: string;
@@ -27,6 +29,29 @@ export default function DashboardPage() {
   const [topLosers, setTopLosers] = useState<MarketMoverItem[]>([]);
   const [isLoadingMovers, setIsLoadingMovers] = useState(true);
   const [moversError, setMoversError] = useState<string | null>(null);
+
+  const [signalOfTheDay, setSignalOfTheDay] = useState<GetSignalOfTheDayOutput | null>(null);
+  const [signalOfTheDayLoading, setSignalOfTheDayLoading] = useState(true);
+  const [signalOfTheDayError, setSignalOfTheDayError] = useState<string | null>(null);
+
+  const fetchSignalOfTheDay = useCallback(async () => {
+    setSignalOfTheDayLoading(true);
+    setSignalOfTheDayError(null);
+    try {
+      const signal = await getSignalOfTheDay();
+      setSignalOfTheDay(signal);
+    } catch (err) {
+      console.error("Error fetching signal of the day:", err);
+      setSignalOfTheDayError("Failed to fetch AI Signal of the Day. Please try again.");
+    } finally {
+      setSignalOfTheDayLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSignalOfTheDay();
+  }, [fetchSignalOfTheDay]);
+
 
   useEffect(() => {
     const fetchMarketMovers = async () => {
@@ -136,6 +161,15 @@ export default function DashboardPage() {
             </Button>
           </div>
 
+          <div className="mb-6">
+            <SignalOfTheDayCard 
+              signalData={signalOfTheDay} 
+              loading={signalOfTheDayLoading} 
+              error={signalOfTheDayError}
+              onRefresh={fetchSignalOfTheDay} 
+            />
+          </div>
+          
           <HotCoinsTicker /> 
 
           <h1 className="text-2xl sm:text-3xl font-bold mt-6 mb-1 text-neon">
