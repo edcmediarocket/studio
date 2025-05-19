@@ -37,6 +37,7 @@ export function MarketDataTable() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [coins, setCoins] = useState<CoinData[]>([]);
+  const [favoritedCoins, setFavoritedCoins] = useState(new Set<string>());
 
   useEffect(() => {
     const fetchCoinData = async () => {
@@ -77,6 +78,19 @@ export function MarketDataTable() {
 
     fetchCoinData();
   }, []);
+
+  const toggleFavorite = (coinId: string) => {
+    setFavoritedCoins(prevFavorites => {
+      const newFavorites = new Set(prevFavorites);
+      if (newFavorites.has(coinId)) {
+        newFavorites.delete(coinId);
+      } else {
+        newFavorites.add(coinId);
+      }
+      return newFavorites;
+    });
+    // In a real app, you'd persist this to localStorage or a backend.
+  };
 
   const sortedCoins = useMemo(() => {
     let sortableItems = [...coins];
@@ -156,7 +170,6 @@ export function MarketDataTable() {
         onChange={(e) => setSearchTerm(e.target.value)}
         className="max-w-sm text-base sm:text-sm"
       />
-      {/* Removed the outer border/card div from around the table */}
       <Table>
         <TableHeader>
           <TableRow>
@@ -209,10 +222,15 @@ export function MarketDataTable() {
                 </TableCell>
               <TableCell className="text-center py-3">
                 <div className="flex items-center justify-center space-x-0 sm:space-x-1">
-                  <Button variant="ghost" size="icon" title="Add to Watchlist" className="h-8 w-8 sm:h-9 sm:w-9">
-                    <Star className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    title={favoritedCoins.has(coin.id) ? "Remove from Watchlist" : "Add to Watchlist"} 
+                    className="h-8 w-8 sm:h-9 sm:w-9"
+                    onClick={() => toggleFavorite(coin.id)}
+                  >
+                    <Star className={cn("h-4 w-4 sm:h-5 sm:w-5", favoritedCoins.has(coin.id) ? "text-primary fill-primary" : "text-muted-foreground")} />
                   </Button>
-                  {/* Link is now on the row data, this button is redundant but kept for explicit action */}
                   <Button variant="ghost" size="icon" title="View Details" asChild className="h-8 w-8 sm:h-9 sm:w-9">
                     <Link href={`/coin/${coin.id}`}>
                       <LineChart className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -233,3 +251,4 @@ export function MarketDataTable() {
     </div>
   );
 }
+
