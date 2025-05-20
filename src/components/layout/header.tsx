@@ -1,15 +1,16 @@
 
-"use client"; // Added "use client" as we'll need client-side interaction for prompt & toast
+"use client"; 
 
 import Link from "next/link";
 import { Logo } from "@/components/icons/logo";
 import { UserNav } from "@/components/layout/user-nav";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Rocket, Mic, Loader2 } from "lucide-react"; // Added Mic and Loader2
-import { useState } from 'react'; // Added useState
-import { useToast } from '@/hooks/use-toast'; // Added useToast
-import { getCoinAdvice, type GetCoinAdviceInput } from '@/ai/flows/get-coin-advice'; // Added getCoinAdvice
+import { Rocket, Mic, Loader2 } from "lucide-react"; 
+import { useState } from 'react'; 
+import { useToast } from '@/hooks/use-toast'; 
+import { getCoinAdvice, type GetCoinAdviceInput } from '@/ai/flows/get-coin-advice'; 
+import { ThemeSwitcher } from "./theme-switcher"; // Added ThemeSwitcher import
 
 export function Header() {
   const { toast } = useToast();
@@ -21,8 +22,6 @@ export function Header() {
     if (userQuery && userQuery.trim() !== "") {
       setIsVoiceAssistantLoading(true);
       try {
-        // Simple heuristic to extract a potential coin name if the query starts with "What about [CoinName]" or similar.
-        // This is very basic and would need a proper NLU for robust coin name extraction.
         let coinNameForFlow: string | undefined = undefined;
         const coinQueryMatch = userQuery.match(/^(?:what about|what's the outlook for|tell me about)\s+([\w\s]+)(?:\?|$)/i);
         if (coinQueryMatch && coinQueryMatch[1]) {
@@ -32,8 +31,6 @@ export function Header() {
         const adviceInput: GetCoinAdviceInput = {
           coinName: coinNameForFlow || "general crypto",
           question: userQuery,
-          // currentPriceUSD and currentPriceTimestamp are not easily available here
-          // The AI will provide more general advice if coinName is not specific or price is missing.
         };
 
         const advice = await getCoinAdvice(adviceInput);
@@ -54,7 +51,7 @@ export function Header() {
               <p className="text-xs italic mt-2">{advice.disclaimer}</p>
             </div>
           ),
-          duration: 15000, // Longer duration for more complex toast
+          duration: 15000, 
         });
       } catch (error) {
         console.error("Voice assistant AI error:", error);
@@ -79,7 +76,8 @@ export function Header() {
           </Link>
         </div>
         
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-1 sm:gap-2"> {/* Reduced gap slightly for theme switcher */}
+          <ThemeSwitcher /> {/* Added ThemeSwitcher */}
           <Button 
             variant="ghost" 
             size="icon" 

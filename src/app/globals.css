@@ -9,6 +9,15 @@ body {
 
 @layer base {
   :root {
+    /* Theme Accent HSL Definitions */
+    --theme-red-hsl: 0 100% 50%;       /* Galactic Red */
+    --theme-blue-hsl: 210 100% 50%;    /* Neon Blue */
+    --theme-purple-hsl: 270 100% 60%;  /* Cosmic Purple */
+
+    /* Default Theme Accent (Galactic Red) */
+    --current-accent-hsl: var(--theme-red-hsl);
+
+    /* Core Colors (mostly unchanged) */
     --background: 0 0% 0%; /* Black */
     --foreground: 0 0% 100%; /* White */
 
@@ -21,44 +30,48 @@ body {
     --card: 0 0% 4%; /* Very Dark Grey/Almost Black for Card Background */
     --card-foreground: 0 0% 100%; /* White */
 
-    --border: 0 100% 50%; /* Neon Red */
-    --input: 0 0% 10%; /* Dark Grey for Input background */
-
-    --primary: 0 100% 50%; /* Neon Red */
+    /* Themeable Colors */
+    --primary: var(--current-accent-hsl);
     --primary-foreground: 0 0% 100%; /* White */
-
-    --secondary: 0 0% 15%; /* Dark Grey for secondary elements */
-    --secondary-foreground: 0 0% 100%; /* White */
-
-    --accent: 0 100% 50%; /* Neon Red */
+    --border: var(--current-accent-hsl);
+    --input: 0 0% 10%; /* Dark Grey for Input background */
+    --accent: var(--current-accent-hsl);
     --accent-foreground: 0 0% 100%; /* White */
     
-    --neon-accent-hsl: 0 100% 50%; /* Neon Red HSL */
+    --neon-accent-hsl: var(--current-accent-hsl); /* For Tailwind 'neon' color */
     --neon-accent: hsl(var(--neon-accent-hsl));
 
     --destructive: 0 80% 55%; /* A slightly different, vibrant red for destructive actions */
     --destructive-foreground: 0 0% 100%; /* White */
 
-    --ring: 0 100% 50%; /* Neon Red for Ring color */
-
+    --ring: var(--current-accent-hsl); /* Ring color */
     --radius: 0.5rem;
 
     /* Sidebar specific colors */
-    --sidebar-background: 0 0% 2%; /* Almost Black, slightly different from main bg */
-    --sidebar-foreground: 0 0% 95%; /* Off-white */
-    --sidebar-primary: 0 100% 50%; /* Neon Red for active/primary items */
-    --sidebar-primary-foreground: 0 0% 100%; /* White */
-    --sidebar-accent: 0 0% 10%; /* Dark grey for hover states in sidebar */
-    --sidebar-accent-foreground: 0 0% 100%; /* White */
-    --sidebar-border: 0 100% 50%; /* Neon Red */
-    --sidebar-ring: 0 100% 50%; /* Neon Red */
+    --sidebar-background: 0 0% 2%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: var(--current-accent-hsl);
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: var(--current-accent-hsl);
+    --sidebar-ring: var(--current-accent-hsl);
 
-    --chart-1: 0 100% 50%; /* Neon Red */
-    --chart-2: 0 0% 80%; /* Light Grey */
-    --chart-3: 0 0% 60%; /* Mid Grey */
-    --chart-4: 0 100% 70%; /* Lighter Neon Red */
-    --chart-5: 0 80% 60%; /* Another shade of Red */
+    /* Chart colors */
+    --chart-1: var(--current-accent-hsl);
+    --chart-2: 0 0% 80%; /* Neutral Light Grey */
+    --chart-3: 0 0% 60%; /* Neutral Mid Grey */
+    --chart-4: var(--current-accent-hsl); /* Can be adjusted to be a lighter shade of accent */
+    --chart-5: var(--current-accent-hsl); /* Can be adjusted to be a darker shade of accent */
   }
+
+  html.theme-blue {
+    --current-accent-hsl: var(--theme-blue-hsl);
+  }
+  html.theme-purple {
+    --current-accent-hsl: var(--theme-purple-hsl);
+  }
+  /* Galactic Red is the default, no specific class needed on html for it if :root defines it */
 }
 
 @layer base {
@@ -66,18 +79,17 @@ body {
     @apply border-border;
   }
   body {
-    background-color: hsl(var(--background)); /* Explicitly black or dark base */
-    color: hsl(var(--foreground)); /* Apply base text color */
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     min-height: 100vh;
     font-feature-settings: "rlig" 1, "calt" 1;
-    /* Old starfield animation removed from here */
   }
 }
 
-/* Added for the scrolling ticker */
+/* Scrolling ticker styles (unchanged) */
 @layer utilities {
   .animate-scroll-horizontal {
-    animation: scroll-horizontal 40s linear infinite; /* Adjust duration as needed */
+    animation: scroll-horizontal 40s linear infinite;
   }
   .pause-animation {
     animation-play-state: paused;
@@ -87,19 +99,19 @@ body {
       transform: translateX(0%);
     }
     100% {
-      transform: translateX(-50%); /* Scroll by half the width (since items are duplicated) */
+      transform: translateX(-50%);
     }
   }
 }
 
-/* New animations for Galaxy Background */
+/* Galaxy Background animations (unchanged) */
 @keyframes shootingStar {
   0% {
     transform: translate(0, 0) scale(1);
     opacity: 1;
   }
   100% {
-    transform: translate(calc(80vw + 100px), calc(40vh + 50px)) scale(0.5); /* Adjusted travel distance */
+    transform: translate(calc(80vw + 100px), calc(40vh + 50px)) scale(0.5);
     opacity: 0;
   }
 }
@@ -123,7 +135,7 @@ body {
   animation: shootingStar 5s linear infinite;
 }
 .animate-shooting-star-2 {
-  animation: shootingStar 7s linear infinite 1.2s; /* Varied delays */
+  animation: shootingStar 7s linear infinite 1.2s;
 }
 .animate-shooting-star-3 {
   animation: shootingStar 6s linear infinite 2.5s;
@@ -136,5 +148,5 @@ body {
 }
 
 .animate-blastoff {
-  animation: blastoff 6s ease-in forwards 1s; /* Added 1s delay before blastoff */
+  animation: blastoff 6s ease-in forwards 1s;
 }
