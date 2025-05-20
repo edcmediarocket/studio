@@ -34,12 +34,6 @@ const nextConfig: NextConfig = {
         hostname: 'upload.wikimedia.org',
         port: '',
         pathname: '/**',
-      },
-      { // Added for Google Drive hosted logo
-        protocol: 'https',
-        hostname: 'drive.google.com',
-        port: '',
-        pathname: '/**',
       }
     ],
   },
