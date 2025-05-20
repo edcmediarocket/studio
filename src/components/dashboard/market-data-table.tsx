@@ -23,7 +23,7 @@ interface CoinData {
   id: string;
   name: string;
   symbol: string;
-  image: string | null; // Allow image to be null
+  image: string | null;
   current_price: number;
   market_cap: number;
   total_volume: number;
@@ -33,7 +33,7 @@ interface CoinData {
 const FAVORITES_STORAGE_KEY = "rocketMemeWatchlistFavorites";
 
 interface MarketDataTableProps {
-  searchTerm: string; // Accept searchTerm as a prop
+  searchTerm: string;
 }
 
 export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
@@ -78,7 +78,7 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
             id: coin.id,
             name: coin.name,
             symbol: coin.symbol,
-            image: coin.image || null, // Ensure image is null if not present
+            image: coin.image || null,
             current_price: coin.current_price,
             market_cap: coin.market_cap,
             total_volume: coin.total_volume,
@@ -158,18 +158,17 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
   if (loading) {
     return (
       <div className="space-y-4">
-        {/* Removed search skeleton as it's moved out */}
         <div className="border rounded-md">
-            {[...Array(10)].map((_, i) => ( // Show more skeleton rows
+            {[...Array(10)].map((_, i) => (
             <div key={i} className="flex items-center space-x-4 p-4 border-b last:border-b-0">
-                <Skeleton className="h-7 w-7 rounded-full" /> {/* Adjusted size */}
+                <Skeleton className="h-7 w-7 rounded-full" />
                 <div className="flex-1 space-y-1">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />
                 </div>
                 <Skeleton className="h-4 w-1/4" />
                 <Skeleton className="h-4 w-1/6 hidden md:block" />
-                <Skeleton className="h-8 w-16" /> {/* Skeleton for actions */}
+                <Skeleton className="h-8 w-16" />
             </div>
             ))}
         </div>
@@ -210,7 +209,7 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
       <TableBody>
         {sortedCoins.length > 0 ? sortedCoins.map((coin) => (
           <TableRow key={coin.id} className="hover:bg-muted/30">
-            <TableCell className="pr-0 py-3">
+            <TableCell className="pr-0 py-3 px-2 sm:px-4">
               {coin.image && typeof coin.image === 'string' && coin.image.trim() !== '' ? (
                   <Link href={`/coin/${coin.id}`} className="block">
                       <Image src={coin.image} alt={coin.name} width={28} height={28} className="rounded-full" data-ai-hint="coin logo crypto" />
@@ -221,28 +220,28 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
                 </div>
               )}
             </TableCell>
-            <TableCell className="py-3">
+            <TableCell className="py-3 px-2 sm:px-4">
               <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors">
                 <div className="font-medium text-sm sm:text-base">{coin.name}</div>
                 <div className="text-xs text-muted-foreground">{coin.symbol.toUpperCase()}</div>
               </Link>
             </TableCell>
-            <TableCell className="text-right font-mono text-sm sm:text-base py-3">
+            <TableCell className="text-right font-mono text-sm sm:text-base py-3 px-2 sm:px-4">
               <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
                   ${coin.current_price !== null && coin.current_price !== undefined ? coin.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: coin.current_price > 0.01 ? 2 : 8 }) : 'N/A'}
               </Link>
             </TableCell>
-            <TableCell className={cn("text-right font-mono text-sm sm:text-base py-3", coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400')}>
+            <TableCell className={cn("text-right font-mono text-sm sm:text-base py-3 px-2 sm:px-4", coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400')}>
               <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
                   {coin.price_change_percentage_24h !== null && coin.price_change_percentage_24h !== undefined ? coin.price_change_percentage_24h.toFixed(2) + '%' : 'N/A'}
               </Link>
             </TableCell>
-            <TableCell className="text-right font-mono hidden md:table-cell text-sm sm:text-base py-3">
+            <TableCell className="text-right font-mono hidden md:table-cell text-sm sm:text-base py-3 px-2 sm:px-4">
                <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
                   ${coin.market_cap !== null && coin.market_cap !== undefined ? coin.market_cap.toLocaleString() : 'N/A'}
                </Link>
               </TableCell>
-            <TableCell className="text-center py-3">
+            <TableCell className="text-center py-3 px-2 sm:px-4">
               <div className="flex items-center justify-center space-x-0 sm:space-x-1">
                 <Button
                   variant="ghost"
