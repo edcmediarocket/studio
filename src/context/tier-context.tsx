@@ -6,7 +6,7 @@ import React, { createContext, useState, useContext, useMemo, useCallback, useEf
 import { useToast } from "@/hooks/use-toast";
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { ADMIN_EMAIL } from '@/lib/firebase'; // Make sure ADMIN_EMAIL is imported
+import { ADMIN_EMAIL } from '@/lib/firebase';
 
 export type UserTier = "Free" | "Basic" | "Pro" | "Premium";
 
@@ -18,7 +18,7 @@ interface TierContextType {
 
 const TierContext = createContext<TierContextType | undefined>(undefined);
 
-const LOCAL_STORAGE_TIER_PREFIX = "rocketMemeUserTier_";
+const LOCAL_STORAGE_TIER_PREFIX = "rocketMemeUserTier_"; // Key prefix for localStorage
 
 export function TierProvider({ children }: PropsWithChildren) {
   const [currentTier, _setCurrentTierInternal] = useState<UserTier>("Free");
@@ -28,67 +28,58 @@ export function TierProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     setIsLoadingTier(true);
     const unsubscribe = onAuthStateChanged(auth, (user: FirebaseUser | null) => {
-      let determinedTier: UserTier = "Free"; // Ultimate default
-      const localStorageKey = user ? `${LOCAL_STORAGE_TIER_PREFIX}${user.uid}` : null;
+      let determinedTier: UserTier = "Free"; // Default if no user or no stored/email-based tier
 
-      if (user && localStorageKey) {
-        const savedPurchasedTier = localStorage.getItem(localStorageKey) as UserTier | null;
+      if (user && user.uid) {
+        const userTierKey = `${LOCAL_STORAGE_TIER_PREFIX}${user.uid}`;
+        const savedTier = localStorage.getItem(userTierKey) as UserTier | null;
 
-        if (savedPurchasedTier && ["Free", "Basic", "Pro", "Premium"].includes(savedPurchasedTier)) {
-          determinedTier = savedPurchasedTier;
-          console.log(`Loaded tier '${determinedTier}' from localStorage (user's explicit choice) for ${user.email}`);
+        if (savedTier && ["Free", "Basic", "Pro", "Premium"].includes(savedTier)) {
+          determinedTier = savedTier;
+          // console.log(`Loaded tier '${determinedTier}' from localStorage for user ${user.uid}`);
         } else {
-          // No explicit/valid choice in localStorage, determine tier based on email
-          let emailBasedTier: UserTier = "Free";
+          // No valid tier in localStorage, determine by email and then save it
           if (user.email === ADMIN_EMAIL || user.email === "premium@rocketmeme.com") {
-            emailBasedTier = "Premium";
+            determinedTier = "Premium";
           } else if (user.email === "pro@rocketmeme.com") {
-            emailBasedTier = "Pro";
+            determinedTier = "Pro";
           } else if (user.email === "basic@rocketmeme.com") {
-            emailBasedTier = "Basic";
+            determinedTier = "Basic";
           }
-          // else it remains "Free" as initialized for emailBasedTier
-          
-          determinedTier = emailBasedTier;
-          console.log(`Determined tier '${determinedTier}' based on email (no localStorage override) for ${user.email}`);
-          
-          // Persist this email-based tier to localStorage if it was determined (i.e., make it the default "saved" choice)
-          // This makes the email-based tier sticky until explicitly changed by a "purchase".
+          // console.log(`Determined tier '${determinedTier}' by email for user ${user.uid}, saving to localStorage.`);
           try {
-            localStorage.setItem(localStorageKey, determinedTier);
-            console.log(`Persisted determined tier '${determinedTier}' to localStorage for ${user.email}`);
+            localStorage.setItem(userTierKey, determinedTier);
           } catch (e) {
-            console.error("Failed to persist determined tier to localStorage", e);
+            console.error("Failed to save email-determined tier to localStorage", e);
           }
         }
       } else {
-        // User is signed out
-        determinedTier = "Free";
-        console.log("User signed out. Setting tier to Free.");
-        // If there was a previous user, their localStorage item remains, but won't be loaded for a null user.
+        // No user logged in, default to Free
+        // console.log("No user logged in, setting tier to Free.");
       }
       
       _setCurrentTierInternal(determinedTier);
       setIsLoadingTier(false);
-      // Avoid toast on initial auth load by not passing `fromSimulatedSubscription=true`
     });
 
     return () => unsubscribe();
-  }, []); // Empty dependency array ensures this runs once on mount
+  }, []);
 
   const setCurrentTier = useCallback((tier: UserTier, fromSimulatedSubscription: boolean = false) => {
     _setCurrentTierInternal(tier);
     const currentUser = auth.currentUser;
-    if (currentUser) {
+
+    if (currentUser && currentUser.uid) {
+      const userTierKey = `${LOCAL_STORAGE_TIER_PREFIX}${currentUser.uid}`;
       try {
-        localStorage.setItem(`${LOCAL_STORAGE_TIER_PREFIX}${currentUser.uid}`, tier);
-        console.log(`Saved tier '${tier}' to localStorage (explicit action) for ${currentUser.email}`);
-      } catch (e) {
+        localStorage.setItem(userTierKey, tier);
+        // console.log(`Saved tier '${tier}' to localStorage for user ${currentUser.uid} due to explicit action.`);
+      } catch (e)
+{
         console.error("Failed to save tier to localStorage on explicit action", e);
       }
     }
 
-    // Show toast only for explicit user actions that are not part of the initial loading phase
     if (fromSimulatedSubscription && !isLoadingTier) { 
       toast({
         title: "Subscription Updated",

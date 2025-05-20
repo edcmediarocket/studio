@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Star, Rocket, ShieldCheck } from "lucide-react";
 import type { UserTier } from "@/context/tier-context"; 
-import { auth } from '@/lib/firebase'; // Import Firebase auth
+import { auth } from '@/lib/firebase'; 
 
 interface TierFeature {
   text: string;
@@ -23,7 +23,7 @@ interface SubscriptionPlan {
   icon?: React.ReactNode;
 }
 
-const tiersData: Omit<SubscriptionPlan, 'ctaText'>[] = [ 
+const tiersData: SubscriptionPlan[] = [ 
   {
     name: "Free",
     price: "$0",
@@ -38,6 +38,7 @@ const tiersData: Omit<SubscriptionPlan, 'ctaText'>[] = [
       { text: "AI Advisor Chat", included: false },
       { text: "Premium Support", included: false },
     ],
+    ctaText: "Switch to Free",
   },
   {
     name: "Basic",
@@ -54,6 +55,7 @@ const tiersData: Omit<SubscriptionPlan, 'ctaText'>[] = [
       { text: "Premium Support", included: false },
     ],
     paypalPlanId: "P-1G079065XJ172161KNAQPHQQ",
+    ctaText: "Subscribe to Basic",
   },
   {
     name: "Pro",
@@ -71,12 +73,13 @@ const tiersData: Omit<SubscriptionPlan, 'ctaText'>[] = [
     ],
     highlight: true,
     paypalPlanId: "P-5GK21636B1377881VNAQPMFA",
+    ctaText: "Subscribe to Pro",
   },
   {
     name: "Premium",
     price: "$49.99",
     period: "/month",
-    icon: <Rocket className="h-6 w-6 text-purple-400 mx-auto mb-2" />,
+    icon: <Rocket className="h-6 w-6 text-purple-400 mx-auto mb-2" />, // Example Premium icon
     features: [
       { text: "All Pro Features Included", included: true },
       { text: "Exclusive AI Models & Early Access", included: true },
@@ -88,6 +91,7 @@ const tiersData: Omit<SubscriptionPlan, 'ctaText'>[] = [
     ],
     paypalPlanId: "P-66R88029R2506591NNAQPPKQ",
     highlight: true,
+    ctaText: "Subscribe to Premium",
   },
 ];
 
@@ -98,27 +102,30 @@ interface SubscriptionTiersProps {
 
 export function SubscriptionTiers({ currentActiveTier, onTierChange }: SubscriptionTiersProps) {
   
-  const handlePayPalSubscription = (tierName: UserTier, planId?: string) => {
-    if (!planId) {
-      alert(`The ${tierName} plan is free or does not have a payment plan ID configured.`);
+  const handlePayPalSubscription = (tier: SubscriptionPlan) => {
+    if (!tier.paypalPlanId && tier.name !== "Free") {
+      alert(`The ${tier.name} plan does not have a payment plan ID configured for this demo.`);
+      // For demo, if no plan ID but it's not Free, we can still simulate tier change
+      onTierChange(tier.name, true);
       return;
     }
     
     const currentUser = auth.currentUser;
-    const userId = currentUser ? currentUser.uid : "USER_ID_NOT_LOGGED_IN";
-
-    alert(`Simulating PayPal subscription for ${tierName} tier with Plan ID: ${planId}.\nUser ID (Firebase UID as custom_id): ${userId}.\n\nIn a real app, PayPal would notify our backend, which then updates your account. For this demo, we'll update your tier now.`);
+    const userId = currentUser ? currentUser.uid : "USER_ID_NOT_LOGGED_IN_OR_UNAVAILABLE"; // Fallback for demo
     
-    // For demo purposes, call onTierChange to update the UI locally AFTER the alert.
-    // This makes the demo interactive. In a real app, this line would be removed,
-    // and the TierProvider would pick up changes from Firestore (updated by your backend).
-    onTierChange(tierName, true); 
+    alert(
+      `Simulating PayPal subscription for ${tier.name} tier with Plan ID: ${tier.paypalPlanId || 'N/A'}.\n` +
+      `Your User ID (Firebase UID as custom_id): ${userId}.\n\n` +
+      `In a real app, PayPal would notify our backend, which then updates your account in Firestore. ` +
+      `For this demo, we'll update your tier locally now.`
+    );
+    
+    onTierChange(tier.name, true); 
   };
 
   const getButtonText = (tier: SubscriptionPlan): string => {
     if (tier.name === currentActiveTier) return "Current Plan";
-    if (tier.name === "Free") return "Switch to Free"; 
-    return `Subscribe to ${tier.name}`; 
+    return tier.ctaText || `Switch to ${tier.name}`;
   };
 
   return (
@@ -166,8 +173,8 @@ export function SubscriptionTiers({ currentActiveTier, onTierChange }: Subscript
               onClick={() => {
                 if (tier.name === "Free") {
                   if (currentActiveTier !== "Free") onTierChange("Free", true);
-                } else if (tier.paypalPlanId) {
-                  handlePayPalSubscription(tier.name, tier.paypalPlanId);
+                } else {
+                  handlePayPalSubscription(tier);
                 }
               }}
               className={`w-full 
