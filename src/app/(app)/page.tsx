@@ -1,14 +1,15 @@
 
-"use client"; 
+"use client";
 
-import { useState, useEffect, useCallback } from 'react'; // Added useCallback
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { MarketDataTable } from "@/components/dashboard/market-data-table";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, TrendingUp, TrendingDown, Info, Flame, Loader2, AlertTriangle, RefreshCw } from "lucide-react"; 
+import { LayoutDashboard, TrendingUp, TrendingDown, Info, Flame, Loader2, AlertTriangle, RefreshCw, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSidebar } from "@/components/ui/sidebar"; 
+import { Input } from "@/components/ui/input"; // Added Input
+import { useSidebar } from "@/components/ui/sidebar";
 import { HotCoinsTicker } from "@/components/dashboard/hot-coins-ticker";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -24,7 +25,7 @@ interface MarketMoverItem {
 }
 
 export default function DashboardPage() {
-  const { toggleSidebar } = useSidebar(); 
+  const { toggleSidebar } = useSidebar();
   const [topGainers, setTopGainers] = useState<MarketMoverItem[]>([]);
   const [topLosers, setTopLosers] = useState<MarketMoverItem[]>([]);
   const [isLoadingMovers, setIsLoadingMovers] = useState(true);
@@ -33,6 +34,8 @@ export default function DashboardPage() {
   const [signalOfTheDay, setSignalOfTheDay] = useState<GetSignalOfTheDayOutput | null>(null);
   const [signalOfTheDayLoading, setSignalOfTheDayLoading] = useState(true);
   const [signalOfTheDayError, setSignalOfTheDayError] = useState<string | null>(null);
+
+  const [searchTerm, setSearchTerm] = useState(''); // Moved searchTerm state here
 
   const fetchSignalOfTheDay = useCallback(async () => {
     setSignalOfTheDayLoading(true);
@@ -67,7 +70,7 @@ export default function DashboardPage() {
 
         if (Array.isArray(data)) {
           const validCoins = data.filter(coin => coin.price_change_percentage_24h !== null && coin.price_change_percentage_24h !== undefined);
-          
+
           const sortedByGain = [...validCoins].sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h);
           setTopGainers(sortedByGain.slice(0, 3).map(coin => ({
             id: coin.id,
@@ -125,7 +128,7 @@ export default function DashboardPage() {
     if (items.length === 0 && !moversError) {
         return <p className="text-xs text-muted-foreground px-6 py-2">No significant {type}s found in the top 100 right now.</p>;
     }
-    
+
     return items.map(coin => (
       <Link href={`/coin/${coin.id}`} key={coin.id} className="block hover:bg-muted/30 transition-colors px-6 py-2 border-b last:border-b-0">
         <div className="flex justify-between items-center">
@@ -149,28 +152,28 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <section className="py-4 sm:py-6">
         <div className="container px-0 sm:px-4">
-          
+
           <div className="mb-6 flex justify-start">
-            <Button 
-              size="default" 
-              variant="outline" 
-              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground text-sm sm:text-base w-full sm:w-auto" 
-              onClick={toggleSidebar} 
+            <Button
+              size="default"
+              variant="outline"
+              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground text-sm sm:text-base w-full sm:w-auto"
+              onClick={toggleSidebar}
             >
               <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
             </Button>
           </div>
 
           <div className="mb-6">
-            <SignalOfTheDayCard 
-              signalData={signalOfTheDay} 
-              loading={signalOfTheDayLoading} 
+            <SignalOfTheDayCard
+              signalData={signalOfTheDay}
+              loading={signalOfTheDayLoading}
               error={signalOfTheDayError}
-              onRefresh={fetchSignalOfTheDay} 
+              onRefresh={fetchSignalOfTheDay}
             />
           </div>
-          
-          <HotCoinsTicker /> 
+
+          <HotCoinsTicker />
 
           <h1 className="text-2xl sm:text-3xl font-bold mt-6 mb-1 text-neon">
             Market Overview
@@ -178,7 +181,7 @@ export default function DashboardPage() {
           <p className="text-sm sm:text-base text-muted-foreground mb-4">
             Today's crypto market highlights.
           </p>
-          
+
           {moversError && (
             <Alert variant="destructive" className="mb-6">
               <AlertTriangle className="h-4 w-4" />
@@ -209,20 +212,28 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-start items-center mb-6">
-             <h2 className="text-xl sm:text-2xl font-semibold text-foreground flex-grow">
+          <div className="flex flex-col sm:flex-row gap-3 justify-between items-center mb-4"> {/* Changed to justify-between */}
+             <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
                 All Coins
              </h2>
+             <div className="relative w-full sm:w-auto sm:max-w-xs md:max-w-sm"> {/* Adjusted width for responsiveness */}
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+                <Input
+                  placeholder="Search coins..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full h-11 pl-10 pr-4 text-sm bg-muted border-primary/30 hover:border-primary/70 focus:border-primary focus:ring-1 focus:ring-primary/50 rounded-lg shadow-sm placeholder:text-muted-foreground/70"
+                />
+              </div>
           </div>
         </div>
       </section>
 
       <Card className="shadow-md">
         <CardContent className="p-0 sm:p-2 md:p-4">
-          <MarketDataTable />
+          <MarketDataTable searchTerm={searchTerm} />
         </CardContent>
       </Card>
     </div>
   );
 }
-
