@@ -24,7 +24,7 @@ const ideaTypeValues = [
     "Short-Term Momentum",
     "Undervalued Gem",
     "Ecosystem Growth"
-] as const; // Use 'as const' for strong typing if z.enum benefits from it
+] as const; // Use 'as const' for strong typing
 
 // Create the Zod enum using this array for internal schema validation
 const IdeaTypeEnumInternal = z.enum(ideaTypeValues);
@@ -32,9 +32,8 @@ const IdeaTypeEnumInternal = z.enum(ideaTypeValues);
 // Export the type derived from the enum (this is fine)
 export type IdeaType = z.infer<typeof IdeaTypeEnumInternal>;
 
-// Export a copy of the array for the client, ensuring it's just a plain string array
-export const AlphaIdeaTypeOptions: readonly string[] = ideaTypeValues;
-
+// DO NOT EXPORT AlphaIdeaTypeOptions from here.
+// The client component will define its own options array.
 
 const TradeIdeaSchema = z.object({
   coinName: z.string().describe('The name of the coin or token.'),
@@ -110,5 +109,3 @@ const getAlphaFeedIdeasFlow = ai.defineFlow(
     return output!;
   }
 );
-
-    

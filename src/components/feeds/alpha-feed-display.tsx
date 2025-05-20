@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { getAlphaFeedIdeas, type GetAlphaFeedIdeasOutput, type TradeIdea, AlphaIdeaTypeOptions } from "@/ai/flows/get-alpha-feed-ideas";
+import { getAlphaFeedIdeas, type GetAlphaFeedIdeasOutput, type TradeIdea } from "@/ai/flows/get-alpha-feed-ideas";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle, Info, RefreshCw, Sparkles, Target, ShieldHalf, CalendarDays, Brain, TrendingUp, Zap, Filter, X } from "lucide-react";
@@ -13,13 +13,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { formatDistanceToNow } from 'date-fns';
 
+// Define the options array directly in the client component
+const AlphaIdeaTypeOptions: readonly string[] = [
+    "High Potential Upside",
+    "Narrative Play",
+    "Contrarian Bet",
+    "Short-Term Momentum",
+    "Undervalued Gem",
+    "Ecosystem Growth"
+];
+
 export function AlphaFeedDisplay() {
   const [feedData, setFeedData] = useState<GetAlphaFeedIdeasOutput | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string | undefined>(undefined);
 
-  const ideaTypes = AlphaIdeaTypeOptions; // Use the exported options array
+  const ideaTypes = AlphaIdeaTypeOptions; // Use the locally defined options array
 
   const fetchFeed = useCallback(async (filter?: string) => {
     setIsLoading(true);
@@ -223,5 +233,3 @@ declare module "@/ai/flows/get-alpha-feed-ideas" {
     lastGeneratedTime?: string;
   }
 }
-
-    
