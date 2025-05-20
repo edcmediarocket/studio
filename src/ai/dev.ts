@@ -22,3 +22,4 @@ import '@/ai/flows/get-coin-risk-assessment.ts'; // Existing
 import '@/ai/flows/get-viral-prediction.ts'; // Existing
 import '@/ai/flows/get-signal-of-the-day.ts';
 import '@/ai/flows/get-pre-launch-gems.ts'; // Added new flow for Pre-Launch Radar
+import '@/ai/flows/get-meme-coin-lifespan-prediction.ts'; // Added new flow for Lifespan Predictor

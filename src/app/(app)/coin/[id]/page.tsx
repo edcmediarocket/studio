@@ -10,11 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon, Siren } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon, Siren, Hourglass, TrendingUpIcon, TrendingDownIcon } from 'lucide-react';
 import { Table, TableBody, TableCell, TableRow, TableHead, TableHeader } from '@/components/ui/table';
 import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from '@/ai/flows/get-coin-trading-signal';
 import { getCoinRiskAssessment, type GetCoinRiskAssessmentOutput } from '@/ai/flows/get-coin-risk-assessment';
 import { getViralPrediction, type GetViralPredictionOutput } from '@/ai/flows/get-viral-prediction';
+import { getMemeCoinLifespanPrediction, type GetMemeCoinLifespanPredictionOutput } from '@/ai/flows/get-meme-coin-lifespan-prediction'; // New import
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { StatItem } from '@/components/shared/stat-item';
@@ -118,6 +119,10 @@ export default function CoinDetailPage() {
   const [viralPredictionLoading, setViralPredictionLoading] = useState(false);
   const [viralPredictionError, setViralPredictionError] = useState<string | null>(null);
 
+  const [lifespanPrediction, setLifespanPrediction] = useState<GetMemeCoinLifespanPredictionOutput | null>(null); // New state
+  const [lifespanLoading, setLifespanLoading] = useState(false); // New state
+  const [lifespanError, setLifespanError] = useState<string | null>(null); // New state
+
 
   useEffect(() => {
     if (!coinId) return;
@@ -127,10 +132,12 @@ export default function CoinDetailPage() {
       setSignalLoading(true);
       setRiskLoading(true);
       setViralPredictionLoading(true);
+      setLifespanLoading(true); // New
       setError(null);
       setSignalError(null);
       setRiskError(null);
       setViralPredictionError(null);
+      setLifespanError(null); // New
 
       try {
         // Fetch main coin details
@@ -185,15 +192,29 @@ export default function CoinDetailPage() {
           } finally {
             setViralPredictionLoading(false);
           }
+          
+          // Lifespan Prediction (New)
+          try {
+            const lifespan = await getMemeCoinLifespanPrediction({ coinName: detailData.name });
+            setLifespanPrediction(lifespan);
+          } catch (err) {
+            console.error("Error fetching lifespan prediction:", err);
+            setLifespanError(err instanceof Error && err.message.toLowerCase().includes('failed to fetch') ? "Network error: Failed to fetch AI lifespan prediction." : "Failed to fetch AI lifespan prediction. Please try again later.");
+          } finally {
+            setLifespanLoading(false);
+          }
+
 
         } else {
           setSignalLoading(false); 
           setRiskLoading(false); 
           setViralPredictionLoading(false);
+          setLifespanLoading(false); // New
           const errorMsg = "Coin name missing from fetched data, cannot proceed with AI analyses.";
           setSignalError(errorMsg);
           setRiskError(errorMsg);
           setViralPredictionError(errorMsg);
+          setLifespanError(errorMsg); // New
         }
 
       } catch (err) {
@@ -206,6 +227,7 @@ export default function CoinDetailPage() {
         setSignalLoading(false);
         setRiskLoading(false);
         setViralPredictionLoading(false);
+        setLifespanLoading(false); // New
       }
     };
 
@@ -230,7 +252,7 @@ export default function CoinDetailPage() {
             </div>
           </div>
         </div>
-        {[...Array(5)].map((_, i) => ( 
+        {[...Array(6)].map((_, i) => ( // Increased skeleton count
           <Card key={i} className="shadow-lg">
             <CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader>
             <CardContent className="space-y-3">
@@ -426,7 +448,7 @@ export default function CoinDetailPage() {
               <Siren className="h-5 w-5 text-red-700" />
               <AlertTitle className="text-red-700 font-bold">High Rug Pull Risk Detected!</AlertTitle>
               <AlertDescription className="text-red-600">
-                {riskAssessment.rugPullWarningSummary || "AI has flagged multiple indicators associated with high rug pull risk. Extreme caution advised."}
+                {riskAssessment.rugPullWarningSummary || "AI has flagged this coin as having multiple indicators associated with high rug pull risk. Extreme caution advised. Verify all aspects independently."}
               </AlertDescription>
             </Alert>
           )}
@@ -580,6 +602,85 @@ export default function CoinDetailPage() {
     </>
   );
 
+  const renderLifespanPredictionContent = () => { // New function
+    if (lifespanLoading) {
+      return (
+        <div className="space-y-3 py-4">
+          <div className="flex items-center justify-center">
+             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+             <p className="ml-3 text-muted-foreground text-lg">Predicting Lifespan & Exit...</p>
+          </div>
+          <Skeleton className="h-6 w-1/4 mx-auto" />
+          <Skeleton className="h-4 w-1/2 mx-auto mb-2" />
+          <Skeleton className="h-16 w-full" />
+        </div>
+      );
+    }
+    if (lifespanError) {
+      return (
+        <Alert variant="destructive" className="my-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Lifespan Prediction Error</AlertTitle>
+          <AlertDescription>{lifespanError}</AlertDescription>
+        </Alert>
+      );
+    }
+    if (lifespanPrediction) {
+      return (
+        <div className="space-y-4">
+          <div className="text-center">
+            <Badge variant="outline" className="text-lg px-4 py-1.5 font-semibold border-orange-500 text-orange-500">
+              {lifespanPrediction.lifespanEstimate}
+            </Badge>
+             <p className="text-sm text-muted-foreground mt-1">
+              AI Confidence: 
+              <Badge className={`ml-1.5 text-xs ${getConfidenceBadgeColor(lifespanPrediction.confidence)}`}>
+                {lifespanPrediction.confidence}
+              </Badge>
+            </p>
+          </div>
+
+          <Separator />
+          
+          <div>
+            <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><TrendingDownIcon className="mr-1.5 h-5 w-5 text-orange-500"/>Exit Recommendation:</h4>
+            <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md whitespace-pre-wrap">{lifespanPrediction.exitRecommendation}</p>
+          </div>
+
+          <div>
+            <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><ListChecks className="mr-1.5 h-5 w-5"/>Key Factors Considered:</h4>
+            <ul className="list-disc list-inside space-y-1 pl-4 text-sm text-muted-foreground">
+              {lifespanPrediction.keyFactors.map((factor, index) => (
+                <li key={`lifespan-factor-${index}`}>{factor}</li>
+              ))}
+            </ul>
+          </div>
+          <p className="text-xs text-muted-foreground pt-3 border-t border-muted/30 mt-3">Analysis as of: {new Date(lifespanPrediction.analysisTimestamp).toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground pt-1">{lifespanPrediction.disclaimer}</p>
+        </div>
+      );
+    }
+    return <p className="text-muted-foreground text-sm text-center">No AI lifespan prediction available for this coin.</p>;
+  };
+
+  const aiLifespanInfo = ( // New popover content
+    <>
+      <h4 className="font-semibold mb-2 text-base">About AI Lifespan Predictor</h4>
+      <p>
+        This AI feature simulates an analysis of a meme coin's current hype cycle, considering factors like volume decay, social sentiment shifts, and historical patterns to estimate its potential lifespan.
+      </p>
+      <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
+        <li><strong>Lifespan Estimate:</strong> AI's speculative timeframe for the current hype.</li>
+        <li><strong>Exit Recommendation:</strong> AI-suggested considerations for de-risking.</li>
+        <li><strong>Confidence:</strong> The AI's confidence in this prediction.</li>
+        <li><strong>Key Factors:</strong> Simulated drivers behind the prediction.</li>
+      </ul>
+      <p className="mt-2 text-xs">
+        This is a highly speculative AI feature. Not financial advice. Always manage risk and DYOR.
+      </p>
+    </>
+  );
+
 
   return (
     <div className="space-y-6">
@@ -636,6 +737,15 @@ export default function CoinDetailPage() {
               infoPopoverContent={aiViralityInfo}
             >
               {renderViralPredictionContent()}
+            </SectionCard>
+            
+            <SectionCard // New Card for Lifespan Predictor
+              title="AI Lifespan Predictor"
+              icon={<Hourglass className="h-5 w-5" />}
+              noPadding
+              infoPopoverContent={aiLifespanInfo}
+            >
+              {renderLifespanPredictionContent()}
             </SectionCard>
 
           <SectionCard title="Description" icon={<BookOpen className="h-5 w-5"/>}>
@@ -712,5 +822,3 @@ export default function CoinDetailPage() {
     </div>
   );
 }
-
-    
