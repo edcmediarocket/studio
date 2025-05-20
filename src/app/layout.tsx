@@ -5,7 +5,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from '@/components/layout/providers';
 import { PwaRegistration } from '@/components/layout/pwa-registration';
-import { AnimatedGalaxyBackground } from '@/components/layout/animated-galaxy-background'; // Added import
+import { AnimatedGalaxyBackground } from '@/components/layout/animated-galaxy-background';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -31,6 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
         <meta name="application-name" content="Rocket Meme" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -47,7 +48,7 @@ export default function RootLayout({
         
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
-        <AnimatedGalaxyBackground /> {/* Added the new background component here */}
+        <AnimatedGalaxyBackground />
         <Providers>
           {children}
           <Toaster />
