@@ -26,7 +26,7 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
         fontFamily="var(--font-geist-sans), system-ui, sans-serif"
         fontSize="28"
         fontWeight="bold"
-        fill="hsl(var(--foreground))"
+        fill="hsl(var(--primary))" // Changed from --foreground to --primary
       >
         Rocket Meme
       </text>
