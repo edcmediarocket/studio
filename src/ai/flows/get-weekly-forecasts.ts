@@ -14,7 +14,7 @@ import {z} from 'genkit';
 const WeeklyForecastSchema = z.object({
   coinName: z.string().describe('The name of the meme coin.'),
   symbol: z.string().describe('The ticker symbol for the coin (e.g., DOGE, SHIB).'),
-  coinImage: z.string().url().describe('A direct URL to an image/logo of the coin. Use placehold.co if a real one is not known.'),
+  coinImage: z.string().describe('A direct URL to an image/logo of the coin. Use placehold.co if a real one is not known.'),
   forecastPeriod: z.string().default("This Week").describe('The period for which the forecast is made (e.g., "This Week", "Next 7 Days").'),
   trendPrediction: z.enum(["Strongly Bullish", "Bullish", "Neutral/Consolidating", "Bearish", "Strongly Bearish"]).describe('The AI-predicted trend for the coin over the forecast period.'),
   keyFactors: z.array(z.string()).max(3).describe('A list of 2-3 key simulated factors influencing this forecast (e.g., "Positive market sentiment", "Upcoming token unlock", "Recent technical breakout").'),
@@ -74,11 +74,12 @@ const getWeeklyForecastsFlow = ai.defineFlow(
         if (!forecast.analysisDate) {
           forecast.analysisDate = currentDate;
         }
-        if (!forecast.coinImage || !forecast.coinImage.startsWith('https://')) {
-            forecast.coinImage = `https://placehold.co/48x48.png?text=${forecast.symbol.substring(0,3).toUpperCase()}`;
+        if (!forecast.coinImage || (!forecast.coinImage.startsWith('https://') && !forecast.coinImage.startsWith('http://'))) {
+            forecast.coinImage = `https://placehold.co/48x48.png?text=${forecast.symbol ? forecast.symbol.substring(0,3).toUpperCase() : 'COIN'}`;
         }
       });
     }
     return output!;
   }
 );
+
