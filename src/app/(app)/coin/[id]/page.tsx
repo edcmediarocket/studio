@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableRow, TableHead, TableHeader } from '@
 import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from '@/ai/flows/get-coin-trading-signal';
 import { getCoinRiskAssessment, type GetCoinRiskAssessmentOutput } from '@/ai/flows/get-coin-risk-assessment';
 import { getViralPrediction, type GetViralPredictionOutput } from '@/ai/flows/get-viral-prediction';
-import { getMemeCoinLifespanPrediction, type GetMemeCoinLifespanPredictionOutput } from '@/ai/flows/get-meme-coin-lifespan-prediction'; // New import
+import { getMemeCoinLifespanPrediction, type GetMemeCoinLifespanPredictionOutput } from '@/ai/flows/get-meme-coin-lifespan-prediction';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { StatItem } from '@/components/shared/stat-item';
@@ -119,9 +119,9 @@ export default function CoinDetailPage() {
   const [viralPredictionLoading, setViralPredictionLoading] = useState(false);
   const [viralPredictionError, setViralPredictionError] = useState<string | null>(null);
 
-  const [lifespanPrediction, setLifespanPrediction] = useState<GetMemeCoinLifespanPredictionOutput | null>(null); // New state
-  const [lifespanLoading, setLifespanLoading] = useState(false); // New state
-  const [lifespanError, setLifespanError] = useState<string | null>(null); // New state
+  const [lifespanPrediction, setLifespanPrediction] = useState<GetMemeCoinLifespanPredictionOutput | null>(null);
+  const [lifespanLoading, setLifespanLoading] = useState(false);
+  const [lifespanError, setLifespanError] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -132,12 +132,12 @@ export default function CoinDetailPage() {
       setSignalLoading(true);
       setRiskLoading(true);
       setViralPredictionLoading(true);
-      setLifespanLoading(true); // New
+      setLifespanLoading(true); 
       setError(null);
       setSignalError(null);
       setRiskError(null);
       setViralPredictionError(null);
-      setLifespanError(null); // New
+      setLifespanError(null); 
 
       try {
         // Fetch main coin details
@@ -193,7 +193,7 @@ export default function CoinDetailPage() {
             setViralPredictionLoading(false);
           }
           
-          // Lifespan Prediction (New)
+          // Lifespan Prediction
           try {
             const lifespan = await getMemeCoinLifespanPrediction({ coinName: detailData.name });
             setLifespanPrediction(lifespan);
@@ -209,12 +209,12 @@ export default function CoinDetailPage() {
           setSignalLoading(false); 
           setRiskLoading(false); 
           setViralPredictionLoading(false);
-          setLifespanLoading(false); // New
+          setLifespanLoading(false); 
           const errorMsg = "Coin name missing from fetched data, cannot proceed with AI analyses.";
           setSignalError(errorMsg);
           setRiskError(errorMsg);
           setViralPredictionError(errorMsg);
-          setLifespanError(errorMsg); // New
+          setLifespanError(errorMsg); 
         }
 
       } catch (err) {
@@ -227,7 +227,7 @@ export default function CoinDetailPage() {
         setSignalLoading(false);
         setRiskLoading(false);
         setViralPredictionLoading(false);
-        setLifespanLoading(false); // New
+        setLifespanLoading(false); 
       }
     };
 
@@ -252,7 +252,7 @@ export default function CoinDetailPage() {
             </div>
           </div>
         </div>
-        {[...Array(6)].map((_, i) => ( // Increased skeleton count
+        {[...Array(6)].map((_, i) => (
           <Card key={i} className="shadow-lg">
             <CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader>
             <CardContent className="space-y-3">
@@ -554,12 +554,12 @@ export default function CoinDetailPage() {
             <Badge variant="outline" className="text-lg px-4 py-1.5 font-semibold border-neon text-neon">
               {viralPrediction.timeToTrendEstimate}
             </Badge>
-            <p className="text-sm text-muted-foreground mt-1">
+            <div className="text-sm text-muted-foreground mt-1">
               AI Confidence: 
               <Badge className={`ml-1.5 text-xs ${getConfidenceBadgeColor(viralPrediction.confidence)}`}>
                 {viralPrediction.confidence}
               </Badge>
-            </p>
+            </div>
           </div>
 
           <Separator />
@@ -602,7 +602,7 @@ export default function CoinDetailPage() {
     </>
   );
 
-  const renderLifespanPredictionContent = () => { // New function
+  const renderLifespanPredictionContent = () => { 
     if (lifespanLoading) {
       return (
         <div className="space-y-3 py-4">
@@ -632,12 +632,12 @@ export default function CoinDetailPage() {
             <Badge variant="outline" className="text-lg px-4 py-1.5 font-semibold border-orange-500 text-orange-500">
               {lifespanPrediction.lifespanEstimate}
             </Badge>
-             <p className="text-sm text-muted-foreground mt-1">
+             <div className="text-sm text-muted-foreground mt-1">
               AI Confidence: 
               <Badge className={`ml-1.5 text-xs ${getConfidenceBadgeColor(lifespanPrediction.confidence)}`}>
                 {lifespanPrediction.confidence}
               </Badge>
-            </p>
+            </div>
           </div>
 
           <Separator />
@@ -663,7 +663,7 @@ export default function CoinDetailPage() {
     return <p className="text-muted-foreground text-sm text-center">No AI lifespan prediction available for this coin.</p>;
   };
 
-  const aiLifespanInfo = ( // New popover content
+  const aiLifespanInfo = ( 
     <>
       <h4 className="font-semibold mb-2 text-base">About AI Lifespan Predictor</h4>
       <p>
@@ -739,7 +739,7 @@ export default function CoinDetailPage() {
               {renderViralPredictionContent()}
             </SectionCard>
             
-            <SectionCard // New Card for Lifespan Predictor
+            <SectionCard 
               title="AI Lifespan Predictor"
               icon={<Hourglass className="h-5 w-5" />}
               noPadding
@@ -822,3 +822,4 @@ export default function CoinDetailPage() {
     </div>
   );
 }
+
