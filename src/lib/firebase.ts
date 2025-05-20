@@ -6,15 +6,15 @@ import { getAuth } from 'firebase/auth';
 // import { getFirestore } from 'firebase/firestore';
 // import { getStorage } from 'firebase/storage';
 
-// Firebase project configuration provided by the user.
+// Your web app's Firebase configuration
 const firebaseConfig: FirebaseOptions = {
-  apiKey: "AIzaSyDRWV3OilblaZWlEDDcy1dOd5ysO5jxUjI",
-  authDomain: "rocketmemefinal.firebaseapp.com",
-  projectId: "rocketmemefinal",
-  storageBucket: "rocketmemefinal.appspot.com", // Corrected: Removed 'firebasestorage' from the middle
-  messagingSenderId: "213714563438",
-  appId: "1:213714563438:web:2eddc648692a831471117f",
-  measurementId: "YOUR_MEASUREMENT_ID_HERE" // Optional: for Google Analytics - User can add this if needed
+  apiKey: "AIzaSyD1l4ELRKb-9Ic2IgVy99Q5NUt43kI879o",
+  authDomain: "meme-prophet-xpyi0.firebaseapp.com",
+  projectId: "meme-prophet-xpyi0",
+  storageBucket: "meme-prophet-xpyi0.appspot.com", // Corrected to .appspot.com
+  messagingSenderId: "1080795361618",
+  appId: "1:1080795361618:web:44e0f318a3a9399e77ca8b"
+  // measurementId: "YOUR_MEASUREMENT_ID_HERE" // Optional: for Google Analytics - User can add this if needed
 };
 
 // Initialize Firebase
