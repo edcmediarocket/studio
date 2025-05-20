@@ -168,11 +168,11 @@ export default function DashboardPage() {
 
           <HotCoinsTicker />
 
-          <h1 className="text-2xl sm:text-3xl font-bold mt-6 mb-1 text-neon">
+          <h1 className="text-2xl sm:text-3xl font-bold mt-8 mb-1 text-neon">
             Market Overview
           </h1>
-          <p className="text-sm sm:text-base text-muted-foreground mb-4">
-            Today's crypto market highlights.
+          <p className="text-md sm:text-lg text-muted-foreground mb-4">
+            Your Launchpad for Meme Coin Insights.
           </p>
 
           {moversError && (
@@ -230,4 +230,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

@@ -58,7 +58,7 @@ const SidebarProvider = React.forwardRef<
 >(
   (
     {
-      defaultOpen = false, // Changed from true to false
+      defaultOpen = false, 
       open: openProp,
       onOpenChange: setOpenProp,
       className,
@@ -160,7 +160,7 @@ const Sidebar = React.forwardRef<
     {
       side = "left",
       variant = "sidebar",
-      collapsible = "icon", // Default to icon collapsible
+      collapsible = "icon", 
       className,
       children,
       ...props
@@ -231,7 +231,7 @@ const Sidebar = React.forwardRef<
               ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
               : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
             variant === "floating" || variant === "inset"
-              ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]" // +2px for border
+              ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]" 
               : "group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l",
             className
           )}
@@ -306,11 +306,11 @@ const SidebarRail = React.forwardRef<
 SidebarRail.displayName = "SidebarRail"
 
 const SidebarInset = React.forwardRef<
-  HTMLDivElement, // Changed from React.ElementRef<typeof main> to HTMLDivElement
-  React.ComponentProps<"div"> // Changed from React.ComponentProps<"main">
+  HTMLDivElement, 
+  React.ComponentProps<"div"> 
 >(({ className, ...props }, ref) => {
   return (
-    <div // Changed from <main> to <div>
+    <div 
       ref={ref}
       className={cn(
         "relative flex min-h-svh flex-1 flex-col bg-background",
@@ -395,7 +395,7 @@ const SidebarContent = React.forwardRef<
       ref={ref}
       data-sidebar="content"
       className={cn(
-        "flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden",
+        "flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto group-data-[collapsible=icon]:overflow-hidden",
         className
       )}
       {...props}
