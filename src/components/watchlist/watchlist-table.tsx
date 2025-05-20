@@ -193,56 +193,56 @@ export function WatchlistTable() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[50px]"></TableHead>
-                  <TableHead className="text-xs sm:text-sm">Name</TableHead>
-                  <TableHead className="text-right text-xs sm:text-sm">Price</TableHead>
-                  <TableHead className="text-right text-xs sm:text-sm">24h %</TableHead>
-                  <TableHead className="hidden md:table-cell text-xs sm:text-sm">Notes</TableHead>
-                  <TableHead className="text-center text-xs sm:text-sm">Alerts</TableHead>
-                  <TableHead className="text-center text-xs sm:text-sm">Actions</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="text-right">Price</TableHead>
+                  <TableHead className="text-right">24h %</TableHead>
+                  <TableHead className="hidden md:table-cell">Notes</TableHead>
+                  <TableHead className="text-center">Alerts</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {watchlist.map((coin) => (
                   <TableRow key={coin.id} className="hover:bg-muted/50">
-                    <TableCell className="py-3 px-2 sm:px-4">
+                    <TableCell>
                       <Link href={`/coin/${coin.id}`}>
                         <Image src={coin.image} alt={coin.name} width={24} height={24} className="rounded-full" data-ai-hint="coin logo crypto"/>
                       </Link>
                     </TableCell>
-                    <TableCell className="py-3 px-2 sm:px-4">
+                    <TableCell>
                       <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors">
-                        <div className="font-medium text-sm sm:text-base">{coin.name}</div>
+                        <div className="font-medium">{coin.name}</div>
                         <div className="text-xs text-muted-foreground">{coin.symbol.toUpperCase()}</div>
                       </Link>
                     </TableCell>
-                    <TableCell className="text-right font-mono py-3 px-2 sm:px-4 text-sm sm:text-base">
+                    <TableCell className="text-right font-mono">
                        <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
                           ${coin.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: coin.current_price > 0.01 ? 2 : 8 })}
                        </Link>
                     </TableCell>
-                    <TableCell className={cn("text-right font-mono py-3 px-2 sm:px-4 text-sm sm:text-base", coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400')}>
+                    <TableCell className={cn("text-right font-mono", coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400')}>
                       <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
                         {coin.price_change_percentage_24h.toFixed(2)}%
                       </Link>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground py-3 px-2 sm:px-4">{coin.notes || 'N/A'}</TableCell>
-                    <TableCell className="text-center py-3 px-2 sm:px-4">
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{coin.notes || 'N/A'}</TableCell>
+                    <TableCell className="text-center">
                       <Button variant="ghost" size="icon" onClick={() => openAlertConfig(coin)} title={coin.alert_active ? "Manage Alert" : "Set Alert"}>
-                        {coin.alert_active ? <BellRing className="h-4 w-4 sm:h-5 sm:w-5 text-neon fill-neon/30" /> : <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />}
+                        {coin.alert_active ? <BellRing className="h-5 w-5 text-neon fill-neon/30" /> : <Bell className="h-5 w-5 text-muted-foreground" />}
                       </Button>
                     </TableCell>
-                    <TableCell className="text-center py-3 px-2 sm:px-4">
-                      <div className="flex items-center justify-center space-x-0 sm:space-x-1">
-                        <Button variant="ghost" size="icon" title="View Details" asChild className="h-8 w-8 sm:h-9 sm:w-9">
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center space-x-1">
+                        <Button variant="ghost" size="icon" title="View Details" asChild>
                           <Link href={`/coin/${coin.id}`}>
-                            <LineChart className="h-4 w-4 sm:h-5 sm:w-5" />
+                            <LineChart className="h-5 w-5" />
                           </Link>
                         </Button>
-                         <Button variant="ghost" size="icon" title="Edit Notes (coming soon)" disabled className="h-8 w-8 sm:h-9 sm:w-9">
-                          <Edit3 className="h-4 w-4 sm:h-5 sm:w-5" />
+                         <Button variant="ghost" size="icon" title="Edit Notes (coming soon)" disabled>
+                          <Edit3 className="h-5 w-5" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => removeItem(coin.id)} title="Remove from Watchlist" className="text-destructive hover:text-destructive h-8 w-8 sm:h-9 sm:w-9">
-                          <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <Button variant="ghost" size="icon" onClick={() => removeItem(coin.id)} title="Remove from Watchlist" className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-5 w-5" />
                         </Button>
                       </div>
                     </TableCell>
