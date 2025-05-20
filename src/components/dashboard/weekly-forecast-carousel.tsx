@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getWeeklyForecasts, type GetWeeklyForecastsOutput, type WeeklyForecast } from '@/ai/flows/get-weekly-forecasts';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'; // Added CardFooter
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -198,3 +198,4 @@ export function WeeklyForecastCarousel() {
     </Card>
   );
 }
+
