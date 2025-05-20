@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Star, LineChart } from "lucide-react";
+import { Star, LineChart, Search } from "lucide-react"; // Added Search icon
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from 'lucide-react';
@@ -187,12 +187,15 @@ export function MarketDataTable() {
 
   return (
     <div className="space-y-4">
-      <Input
-        placeholder="Search coins (e.g., Bitcoin, ETH)..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="max-w-sm text-base sm:text-sm"
-      />
+      <div className="relative w-full md:max-w-md">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+        <Input
+          placeholder="Search coins (e.g., Bitcoin, ETH)..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full h-12 pl-12 pr-4 text-base sm:text-sm border-muted-foreground/40 hover:border-primary/70 focus:border-primary focus:ring-1 focus:ring-primary/50 rounded-lg shadow-sm"
+        />
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
