@@ -13,8 +13,8 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
     >
       <defs>
         <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" style={{ stopColor: 'hsl(var(--primary))', stopOpacity: 1 }} />
-          <stop offset="100%" style={{ stopColor: 'hsl(var(--foreground))', stopOpacity: 1 }} /> {/* Gradient to white */}
+          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="1" />
+          <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity="1" />
         </linearGradient>
       </defs>
       <rect width="280" height="50" fill="transparent" />
@@ -22,7 +22,7 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
       <path 
         d="M10 40 Q 15 10 20 40 L 25 15 L 30 40 Q 35 10 40 40" 
         stroke="url(#logoGradient)" 
-        strokeWidth="4"  // Increased stroke width
+        strokeWidth="4"
         fill="none" 
       />
       <text
@@ -31,7 +31,7 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
         fontFamily="var(--font-geist-sans), system-ui, sans-serif"
         fontSize="28"
         fontWeight="bold"
-        fill="url(#logoGradient)" // Apply gradient to text fill
+        fill="url(#logoGradient)"
       >
         Rocket Meme
       </text>
