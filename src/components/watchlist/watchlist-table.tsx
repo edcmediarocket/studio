@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '../ui/skeleton';
+import { cn } from '@/lib/utils'; // Import cn
 
 interface WatchlistItem {
   id: string;
@@ -121,34 +122,34 @@ export function WatchlistTable() {
             <TableBody>
               {watchlist.map((coin) => (
                 <TableRow key={coin.id} className="hover:bg-muted/50">
-                  <TableCell>
+                  <TableCell className="py-3">
                     <Link href={`/coin/${coin.id}`}>
                       <Image src={coin.image} alt={coin.name} width={24} height={24} className="rounded-full" data-ai-hint="coin logo crypto"/>
                     </Link>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-3">
                     <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors">
                       <div className="font-medium">{coin.name}</div>
                       <div className="text-xs text-muted-foreground">{coin.symbol.toUpperCase()}</div>
                     </Link>
                   </TableCell>
-                  <TableCell className="text-right font-mono">
+                  <TableCell className="text-right font-mono py-3">
                      <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
                         ${coin.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: coin.current_price > 0.01 ? 2 : 8 })}
                      </Link>
                   </TableCell>
-                  <TableCell className={`text-right font-mono ${coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  <TableCell className={cn("text-right font-mono py-3", coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400')}>
                     <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
                       {coin.price_change_percentage_24h.toFixed(2)}%
                     </Link>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{coin.notes || 'N/A'}</TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground py-3">{coin.notes || 'N/A'}</TableCell>
+                  <TableCell className="text-center py-3">
                     <Button variant="ghost" size="icon" onClick={() => toggleAlert(coin.id)} title={coin.alert_active ? "Disable Alert" : "Enable Alert"}>
-                      {coin.alert_active ? <BellRing className="h-5 w-5 text-neon" /> : <Bell className="h-5 w-5" />}
+                      {coin.alert_active ? <BellRing className="h-5 w-5 text-neon fill-neon/30" /> : <Bell className="h-5 w-5 text-muted-foreground" />}
                     </Button>
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="text-center py-3">
                     <div className="flex items-center justify-center space-x-1">
                       <Button variant="ghost" size="icon" title="View Details" asChild>
                         <Link href={`/coin/${coin.id}`}>
@@ -172,4 +173,3 @@ export function WatchlistTable() {
     </Card>
   );
 }
-
