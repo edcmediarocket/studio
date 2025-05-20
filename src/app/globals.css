@@ -10,12 +10,13 @@ body {
 @layer base {
   :root {
     /* Theme Accent HSL Definitions */
-    --theme-logo-cyan-hsl: 180 100% 50%;    /* Logo "ROCKET" text color */
+    --theme-logo-cyan-hsl: 180 100% 50%;    /* Logo "ROCKET" text color - Default */
     --theme-logo-magenta-hsl: 300 100% 60%; /* Logo "MEME" text color */
     --theme-logo-pink-hsl: 330 100% 55%;    /* Logo rocket tip accent */
     
     --theme-orange-hsl: 25 100% 50%;   /* Neon Orange */
     --theme-green-hsl: 145 100% 45%;  /* Neon Green */
+    --theme-neon-blue-hsl: 220 100% 55%; /* Distinct Neon Blue */
 
     /* Default Theme Accent (Logo Cyan) */
     --current-accent-hsl: var(--theme-logo-cyan-hsl);
@@ -68,13 +69,13 @@ body {
     --chart-5: var(--current-accent-hsl); /* Can be adjusted to be a darker shade of accent */
   }
 
-  html.theme-blue { /* Now "Logo Cyan" */
+  html.theme-logo-cyan { /* Explicit class for Logo Cyan, matching the :root default */
     --current-accent-hsl: var(--theme-logo-cyan-hsl);
   }
-  html.theme-purple { /* Now "Logo Magenta" */
+  html.theme-logo-magenta {
     --current-accent-hsl: var(--theme-logo-magenta-hsl);
   }
-  html.theme-red { /* Now "Logo Pink" */
+  html.theme-logo-pink {
     --current-accent-hsl: var(--theme-logo-pink-hsl);
   }
   html.theme-orange {
@@ -82,6 +83,9 @@ body {
   }
   html.theme-green {
     --current-accent-hsl: var(--theme-green-hsl);
+  }
+  html.theme-neon-blue { /* New Neon Blue theme class */
+    --current-accent-hsl: var(--theme-neon-blue-hsl);
   }
 }
 

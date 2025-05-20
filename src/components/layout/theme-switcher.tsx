@@ -12,26 +12,30 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// "blue" now corresponds to "Logo Cyan" and is the default.
-// "red" now corresponds to "Logo Pink".
-// "purple" now corresponds to "Logo Magenta".
-type Theme = "blue" | "purple" | "red" | "orange" | "green";
+type ThemeValue = "logo-cyan" | "logo-magenta" | "logo-pink" | "neon-orange" | "neon-green" | "neon-blue";
 
-const themes: { value: Theme; label: string; className: string }[] = [
-  { value: "blue", label: "Logo Cyan (Default)", className: "theme-blue" }, 
-  { value: "purple", label: "Logo Magenta", className: "theme-purple" },
-  { value: "red", label: "Logo Pink", className: "theme-red" },
-  { value: "orange", label: "Neon Orange", className: "theme-orange" },
-  { value: "green", label: "Neon Green", className: "theme-green" },
+interface ThemeOption {
+  value: ThemeValue;
+  label: string;
+  className: string;
+}
+
+const themes: ThemeOption[] = [
+  { value: "logo-cyan", label: "Logo Cyan (Default)", className: "theme-logo-cyan" }, 
+  { value: "neon-blue", label: "Neon Blue", className: "theme-neon-blue" },
+  { value: "logo-magenta", label: "Logo Magenta", className: "theme-logo-magenta" },
+  { value: "logo-pink", label: "Logo Pink", className: "theme-logo-pink" },
+  { value: "neon-orange", label: "Neon Orange", className: "theme-orange" },
+  { value: "neon-green", label: "Neon Green", className: "theme-green" },
 ];
 
-const LOCAL_STORAGE_THEME_KEY = "rocket-meme-theme";
+const LOCAL_STORAGE_THEME_KEY = "rocket-meme-theme-v2"; // Changed key to reset if old one exists with "blue"
 
 export function ThemeSwitcher() {
-  const [currentTheme, setCurrentTheme] = React.useState<Theme>("blue"); // Default to "blue" (Logo Cyan)
+  const [currentTheme, setCurrentTheme] = React.useState<ThemeValue>("logo-cyan"); // Default to "logo-cyan"
 
   React.useEffect(() => {
-    const storedTheme = localStorage.getItem(LOCAL_STORAGE_THEME_KEY) as Theme | null;
+    const storedTheme = localStorage.getItem(LOCAL_STORAGE_THEME_KEY) as ThemeValue | null;
     if (storedTheme && themes.some(t => t.value === storedTheme)) {
       setCurrentTheme(storedTheme);
     }
@@ -39,25 +43,14 @@ export function ThemeSwitcher() {
 
   React.useEffect(() => {
     // Remove all potential theme classes first
-    document.documentElement.classList.remove(
-      "theme-blue", 
-      "theme-purple", 
-      "theme-red",
-      "theme-orange", 
-      "theme-green"
-    );
+    themes.forEach(theme => {
+      if (theme.className) { // Ensure className is defined
+        document.documentElement.classList.remove(theme.className);
+      }
+    });
 
     const selectedThemeObject = themes.find(t => t.value === currentTheme);
     if (selectedThemeObject && selectedThemeObject.className) {
-      // Check if the className is for the default theme which might be empty
-      // The current logic in globals.css makes theme-blue (Logo Cyan) the :root default implicitly
-      // if no other class is applied.
-      // So, only add class if it's not the implicit default visual.
-      // OR, more simply, always add the specific class, and :root handles the base.
-      // For clarity, let's ensure :root sets Logo Cyan, and other classes override it.
-      // If selectedThemeObject.value is the default theme (e.g., "blue" for Logo Cyan),
-      // we don't need to add its specific class if :root already provides it.
-      // However, to be safe and explicit, we add the class.
       document.documentElement.classList.add(selectedThemeObject.className);
     }
     
