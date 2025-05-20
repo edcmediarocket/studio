@@ -48,7 +48,7 @@ For each coin forecast, provide:
 - 'keyFactors': List 2-3 concise, simulated key factors driving this prediction (e.g., "Sustained social media hype", "Technical indicators suggest overbought conditions", "Broader market recovery expected").
 - 'confidenceLevel': Your confidence ("High", "Medium", "Low") in this specific forecast.
 - 'targetPriceRange' (optional): A speculative price range if you can plausibly estimate one. If not, omit this field.
-- 'analysisDate': The current date in YYYY-MM-DD format.
+- 'analysisDate': This will be set programmatically. Do not generate it.
 
 Ensure the forecasts are varied and reflect different potential market scenarios for meme coins.
 The 'generatedAt' timestamp for the overall set of forecasts will be handled programmatically. Include the standard 'disclaimer'.
@@ -68,12 +68,10 @@ const getWeeklyForecastsFlow = ai.defineFlow(
       if (!output.disclaimer) {
         output.disclaimer = "These AI-generated weekly forecasts are speculative and for informational purposes only. Market conditions can change rapidly. DYOR.";
       }
-      // Ensure analysisDate is set for each forecast if AI misses it
+      // Ensure analysisDate is set for each forecast programmatically
       const currentDate = new Date().toISOString().split('T')[0];
       output.forecasts.forEach(forecast => {
-        if (!forecast.analysisDate) {
-          forecast.analysisDate = currentDate;
-        }
+        forecast.analysisDate = currentDate; // Always override AI's date
         if (!forecast.coinImage || (!forecast.coinImage.startsWith('https://') && !forecast.coinImage.startsWith('http://'))) {
             forecast.coinImage = `https://placehold.co/48x48.png?text=${forecast.symbol ? forecast.symbol.substring(0,3).toUpperCase() : 'COIN'}`;
         }

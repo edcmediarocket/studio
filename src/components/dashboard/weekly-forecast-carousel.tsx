@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getWeeklyForecasts, type GetWeeklyForecastsOutput, type WeeklyForecast } from '@/ai/flows/get-weekly-forecasts';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'; // Added CardFooter
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -143,7 +143,7 @@ export function WeeklyForecastCarousel() {
         <ScrollArea className="w-full whitespace-nowrap">
           <div className="flex space-x-4 p-4">
             {forecastData.forecasts.map((forecast, index) => (
-              <Card key={`${forecast.symbol}-${index}`} className="w-72 sm:w-80 shrink-0 bg-muted/30 hover:shadow-primary/20 hover:shadow-md transition-shadow">
+              <Card key={`${forecast.symbol}-${index}`} className="w-72 sm:w-80 shrink-0 bg-muted/30 hover:shadow-primary/20 hover:shadow-md transition-shadow flex flex-col">
                 <CardHeader className="pb-2">
                   <div className="flex items-center space-x-3 mb-2">
                     <Image 
@@ -167,11 +167,13 @@ export function WeeklyForecastCarousel() {
                     <Badge className={cn("text-xs", getConfidenceBadgeColor(forecast.confidenceLevel))}>{forecast.confidenceLevel} Confidence</Badge>
                    </div>
                 </CardHeader>
-                <CardContent className="text-xs space-y-1.5 pt-1">
-                  <p className="text-muted-foreground leading-relaxed">
+                <CardContent className="text-xs space-y-1.5 pt-1 flex-grow">
+                  <div className="mb-2">
                     <span className="font-semibold text-foreground/80">Factors: </span> 
-                    {forecast.keyFactors.join(', ') || 'General market conditions.'}
-                  </p>
+                    <span className="text-muted-foreground leading-relaxed break-words whitespace-normal">
+                      {forecast.keyFactors.join(', ') || 'General market conditions.'}
+                    </span>
+                  </div>
                   {forecast.targetPriceRange && (
                     <p className="text-muted-foreground">
                       <span className="font-semibold text-foreground/80">Target Range: </span>{forecast.targetPriceRange}
@@ -180,12 +182,14 @@ export function WeeklyForecastCarousel() {
                   <p className="text-muted-foreground/70 pt-1">
                     <span className="font-semibold">Date: </span>{forecast.analysisDate}
                   </p>
-                  <Button asChild variant="link" size="sm" className="p-0 h-auto text-neon hover:text-neon/80 text-xs mt-1">
+                </CardContent>
+                <CardFooter className="pt-2 pb-3">
+                  <Button asChild variant="link" size="sm" className="p-0 h-auto text-neon hover:text-neon/80 text-xs">
                      <Link href={`/coin/${forecast.coinName.toLowerCase().replace(/\s+/g, '-')}`}>
                         View {forecast.symbol.toUpperCase()} Details
                     </Link>
                   </Button>
-                </CardContent>
+                </CardFooter>
               </Card>
             ))}
           </div>
