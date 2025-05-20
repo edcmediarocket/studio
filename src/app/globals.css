@@ -13,6 +13,8 @@ body {
     --theme-red-hsl: 0 100% 50%;       /* Galactic Red */
     --theme-blue-hsl: 210 100% 50%;    /* Neon Blue */
     --theme-purple-hsl: 270 100% 60%;  /* Cosmic Purple */
+    --theme-orange-hsl: 25 100% 50%;   /* Neon Orange */
+    --theme-green-hsl: 145 100% 45%;  /* Neon Green */
 
     /* Default Theme Accent (Galactic Red) */
     --current-accent-hsl: var(--theme-red-hsl);
@@ -70,6 +72,12 @@ body {
   }
   html.theme-purple {
     --current-accent-hsl: var(--theme-purple-hsl);
+  }
+  html.theme-orange {
+    --current-accent-hsl: var(--theme-orange-hsl);
+  }
+  html.theme-green {
+    --current-accent-hsl: var(--theme-green-hsl);
   }
   /* Galactic Red is the default, no specific class needed on html for it if :root defines it */
 }

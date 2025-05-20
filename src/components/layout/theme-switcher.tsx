@@ -12,12 +12,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type Theme = "red" | "blue" | "purple";
+type Theme = "red" | "blue" | "purple" | "orange" | "green";
 
 const themes: { value: Theme; label: string; className: string }[] = [
-  { value: "red", label: "Galactic Red", className: "" }, // Default, no class needed
+  { value: "red", label: "Galactic Red", className: "" }, // Default, no class needed for html tag
   { value: "blue", label: "Neon Blue", className: "theme-blue" },
   { value: "purple", label: "Cosmic Purple", className: "theme-purple" },
+  { value: "orange", label: "Neon Orange", className: "theme-orange" },
+  { value: "green", label: "Neon Green", className: "theme-green" },
 ];
 
 const LOCAL_STORAGE_THEME_KEY = "rocket-meme-theme";
@@ -33,12 +35,20 @@ export function ThemeSwitcher() {
   }, []);
 
   React.useEffect(() => {
-    document.documentElement.classList.remove("theme-blue", "theme-purple"); // Remove all specific theme classes
+    // Remove all potential theme classes first
+    document.documentElement.classList.remove(
+      "theme-blue", 
+      "theme-purple", 
+      "theme-orange", 
+      "theme-green"
+    );
 
     const selectedThemeObject = themes.find(t => t.value === currentTheme);
     if (selectedThemeObject && selectedThemeObject.className) {
       document.documentElement.classList.add(selectedThemeObject.className);
     }
+    // If it's the default "red" theme, no class is added, and the :root default applies.
+    
     localStorage.setItem(LOCAL_STORAGE_THEME_KEY, currentTheme);
   }, [currentTheme]);
 
