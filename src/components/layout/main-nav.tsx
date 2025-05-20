@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, BarChart2, Eye, UserCircle, BotMessageSquare, Signal, Calculator, GitCompareArrows, Activity, SlidersHorizontal, Newspaper, Rocket, Siren, Lightbulb, DatabaseZap, ShieldQuestion, ShieldAlert, Flame } from "lucide-react";
+import { LayoutDashboard, BarChart2, Eye, UserCircle, BotMessageSquare, Signal, Calculator, GitCompareArrows, Activity, SlidersHorizontal, Newspaper, Rocket, Siren, Lightbulb, DatabaseZap, ShieldQuestion, ShieldAlert, Flame, SearchCode } from "lucide-react";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
 import { useTier } from "@/context/tier-context";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
@@ -30,6 +30,7 @@ const baseNavItems: NavItem[] = [
   { href: "/onchain-intelligence", label: "On-Chain Intel", icon: DatabaseZap, isPremiumFeature: true },
   { href: "/market-anomalies", label: "Market Anomalies", icon: Siren, isPremiumFeature: true },
   { href: "/confidence-dashboard", label: "Confidence Dashboard", icon: ShieldQuestion, isPremiumFeature: true },
+  { href: "/pre-launch-radar", label: "Pre-Launch Radar", icon: SearchCode, isPremiumFeature: true }, // Added Pre-Launch Radar
   { href: "/watchlist", label: "Watchlist", icon: Eye },
   { href: "/roi-calculator", label: "ROI Calculator", icon: Calculator },
   { href: "/coin-comparison", label: "Coin Comparison", icon: GitCompareArrows },
@@ -67,15 +68,15 @@ export function MainNav() {
     <SidebarMenu>
       {navItemsToDisplay.map((item) => {
         let tooltipText = item.label;
+        let featureIsEffectivelyLocked = false; // Does the CURRENT tier lock THIS feature?
+        let featureIsProOrPremium = item.isProFeature || item.isPremiumFeature; // Is the feature generally Pro/Premium?
         
-        // Determine if feature is locked for the current user
-        let featureIsEffectivelyLocked = false;
-        if (item.isPremiumFeature && currentTier !== "Premium" && currentTier !== "Pro") {
-          tooltipText = `${item.label} (Upgrade to Premium/Pro)`;
+        if (item.isPremiumFeature && currentTier !== 'Premium') {
           featureIsEffectivelyLocked = true;
-        } else if (item.isProFeature && currentTier !== "Pro" && currentTier !== "Premium") {
-           tooltipText = `${item.label} (Upgrade to Pro/Premium)`;
+          tooltipText = `${item.label} (Upgrade to Premium)`;
+        } else if (item.isProFeature && currentTier !== 'Pro' && currentTier !== 'Premium') {
            featureIsEffectivelyLocked = true;
+           tooltipText = `${item.label} (Upgrade to Pro or Premium)`;
         }
 
 
@@ -90,7 +91,7 @@ export function MainNav() {
               }}
               className={cn(
                 "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                // No blur/opacity here, locking is handled on the page itself
+                // No blur/opacity here; controlled by page content
               )}
               aria-disabled={false} 
             >
@@ -98,7 +99,7 @@ export function MainNav() {
                 <item.icon />
                 <span className="flex items-center">
                   {item.label}
-                  {(item.isProFeature || item.isPremiumFeature) && item.href !== "/admin/dashboard" && (
+                  {(featureIsProOrPremium && item.href !== "/admin/dashboard") && (
                      <Rocket className="ml-auto h-3.5 w-3.5 text-neon opacity-80 group-data-[collapsible=icon]:hidden" />
                   )}
                 </span>

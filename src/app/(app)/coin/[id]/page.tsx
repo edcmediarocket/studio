@@ -10,11 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon, Siren } from 'lucide-react';
 import { Table, TableBody, TableCell, TableRow, TableHead, TableHeader } from '@/components/ui/table';
 import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from '@/ai/flows/get-coin-trading-signal';
 import { getCoinRiskAssessment, type GetCoinRiskAssessmentOutput } from '@/ai/flows/get-coin-risk-assessment';
-import { getViralPrediction, type GetViralPredictionOutput } from '@/ai/flows/get-viral-prediction'; // Added
+import { getViralPrediction, type GetViralPredictionOutput } from '@/ai/flows/get-viral-prediction';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { StatItem } from '@/components/shared/stat-item';
@@ -126,11 +126,11 @@ export default function CoinDetailPage() {
       setLoading(true);
       setSignalLoading(true);
       setRiskLoading(true);
-      setViralPredictionLoading(true); // Start loading for viral prediction
+      setViralPredictionLoading(true);
       setError(null);
       setSignalError(null);
       setRiskError(null);
-      setViralPredictionError(null); // Reset viral prediction error
+      setViralPredictionError(null);
 
       try {
         // Fetch main coin details
@@ -160,7 +160,7 @@ export default function CoinDetailPage() {
               setSignalLoading(false);
             }
           } else {
-            setSignalLoading(false); // No signal if price is missing
+            setSignalLoading(false); 
             setSignalError("Current price data missing, cannot generate trading signal.");
           }
 
@@ -230,7 +230,7 @@ export default function CoinDetailPage() {
             </div>
           </div>
         </div>
-        {[...Array(5)].map((_, i) => ( // Increased skeleton cards
+        {[...Array(5)].map((_, i) => ( 
           <Card key={i} className="shadow-lg">
             <CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader>
             <CardContent className="space-y-3">
@@ -420,6 +420,16 @@ export default function CoinDetailPage() {
             <Progress value={riskAssessment.riskScore} className="h-2 mt-1 max-w-xs mx-auto [&>div]:bg-primary" />
              <p className="text-xs text-muted-foreground mt-1">Assessed on: {new Date(riskAssessment.assessmentDate).toLocaleDateString()}</p>
           </div>
+          
+          {riskAssessment.isHighRugRisk && (
+            <Alert variant="destructive" className="border-2 border-red-700">
+              <Siren className="h-5 w-5 text-red-700" />
+              <AlertTitle className="text-red-700 font-bold">High Rug Pull Risk Detected!</AlertTitle>
+              <AlertDescription className="text-red-600">
+                {riskAssessment.rugPullWarningSummary || "AI has flagged multiple indicators associated with high rug pull risk. Extreme caution advised."}
+              </AlertDescription>
+            </Alert>
+          )}
 
           <Separator />
           
@@ -427,9 +437,22 @@ export default function CoinDetailPage() {
             <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><RiskIcon className="mr-1.5 h-5 w-5"/>Overall Assessment:</h4>
             <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md whitespace-pre-wrap">{riskAssessment.overallAssessment}</p>
           </div>
+          
+          <Card className="bg-card border-border/50">
+            <CardHeader className="pb-2 pt-3">
+                <CardTitle className="text-base text-primary/90">Rug Pull Indicators</CardTitle>
+            </CardHeader>
+            <CardContent className="text-xs space-y-1.5">
+                <StatItem label="Liquidity Lock" value={riskAssessment.liquidityLockStatus || "N/A"} className="px-2 py-1" labelClassName="text-xs" valueClassName="text-xs" />
+                <StatItem label="Dev Wallet/Holder Concentration" value={riskAssessment.devWalletConcentration || "N/A"} className="px-2 py-1" labelClassName="text-xs" valueClassName="text-xs"/>
+                <StatItem label="Contract Verified" value={riskAssessment.contractVerified === undefined ? "N/A" : riskAssessment.contractVerified ? "Yes" : "No"} className="px-2 py-1" labelClassName="text-xs" valueClassName="text-xs"/>
+                <StatItem label="Honeypot Signs" value={riskAssessment.honeypotIndicators || "N/A"} className="px-2 py-1" labelClassName="text-xs" valueClassName="text-xs"/>
+            </CardContent>
+          </Card>
+
 
           <div>
-            <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><ListChecks className="mr-1.5 h-5 w-5"/>Key Contributing Factors:</h4>
+            <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><ListChecks className="mr-1.5 h-5 w-5"/>Key Contributing Factors (General Risk):</h4>
             <ul className="list-disc list-inside space-y-1 pl-4 text-sm text-muted-foreground">
               {riskAssessment.contributingFactors.map((factor, index) => (
                 <li key={`factor-${index}`}>{factor}</li>
@@ -454,16 +477,17 @@ export default function CoinDetailPage() {
 
    const aiRiskMeterInfo = (
     <>
-      <h4 className="font-semibold mb-2 text-base">About AI Risk Meter</h4>
+      <h4 className="font-semibold mb-2 text-base">About AI Risk Meter & Rug Pull Detector</h4>
       <p>
         The AI Risk Meter provides a simulated risk assessment for the selected coin, considering factors like volatility, liquidity, market cap, and on-chain metrics (simulated).
+        It now includes specific checks for common **Rug Pull Indicators**:
       </p>
       <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
-        <li><strong>Risk Level:</strong> Categorical risk assessment (e.g., Low, High, Degenerate Gambler Zone).</li>
-        <li><strong>Risk Score:</strong> A numerical score from 0-100.</li>
-        <li><strong>Contributing Factors:</strong> Key elements influencing the risk.</li>
-        <li><strong>Mitigation Suggestions:</strong> General tips for managing risk.</li>
-        <li><strong>Overall Assessment:</strong> AI's summary of the risk profile.</li>
+        <li><strong>Liquidity Lock Status:</strong> Checks if LP tokens are locked.</li>
+        <li><strong>Developer Wallet Concentration:</strong> High concentration can be a red flag.</li>
+        <li><strong>Smart Contract Verification:</strong> Unverified contracts are riskier.</li>
+        <li><strong>Honeypot Indicators:</strong> Looks for signs of scam contracts.</li>
+        <li>A **"High Rug Risk"** badge and summary will appear if multiple red flags are detected.</li>
       </ul>
       <p className="mt-2 text-xs">
         This information is AI-generated, speculative, and not financial advice. Always DYOR.
@@ -597,7 +621,7 @@ export default function CoinDetailPage() {
            </SectionCard>
 
             <SectionCard 
-                title="AI Risk Meter" 
+                title="AI Risk Meter & Rug Pull Detector" 
                 icon={<RiskIcon className="h-5 w-5"/>} 
                 noPadding
                 infoPopoverContent={aiRiskMeterInfo}
