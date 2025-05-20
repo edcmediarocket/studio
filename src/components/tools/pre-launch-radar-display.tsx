@@ -9,6 +9,7 @@ import { Loader2, AlertTriangle, Info, RefreshCw, Sparkles, Target, ShieldHalf, 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Label } from "@/components/ui/label"; // Added import
 import { Separator } from "@/components/ui/separator";
 import { formatDistanceToNow } from 'date-fns';
 
@@ -172,3 +173,4 @@ const InfoItem: React.FC<InfoItemProps> = ({ icon, label, value, valueClassName 
     <p className={`${valueClassName} pl-5 leading-relaxed whitespace-pre-wrap`}>{value}</p>
   </div>
 );
+
