@@ -50,7 +50,6 @@ export function MarketDataTable() {
       }
     } catch (e) {
       console.error("Failed to load favorites from localStorage", e);
-      // In a real app, you might want to handle this more gracefully
     }
   }, []);
 
