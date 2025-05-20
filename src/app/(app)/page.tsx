@@ -8,7 +8,7 @@ import { MarketDataTable } from "@/components/dashboard/market-data-table";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, TrendingUp, TrendingDown, Info, Flame, Loader2, AlertTriangle, RefreshCw, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input"; // Added Input
+import { Input } from "@/components/ui/input"; 
 import { useSidebar } from "@/components/ui/sidebar";
 import { HotCoinsTicker } from "@/components/dashboard/hot-coins-ticker";
 import { Skeleton } from '@/components/ui/skeleton';
@@ -35,7 +35,7 @@ export default function DashboardPage() {
   const [signalOfTheDayLoading, setSignalOfTheDayLoading] = useState(true);
   const [signalOfTheDayError, setSignalOfTheDayError] = useState<string | null>(null);
 
-  const [searchTerm, setSearchTerm] = useState(''); // Moved searchTerm state here
+  const [searchTerm, setSearchTerm] = useState(''); 
 
   const fetchSignalOfTheDay = useCallback(async () => {
     setSignalOfTheDayLoading(true);
@@ -152,18 +152,6 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <section className="py-4 sm:py-6">
         <div className="container px-0 sm:px-4">
-
-          <div className="mb-6 flex justify-start">
-            <Button
-              size="default"
-              variant="outline"
-              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground text-sm sm:text-base w-full sm:w-auto"
-              onClick={toggleSidebar}
-            >
-              <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
-            </Button>
-          </div>
-
           <div className="mb-6">
             <SignalOfTheDayCard
               signalData={signalOfTheDay}
@@ -212,11 +200,11 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-between items-center mb-4"> {/* Changed to justify-between */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-between items-center mb-4"> 
              <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
                 All Coins
              </h2>
-             <div className="relative w-full sm:w-auto sm:max-w-xs md:max-w-sm"> {/* Adjusted width for responsiveness */}
+             <div className="relative w-full sm:w-auto sm:max-w-xs md:max-w-sm"> 
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
                 <Input
                   placeholder="Search coins..."
