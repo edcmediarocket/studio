@@ -93,7 +93,7 @@ const tiersData: Omit<SubscriptionPlan, 'ctaText'>[] = [
 
 interface SubscriptionTiersProps {
   currentActiveTier: UserTier;
-  onTierChange: (newTier: UserTier) => void; 
+  onTierChange: (newTier: UserTier, fromSimulatedSubscription?: boolean) => void; 
 }
 
 export function SubscriptionTiers({ currentActiveTier, onTierChange }: SubscriptionTiersProps) {
@@ -105,14 +105,14 @@ export function SubscriptionTiers({ currentActiveTier, onTierChange }: Subscript
     }
     
     const currentUser = auth.currentUser;
-    const userId = currentUser ? currentUser.uid : "USER_ID_NOT_AVAILABLE (User not logged in)";
+    const userId = currentUser ? currentUser.uid : "USER_ID_NOT_LOGGED_IN";
 
-    alert(`Simulating PayPal subscription for ${tierName} tier.\nPlan ID: ${planId}\nUser ID (as custom_id): ${userId}\n\nThis is where the actual PayPal JS SDK integration would begin. The user's tier would be updated via backend webhooks upon successful payment.`);
+    alert(`Simulating PayPal subscription for ${tierName} tier with Plan ID: ${planId}.\nUser ID (Firebase UID as custom_id): ${userId}.\n\nIn a real app, PayPal would notify our backend, which then updates your account. For this demo, we'll update your tier now.`);
     
     // For demo purposes, call onTierChange to update the UI locally AFTER the alert.
-    // In a real app, this onTierChange would likely be triggered by a Firestore listener
-    // reacting to changes made by the backend webhook.
-    onTierChange(tierName); 
+    // This makes the demo interactive. In a real app, this line would be removed,
+    // and the TierProvider would pick up changes from Firestore (updated by your backend).
+    onTierChange(tierName, true); 
   };
 
   const getButtonText = (tier: SubscriptionPlan): string => {
@@ -165,7 +165,7 @@ export function SubscriptionTiers({ currentActiveTier, onTierChange }: Subscript
             <Button 
               onClick={() => {
                 if (tier.name === "Free") {
-                  if (currentActiveTier !== "Free") onTierChange("Free");
+                  if (currentActiveTier !== "Free") onTierChange("Free", true);
                 } else if (tier.paypalPlanId) {
                   handlePayPalSubscription(tier.name, tier.paypalPlanId);
                 }
