@@ -16,22 +16,30 @@ const GetAlphaFeedIdeasInputSchema = z.object({
 });
 export type GetAlphaFeedIdeasInput = z.infer<typeof GetAlphaFeedIdeasInputSchema>;
 
-const IdeaTypeEnum = z.enum([
+// Define the array of strings for idea types
+const ideaTypeValues = [
     "High Potential Upside",
     "Narrative Play",
     "Contrarian Bet",
     "Short-Term Momentum",
     "Undervalued Gem",
     "Ecosystem Growth"
-]);
-export type IdeaType = z.infer<typeof IdeaTypeEnum>;
-export const AlphaIdeaTypeOptions = IdeaTypeEnum.options; // Export options array
+] as const; // Use 'as const' for strong typing if z.enum benefits from it
+
+// Create the Zod enum using this array for internal schema validation
+const IdeaTypeEnumInternal = z.enum(ideaTypeValues);
+
+// Export the type derived from the enum (this is fine)
+export type IdeaType = z.infer<typeof IdeaTypeEnumInternal>;
+
+// Export a copy of the array for the client, ensuring it's just a plain string array
+export const AlphaIdeaTypeOptions: readonly string[] = ideaTypeValues;
 
 
 const TradeIdeaSchema = z.object({
   coinName: z.string().describe('The name of the coin or token.'),
   symbol: z.string().describe('The ticker symbol for the coin (e.g., BTC, DOGE).'),
-  ideaType: IdeaTypeEnum.describe('The category or type of trade idea.'),
+  ideaType: IdeaTypeEnumInternal.describe('The category or type of trade idea.'), // Use the internal enum
   signal: z.enum(["Buy", "Accumulate", "Watch", "Consider Short"]).describe('The suggested trading action.'),
   riskRewardProfile: z.enum([
       "High Risk / High Reward",
@@ -102,9 +110,5 @@ const getAlphaFeedIdeasFlow = ai.defineFlow(
     return output!;
   }
 );
-
-// Removed: export { IdeaTypeEnum as AlphaIdeaTypeEnum };
-// The type `IdeaType` is still exported correctly.
-// The options for the enum are now exported as AlphaIdeaTypeOptions above.
 
     
