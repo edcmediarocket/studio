@@ -51,10 +51,11 @@ export function MarketAnomalyDetector() {
   };
   
   const getAnomalyIcon = (type: string) => {
-    if (type.includes("Price")) return <BarChart className="h-4 w-4 mr-1.5" />;
-    if (type.includes("Volume")) return <Activity className="h-4 w-4 mr-1.5" />;
-    if (type.includes("Sentiment")) return <MessageSquare className="h-4 w-4 mr-1.5" />;
-    if (type.includes("Security")) return <ShieldCheck className="h-4 w-4 mr-1.5" />;
+    if (type.toLowerCase().includes("price")) return <BarChart className="h-4 w-4 mr-1.5" />;
+    if (type.toLowerCase().includes("volume")) return <Activity className="h-4 w-4 mr-1.5" />;
+    if (type.toLowerCase().includes("sentiment")) return <MessageSquare className="h-4 w-4 mr-1.5" />;
+    if (type.toLowerCase().includes("security") || type.toLowerCase().includes("exploit")) return <ShieldCheck className="h-4 w-4 mr-1.5" />;
+    if (type.toLowerCase().includes("whale")) return <Users className="h-4 w-4 mr-1.5"/>;
     return <Siren className="h-4 w-4 mr-1.5" />; 
   };
 
@@ -168,8 +169,8 @@ export function MarketAnomalyDetector() {
           </div>
         )}
         {!isLoading && !analysisResult && !error && (
-            <div className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center bg-muted/10 mt-6">
-                <Siren className="h-10 w-10 text-muted-foreground/50 mb-3" />
+            <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center bg-muted/10 mt-6">
+                <Siren className="h-12 w-12 text-muted-foreground/50 mb-4" />
                 <p className="text-muted-foreground">Select a market segment and click "Scan for Anomalies" to get the AI report.</p>
             </div>
         )}
@@ -182,4 +183,3 @@ export function MarketAnomalyDetector() {
     </Card>
   );
 }
-

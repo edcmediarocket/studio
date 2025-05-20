@@ -45,7 +45,7 @@ export function CustomSignalGenerator() {
         "xrp": "ripple",
         "shiba inu": "shiba-inu",
         "dogecoin": "dogecoin",
-        "xdc": "xdce-crowd-sale", // Added mapping for XDC
+        "xdc": "xdce-crowd-sale",
       };
       coinId = coinIdMappings[coinId] || coinId.replace(/\s+/g, '-');
 
@@ -271,7 +271,7 @@ export function CustomSignalGenerator() {
               <Badge variant={getRecommendationBadgeVariant(signalData.recommendation)} className="text-lg px-4 py-1.5 font-semibold">
                 {signalData.recommendation}
               </Badge>
-              <p className="text-sm text-muted-foreground">{signalData.reasoning}</p> {/* reasoning is not in your GetCustomizedCoinTradingSignalOutputSchema, detailedAnalysis is. Correcting this. */}
+              {/* <p className="text-sm text-muted-foreground">{signalData.reasoning}</p> Removed this as reasoning is not in schema, detailedAnalysis is */}
               <div>
                 <span className="text-sm font-medium text-foreground">AI Confidence: {signalData.confidenceScore}%</span>
                 <Progress value={signalData.confidenceScore} className="h-2 mt-1 [&>div]:bg-neon max-w-xs mx-auto" />
@@ -303,9 +303,9 @@ export function CustomSignalGenerator() {
             )}
           </div>
         )}
-        {!isLoadingSignal && !signalData && !signalError && (
-            <div className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center bg-muted/10 mt-6">
-                <Wand2 className="h-10 w-10 text-muted-foreground/50 mb-3" />
+         {!isLoadingSignal && !signalData && !signalError && (
+            <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center bg-muted/10 mt-6">
+                <Wand2 className="h-12 w-12 text-muted-foreground/50 mb-4" />
                 <p className="text-muted-foreground">Enter details above to generate your custom AI trading signal.</p>
             </div>
         )}
@@ -337,11 +337,3 @@ const InfoCard: React.FC<InfoCardProps> = ({icon, title, children}) => (
         </CardContent>
     </Card>
 )
-
-// Correcting the reasoning display in CustomSignalGenerator's output section.
-// The schema for GetCustomizedCoinTradingSignalOutputSchema uses `detailedAnalysis` for the main rationale,
-// not `reasoning`. Let me adjust that.
-// Actually, the schema for GetCustomizedCoinTradingSignalOutputSchema does not have a `reasoning` field for the main signal badge area.
-// The `detailedAnalysis` is for the larger text block. I will remove the display of `signalData.reasoning` for now as it's not in the defined output.
-// The user's image shows `detailedAnalysis` as the primary text output for reasoning, and that's what the prompt for custom signals aims for.
-// I will also ensure placeholder for coin name input includes XDC for clarity.

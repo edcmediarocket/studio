@@ -9,7 +9,7 @@ import { Loader2, AlertTriangle, Info, RefreshCw, Sparkles, Target, ShieldHalf, 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Label } from "@/components/ui/label"; // Added import
+import { Label } from "@/components/ui/label"; 
 import { Separator } from "@/components/ui/separator";
 import { formatDistanceToNow } from 'date-fns';
 
@@ -100,8 +100,8 @@ export function PreLaunchRadarDisplay() {
       )}
 
       {!isLoading && !error && (!radarData || radarData.gems.length === 0) && (
-        <div className="text-center py-10">
-          <Telescope className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center bg-muted/10 mt-6">
+          <Telescope className="h-12 w-12 text-muted-foreground/50 mb-4" />
           <p className="text-muted-foreground">AI Gem Radar found no significant signals matching criteria currently.</p>
           <p className="text-xs text-muted-foreground">This space is highly dynamic, check back often.</p>
         </div>
@@ -173,4 +173,3 @@ const InfoItem: React.FC<InfoItemProps> = ({ icon, label, value, valueClassName 
     <p className={`${valueClassName} pl-5 leading-relaxed whitespace-pre-wrap`}>{value}</p>
   </div>
 );
-

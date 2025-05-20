@@ -29,7 +29,7 @@ export function AlphaFeedDisplay() {
   const [error, setError] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string | undefined>(undefined);
 
-  const ideaTypes = AlphaIdeaTypeOptions; // Use the locally defined options array
+  const ideaTypes = AlphaIdeaTypeOptions; 
 
   const fetchFeed = useCallback(async (filter?: string) => {
     setIsLoading(true);
@@ -40,7 +40,7 @@ export function AlphaFeedDisplay() {
     } catch (err) {
       console.error("Error fetching alpha feed:", err);
       setError("Failed to fetch AI Alpha Feed. The AI might be strategizing, please try again later.");
-      setFeedData(null);
+      // Do not clear feedData here, so existing data remains visible if refresh fails
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +71,7 @@ export function AlphaFeedDisplay() {
     return "border-purple-500 text-purple-500"; // For speculative/asymmetric
   };
 
-  if (isLoading && !feedData) { // Show initial full loader only if no data yet
+  if (isLoading && !feedData) { 
     return (
       <div className="flex flex-col items-center justify-center h-64">
         <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
@@ -80,7 +80,7 @@ export function AlphaFeedDisplay() {
     );
   }
 
-  if (error && !feedData) { // Show error only if no data yet
+  if (error && !feedData) { 
     return (
       <Alert variant="destructive" className="mt-6">
         <AlertTriangle className="h-4 w-4" />
@@ -128,13 +128,13 @@ export function AlphaFeedDisplay() {
           )}
       </Card>
       
-      {isLoading && feedData && ( // Show subtle loader when refreshing
+      {isLoading && feedData && ( 
           <div className="flex items-center justify-center text-muted-foreground py-4">
             <Loader2 className="h-5 w-5 animate-spin mr-2" /> Updating feed...
           </div>
       )}
 
-      {!isLoading && error && feedData && ( // Show error if refresh fails but old data exists
+      {!isLoading && error && feedData && ( 
            <Alert variant="destructive" className="my-4">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Refresh Error</AlertTitle>
@@ -223,7 +223,7 @@ const InfoItem: React.FC<InfoItemProps> = ({ icon, label, value, valueClassName 
       {icon}
       <span className="ml-1.5">{label}:</span>
     </h4>
-    <p className={`${valueClassName} pl-5 leading-relaxed`}>{value}</p>
+    <p className={`${valueClassName} pl-5 leading-relaxed whitespace-pre-wrap`}>{value}</p>
   </div>
 );
 

@@ -40,9 +40,9 @@ export function NarrativeEngine() {
   };
   
   const getConfidenceBadgeVariant = (confidence: 'High' | 'Medium' | 'Low' | undefined) => {
-    if (confidence === 'High') return 'default'; // Greenish in default theme
-    if (confidence === 'Medium') return 'secondary'; // Yellowish
-    if (confidence === 'Low') return 'destructive'; // Reddish
+    if (confidence === 'High') return 'default'; 
+    if (confidence === 'Medium') return 'secondary'; 
+    if (confidence === 'Low') return 'destructive'; 
     return 'outline';
   };
 

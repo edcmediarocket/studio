@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Activity, Info, Users, BarChartBig, Shuffle } from "lucide-react";
+import { Loader2, Activity, Info, Users, BarChartBig, Shuffle, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export function OnChainDataVisualizer() {
@@ -20,6 +20,7 @@ export function OnChainDataVisualizer() {
     e.preventDefault();
     if (!coinName.trim()) {
       setError("Please enter a coin name.");
+      setInsights(null); // Clear previous insights if any
       return;
     }
     setIsLoading(true);
@@ -61,7 +62,7 @@ export function OnChainDataVisualizer() {
               className="mt-1"
             />
           </div>
-          <Button type="submit" disabled={isLoading} className="w-full bg-primary hover:bg-primary/90">
+          <Button type="submit" disabled={isLoading || !coinName.trim()} className="w-full bg-primary hover:bg-primary/90">
             {isLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -91,7 +92,7 @@ export function OnChainDataVisualizer() {
               <Alert variant="default" className="mt-4 border-primary/50">
                 <Info className="h-4 w-4 text-primary" />
                 <AlertTitle className="text-primary">Important Note</AlertTitle>
-                <AlertDescription className="text-muted-foreground">{insights.dataCaveat}</AlertDescription>
+                <AlertDescription className="text-muted-foreground text-xs">{insights.dataCaveat}</AlertDescription>
               </Alert>
             )}
           </div>
@@ -132,6 +133,3 @@ const InsightCategoryCard: React.FC<InsightCategoryCardProps> = ({ title, icon, 
         </Card>
     );
 };
-
-// Added AlertTriangle to imports for error display
-import { AlertTriangle } from 'lucide-react';
