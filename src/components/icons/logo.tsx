@@ -1,33 +1,24 @@
 
-import type { SVGProps } from 'react';
+import Image from 'next/image';
+import type { ImageProps } from 'next/image';
 
-export function Logo(props: SVGProps<SVGSVGElement>) {
+// Note: Replace the placeholder 'src' below with the actual URL of your hosted logo image.
+const LOGO_URL = "https://placehold.co/120x32.png?text=Rocket+Meme+Logo"; 
+// Example dimensions, adjust as needed for your logo's aspect ratio and desired header size.
+const LOGO_WIDTH = 120;
+const LOGO_HEIGHT = 32;
+
+export function Logo(props: Partial<Omit<ImageProps, 'src' | 'alt' | 'width' | 'height'>>) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 280 50"
-      width="168"
-      height="30"
-      aria-label="Rocket Meme Logo"
+    <Image
+      src={LOGO_URL}
+      alt="Rocket Meme Logo"
+      width={LOGO_WIDTH}
+      height={LOGO_HEIGHT}
+      priority // Good to add for LCP elements like a logo in the header
+      data-ai-hint="app logo" // Add your AI hint here
       {...props}
-    >
-      {/* Rocket-like M shape */}
-      <path
-        d="M10 40 Q 15 10 20 40 L 25 15 L 30 40 Q 35 10 40 40"
-        stroke="hsl(var(--primary))" // Use direct primary color for stroke
-        strokeWidth="4"
-        fill="none"
-      />
-      <text
-        x="55"
-        y="35"
-        fontFamily="var(--font-geist-sans), system-ui, sans-serif"
-        fontSize="28"
-        fontWeight="bold"
-        fill="hsl(var(--primary))" // Use direct primary color for fill
-      >
-        Rocket Meme
-      </text>
-    </svg>
+      className={props.className} // Ensure className prop is passed through
+    />
   );
 }

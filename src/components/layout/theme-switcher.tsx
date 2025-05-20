@@ -12,12 +12,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type Theme = "red" | "blue" | "purple" | "orange" | "green";
+// "blue" now corresponds to "Logo Cyan" and is the default.
+// "red" now corresponds to "Logo Pink".
+// "purple" now corresponds to "Logo Magenta".
+type Theme = "blue" | "purple" | "red" | "orange" | "green";
 
 const themes: { value: Theme; label: string; className: string }[] = [
-  { value: "red", label: "Galactic Red", className: "" }, // Default, no class needed for html tag
-  { value: "blue", label: "Neon Blue", className: "theme-blue" },
-  { value: "purple", label: "Cosmic Purple", className: "theme-purple" },
+  { value: "blue", label: "Logo Cyan (Default)", className: "theme-blue" }, 
+  { value: "purple", label: "Logo Magenta", className: "theme-purple" },
+  { value: "red", label: "Logo Pink", className: "theme-red" },
   { value: "orange", label: "Neon Orange", className: "theme-orange" },
   { value: "green", label: "Neon Green", className: "theme-green" },
 ];
@@ -25,7 +28,7 @@ const themes: { value: Theme; label: string; className: string }[] = [
 const LOCAL_STORAGE_THEME_KEY = "rocket-meme-theme";
 
 export function ThemeSwitcher() {
-  const [currentTheme, setCurrentTheme] = React.useState<Theme>("red");
+  const [currentTheme, setCurrentTheme] = React.useState<Theme>("blue"); // Default to "blue" (Logo Cyan)
 
   React.useEffect(() => {
     const storedTheme = localStorage.getItem(LOCAL_STORAGE_THEME_KEY) as Theme | null;
@@ -39,15 +42,24 @@ export function ThemeSwitcher() {
     document.documentElement.classList.remove(
       "theme-blue", 
       "theme-purple", 
+      "theme-red",
       "theme-orange", 
       "theme-green"
     );
 
     const selectedThemeObject = themes.find(t => t.value === currentTheme);
     if (selectedThemeObject && selectedThemeObject.className) {
+      // Check if the className is for the default theme which might be empty
+      // The current logic in globals.css makes theme-blue (Logo Cyan) the :root default implicitly
+      // if no other class is applied.
+      // So, only add class if it's not the implicit default visual.
+      // OR, more simply, always add the specific class, and :root handles the base.
+      // For clarity, let's ensure :root sets Logo Cyan, and other classes override it.
+      // If selectedThemeObject.value is the default theme (e.g., "blue" for Logo Cyan),
+      // we don't need to add its specific class if :root already provides it.
+      // However, to be safe and explicit, we add the class.
       document.documentElement.classList.add(selectedThemeObject.className);
     }
-    // If it's the default "red" theme, no class is added, and the :root default applies.
     
     localStorage.setItem(LOCAL_STORAGE_THEME_KEY, currentTheme);
   }, [currentTheme]);
