@@ -29,20 +29,21 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingEmail, setIsLoadingEmail] = useState(false);
+  const [isLoadingGoogle, setIsLoadingGoogle] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSignUpMode, setIsSignUpMode] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setIsLoading(true);
+    setIsLoadingEmail(true);
     setError(null);
 
     if (!auth) {
       console.error("Firebase auth is not initialized for email/password action.");
       setError("Authentication service is not ready. Please try again in a moment.");
       toast({ title: "Error", description: "Authentication service not ready.", variant: "destructive" });
-      setIsLoading(false);
+      setIsLoadingEmail(false);
       return;
     }
 
@@ -54,25 +55,25 @@ export default function LoginPage() {
         await signInWithEmailAndPassword(auth, email, password);
         toast({ title: "Login Successful", description: "Welcome back!" });
       }
-      router.push('/'); // Redirect to dashboard
+      router.push('/'); 
     } catch (err: any) {
       console.error("Email/Password action error:", err);
       setError(err.message || `Failed to ${isSignUpMode ? 'sign up' : 'login'}. Please check your credentials.`);
       toast({ title: `${isSignUpMode ? 'Sign Up' : 'Login'} Failed`, description: err.message || "An error occurred.", variant: "destructive" });
     } finally {
-      setIsLoading(false);
+      setIsLoadingEmail(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-    setIsLoading(true);
+    setIsLoadingGoogle(true);
     setError(null);
 
     if (!auth) {
       console.error("Firebase auth is not initialized for Google Sign-In.");
       setError("Authentication service is not ready. Please try again in a moment.");
       toast({ title: "Error", description: "Authentication service not ready.", variant: "destructive" });
-      setIsLoading(false);
+      setIsLoadingGoogle(false);
       return;
     }
 
@@ -80,27 +81,28 @@ export default function LoginPage() {
     try {
       await signInWithPopup(auth, provider);
       toast({ title: "Google Sign-In Successful", description: "Welcome!" });
-      router.push('/'); // Redirect to dashboard
+      router.push('/'); 
     } catch (err: any) {
-      console.error("Google login error:", err);
+      console.warn("Google login error:", err); // Use console.warn for non-critical errors
       if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
         toast({
           title: "Google Sign-In Cancelled",
-          description: "The Google Sign-In popup was closed or the process was cancelled by the user or browser.",
+          description: "The Google Sign-In window was closed before completion. Please ensure popups are allowed and try again.",
           variant: "default", 
+          duration: 5000,
         });
       } else {
         setError(err.message || "Failed to login with Google. Please try again.");
         toast({ title: "Google Sign-In Failed", description: err.message || "Please try again.", variant: "destructive" });
       }
     } finally {
-      setIsLoading(false);
+      setIsLoadingGoogle(false);
     }
   };
 
   const toggleMode = () => {
     setIsSignUpMode(!isSignUpMode);
-    setError(null); // Clear errors when switching modes
+    setError(null); 
   };
 
   return (
@@ -118,10 +120,13 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <Button variant="outline" className="w-full text-lg py-6" onClick={handleGoogleLogin} disabled={isLoading}>
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
+          <Button variant="outline" className="w-full text-lg py-6" onClick={handleGoogleLogin} disabled={isLoadingGoogle || isLoadingEmail}>
+            {isLoadingGoogle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
             Sign in with Google
           </Button>
+          <p className="text-xs text-center text-muted-foreground -mt-2">
+            If Google Sign-In doesn't work, please ensure popups are enabled for this site in your browser settings.
+          </p>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
@@ -145,7 +150,7 @@ export default function LoginPage() {
                   className="pl-10" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
+                  disabled={isLoadingEmail || isLoadingGoogle}
                 />
               </div>
             </div>
@@ -160,17 +165,17 @@ export default function LoginPage() {
                   className="pl-10" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
+                  disabled={isLoadingEmail || isLoadingGoogle}
                   placeholder={isSignUpMode ? "Choose a strong password" : "Enter your password"}
                 />
               </div>
             </div>
             {error && <p className="text-xs text-destructive text-center">{error}</p>}
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-lg py-6" disabled={isLoading}>
-              {isLoading && isSignUpMode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {isLoading && !isSignUpMode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {!isLoading && isSignUpMode ? <UserPlus className="mr-2 h-5 w-5" /> : null}
-              {!isLoading && !isSignUpMode && !isSignUpMode ? <KeyRound className="mr-2 h-5 w-5" /> : null}
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-lg py-6" disabled={isLoadingEmail || isLoadingGoogle}>
+              {isLoadingEmail && isSignUpMode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {isLoadingEmail && !isSignUpMode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {!isLoadingEmail && isSignUpMode ? <UserPlus className="mr-2 h-5 w-5" /> : null}
+              {!isLoadingEmail && !isSignUpMode ? <KeyRound className="mr-2 h-5 w-5" /> : null}
               {isSignUpMode ? "Sign Up" : "Login"}
             </Button>
           </form>
