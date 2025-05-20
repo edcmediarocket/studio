@@ -72,6 +72,9 @@ body {
   html.theme-logo-cyan { /* Explicit class for Logo Cyan, matching the :root default */
     --current-accent-hsl: var(--theme-logo-cyan-hsl);
   }
+  html.theme-neon-blue {
+    --current-accent-hsl: var(--theme-neon-blue-hsl);
+  }
   html.theme-logo-magenta {
     --current-accent-hsl: var(--theme-logo-magenta-hsl);
   }
@@ -84,26 +87,17 @@ body {
   html.theme-green {
     --current-accent-hsl: var(--theme-green-hsl);
   }
-  html.theme-neon-blue {
-    --current-accent-hsl: var(--theme-neon-blue-hsl);
-  }
 }
 
 @layer base {
   * {
     @apply border-border;
   }
-  html, body {
-    @apply overflow-x-hidden;
-  }
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     min-height: 100vh;
     font-feature-settings: "rlig" 1, "calt" 1;
-  }
-  img, svg {
-    @apply max-w-full h-auto;
   }
 }
 

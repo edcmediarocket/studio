@@ -31,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="application-name" content="Rocket Meme" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -45,7 +45,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="https://placehold.co/192x192.png" data-ai-hint="app icon" />
         <link rel="icon" type="image/png" sizes="192x192" href="https://placehold.co/192x192.png" data-ai-hint="app icon" />
         <link rel="icon" type="image/png" sizes="512x512" href="https://placehold.co/512x512.png" data-ai-hint="app icon large" />
-        
+        <link rel="manifest" href="/manifest.json" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
         <AnimatedGalaxyBackground />
