@@ -18,7 +18,7 @@ const PreLaunchGemSchema = z.object({
   gemName: z.string().describe('The name or codename of the potential pre-launch gem or very early stage project.'),
   potentialListingPlatform: z.string().optional().describe('Simulated or rumored listing platform (e.g., "Uniswap", "Raydium", "PancakeSwap", "Unknown DEX", "Direct Community Sale").'),
   estimatedLaunchWindow: z.string().describe('Speculative timeframe for potential launch or significant public activity (e.g., "Next 6-12 hours", "Within 24-72 hours", "This week", "Stealth launch suspected soon", "Monitoring for catalysts", "Just launched - extremely new").'),
-  simulatedBuzzSummary: z.string().describe('A concise AI-generated summary clustering simulated buzz from sources like Telegram, Twitter, Discord, or 4chan (e.g., "Growing chatter in alpha Telegram groups, mentions of a 'revolutionary new meme concept'.", "Stealth marketing hints on Twitter from anonymous dev accounts, early shill campaigns noted.").'),
+  simulatedBuzzSummary: z.string().describe('A concise AI-generated summary clustering simulated buzz from sources like Telegram, Twitter, Discord, or 4chan (e.g., "Growing chatter in alpha Telegram groups, mentions of a \'revolutionary new meme concept\'.", "Stealth marketing hints on Twitter from anonymous dev accounts, early shill campaigns noted.").'),
   keyIndicators: z.array(z.string()).max(5).describe('List of 2-4 simulated key indicators or observations for this potential gem (e.g., "New contract deployed on BSC scan - functions look standard", "Sudden spike in Telegram group members (+200% in 6h)", "Whispers of CEX listing post-launch (unconfirmed)", "Devs active in community, answering questions", "High engagement on initial social media posts", "Unique meme concept or utility tease").'),
   moonPotentialScore: z.number().min(0).max(100).int().describe('Highly speculative AI-generated score (0-100) indicating perceived "moon potential" based on simulated buzz, narrative, and dev history. 100 is highest potential.'),
   degenScore: z.number().min(0).max(100).int().describe('AI-generated "Degen Score" (0-100) indicating the level of risk and speculative fervor. Higher scores mean higher risk and more aligned with "degen" trading styles. Consider factors like anonymity, market cap if launched, and volatility.'),
@@ -81,3 +81,4 @@ const getPreLaunchGemsFlow = ai.defineFlow(
     return output!;
   }
 );
+
