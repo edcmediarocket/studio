@@ -38,8 +38,9 @@ export function SplashScreen({ onFinished }: SplashScreenProps) {
       <div className="animate-pulse"> {/* Optional: add subtle animation to logo */}
         <Logo className="h-24 w-auto sm:h-32 md:h-40 text-primary-foreground" /> {/* Increased size & ensure contrast */}
       </div>
-      {/* You could add app name text here if desired, ensure contrast with bg-primary */}
-      {/* <h1 className="mt-4 text-4xl font-bold text-primary-foreground">Rocket Meme</h1> */}
+      <p className="mt-4 text-xl sm:text-2xl font-semibold text-primary-foreground/90 tracking-tight">
+        Your Launchpad for Meme Coin Insights.
+      </p>
     </div>
   );
 }
