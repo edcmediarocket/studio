@@ -10,6 +10,7 @@ import { LayoutDashboard, TrendingUp, TrendingDown, Info, Flame, Loader2, AlertT
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input"; 
 import { HotCoinsTicker } from "@/components/dashboard/hot-coins-ticker";
+import { WeeklyForecastCarousel } from "@/components/dashboard/weekly-forecast-carousel"; // Added import
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getSignalOfTheDay, type GetSignalOfTheDayOutput } from '@/ai/flows/get-signal-of-the-day';
@@ -156,7 +157,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <section className="py-4 sm:py-6">
-        <div className="container px-0 sm:px-4">
+        <div className="container px-0 sm:px-4"> {/* Changed this from px-0 to allow some padding on larger screens */}
           <div className="mb-6">
             <SignalOfTheDayCard
               signalData={signalOfTheDay}
@@ -167,6 +168,10 @@ export default function DashboardPage() {
           </div>
 
           <HotCoinsTicker />
+
+          <div className="mt-8 mb-6"> {/* Added margin for the new carousel */}
+            <WeeklyForecastCarousel />
+          </div>
 
           <h1 className="text-2xl sm:text-3xl font-bold mt-8 mb-1 text-neon">
             Market Overview
