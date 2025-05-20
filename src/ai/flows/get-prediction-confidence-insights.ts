@@ -85,7 +85,7 @@ Key Generation Instructions:
 5.  **keyFactorsInfluencingConfidence**: List 3-5 specific, plausible factors that are currently impacting the AI's confidence for this {{predictionType}} regarding {{coinName}}. Examples: "Increased social media chatter volume and velocity for {{coinName}}", "Conflicting signals between short-term (1H) and mid-term (4H) technical indicators", "Successful backtesting of this prediction model on assets with similar volatility profiles", "A recent unexpected partnership announcement for {{coinName}}.", "Lack of significant trading volume to confirm recent price movements."
 6.  **modelHealthSummary (Optional but Encouraged)**: Provide a brief assessment of the simulated underlying AI model's health. Consider aspects like data input quality, recent (simulated) retraining performance, or any detected data anomalies. E.g., "Model performing within expected parameters; recent data ingestion for {{coinName}} is clean." or "Social sentiment data stream for {{coinName}} currently showing high noise, potentially impacting short-term sentiment accuracy."
 7.  **sensitivityToInputs (Optional but Encouraged)**: Summarize how sensitive this particular "{{predictionType}}" is to changes in its key input factors for {{coinName}}. E.g., "Short-term price predictions for {{coinName}} are highly sensitive to sudden whale transaction alerts and major exchange listing news; moderately sensitive to broad market BTC movements."
-8.  **analysisTimestamp**: Set this to the current date and time in 'YYYY-MM-DD HH:MM UTC' format.
+8.  **analysisTimestamp**: This will be set programmatically by the calling code, so you do not need to generate it.
 9.  **disclaimer**: Include the standard disclaimer.
 
 Make the generated data sound plausible, detailed, and insightful for an AI analyzing its own prediction confidence.
@@ -101,11 +101,10 @@ const getPredictionConfidenceInsightsFlow = ai.defineFlow(
   async (input) => {
     const {output} = await prompt(input);
     if (output) {
-      // Ensure timestamp is current if AI fails to generate it
-      if (!output.analysisTimestamp || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC$/.test(output.analysisTimestamp) ) {
-         const now = new Date();
-         output.analysisTimestamp = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')} ${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')} UTC`;
-      }
+      // Always set the timestamp programmatically to ensure accuracy
+      const now = new Date();
+      output.analysisTimestamp = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')} ${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')} UTC`;
+      
       if (!output.disclaimer) {
         output.disclaimer = 'This confidence analysis is AI-generated and for informational purposes. It reflects the model\'s simulated certainty, not a guarantee of future outcomes. DYOR.';
       }
@@ -115,5 +114,3 @@ const getPredictionConfidenceInsightsFlow = ai.defineFlow(
     return output!;
   }
 );
-
-    
