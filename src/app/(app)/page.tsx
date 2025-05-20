@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { LayoutDashboard, TrendingUp, TrendingDown, Info, Flame, Loader2, AlertTriangle, RefreshCw, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input"; 
-import { useSidebar } from "@/components/ui/sidebar";
 import { HotCoinsTicker } from "@/components/dashboard/hot-coins-ticker";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -25,7 +24,6 @@ interface MarketMoverItem {
 }
 
 export default function DashboardPage() {
-  const { toggleSidebar } = useSidebar();
   const [topGainers, setTopGainers] = useState<MarketMoverItem[]>([]);
   const [topLosers, setTopLosers] = useState<MarketMoverItem[]>([]);
   const [isLoadingMovers, setIsLoadingMovers] = useState(true);
@@ -45,7 +43,14 @@ export default function DashboardPage() {
       setSignalOfTheDay(signal);
     } catch (err) {
       console.error("Error fetching signal of the day:", err);
-      setSignalOfTheDayError("Failed to fetch AI Signal of the Day. Please try again.");
+      const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
+      if (errorMessage.toLowerCase().includes('503') || errorMessage.toLowerCase().includes('overloaded') || errorMessage.toLowerCase().includes('service unavailable')) {
+        setSignalOfTheDayError("AI Signal of the Day is temporarily unavailable due to high demand. Please try refreshing in a moment.");
+      } else if (errorMessage.toLowerCase().includes('failed to fetch') || errorMessage.toLowerCase().includes('networkerror')) {
+        setSignalOfTheDayError("Network error: Failed to fetch AI Signal of the Day. Please check your connection.");
+      } else {
+        setSignalOfTheDayError("Failed to fetch AI Signal of the Day. Please try again.");
+      }
     } finally {
       setSignalOfTheDayLoading(false);
     }
@@ -225,3 +230,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
