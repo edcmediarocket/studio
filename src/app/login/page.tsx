@@ -3,15 +3,23 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/icons/logo";
-import { KeyRound, AtSign, Loader2, UserPlus } from "lucide-react";
-import { auth } from '@/lib/firebase'; 
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { KeyRound, AtSign, Loader2, UserPlus, Smartphone, MessageSquare } from "lucide-react";
+import { auth } from '@/lib/firebase';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  type ConfirmationResult
+} from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
 const GoogleIcon = () => (
@@ -24,6 +32,13 @@ const GoogleIcon = () => (
   </svg>
 );
 
+declare global {
+  interface Window {
+    recaptchaVerifier?: RecaptchaVerifier;
+    confirmationResult?: ConfirmationResult;
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -34,18 +49,53 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSignUpMode, setIsSignUpMode] = useState(false);
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setIsLoadingEmail(true);
-    setError(null);
+  // Phone Auth State
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isLoadingPhone, setIsLoadingPhone] = useState(false);
+  const [isCodeSent, setIsCodeSent] = useState(false);
+  const [loginMode, setLoginMode] = useState<'email' | 'phone'>('email'); // 'email' or 'phone'
 
+  const recaptchaContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (loginMode === 'phone' && !window.recaptchaVerifier && recaptchaContainerRef.current) {
+      try {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
+          'size': 'invisible',
+          'callback': (response: any) => {
+            // reCAPTCHA solved, allow signInWithPhoneNumber.
+            // console.log("reCAPTCHA verified");
+          },
+          'expired-callback': () => {
+            // Response expired. Ask user to solve reCAPTCHA again.
+            toast({ title: "reCAPTCHA Expired", description: "Please try sending the code again.", variant: "default" });
+          }
+        });
+        window.recaptchaVerifier.render().catch(err => {
+            console.error("RecaptchaVerifier render error:", err);
+            setError("Failed to initialize reCAPTCHA. Please ensure it's configured correctly in Firebase and try refreshing.");
+            toast({ title: "reCAPTCHA Error", description: "Could not initialize security check.", variant: "destructive" });
+        });
+      } catch (err) {
+        console.error("Error initializing RecaptchaVerifier:", err);
+        setError("Failed to initialize phone sign-in. Please check Firebase configuration for reCAPTCHA.");
+        toast({ title: "Phone Sign-In Error", description: "Security check setup failed.", variant: "destructive" });
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loginMode]); // Only run when loginMode changes to 'phone'
+
+
+  const handleEmailSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!auth) {
-      console.error("Firebase auth is not initialized for email/password action.");
-      setError("Authentication service is not ready. Please try again in a moment.");
-      toast({ title: "Error", description: "Authentication service not ready.", variant: "destructive" });
-      setIsLoadingEmail(false);
+      setError("Authentication service not ready.");
+      toast({ title: "Error", description: "Auth service not ready.", variant: "destructive" });
       return;
     }
+    setIsLoadingEmail(true);
+    setError(null);
 
     try {
       if (isSignUpMode) {
@@ -55,7 +105,7 @@ export default function LoginPage() {
         await signInWithEmailAndPassword(auth, email, password);
         toast({ title: "Login Successful", description: "Welcome back!" });
       }
-      router.push('/'); 
+      router.push('/');
     } catch (err: any) {
       console.error("Email/Password action error:", err);
       setError(err.message || `Failed to ${isSignUpMode ? 'sign up' : 'login'}. Please check your credentials.`);
@@ -66,29 +116,25 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
-    setIsLoadingGoogle(true);
-    setError(null);
-
     if (!auth) {
-      console.error("Firebase auth is not initialized for Google Sign-In.");
-      setError("Authentication service is not ready. Please try again in a moment.");
-      toast({ title: "Error", description: "Authentication service not ready.", variant: "destructive" });
-      setIsLoadingGoogle(false);
+      setError("Authentication service not ready.");
+      toast({ title: "Error", description: "Auth service not ready.", variant: "destructive" });
       return;
     }
-
+    setIsLoadingGoogle(true);
+    setError(null);
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
       toast({ title: "Google Sign-In Successful", description: "Welcome!" });
-      router.push('/'); 
+      router.push('/');
     } catch (err: any) {
-      console.warn("Google login error:", err); // Use console.warn for non-critical errors
+      console.warn("Google login error:", err);
       if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
         toast({
           title: "Google Sign-In Cancelled",
           description: "The Google Sign-In window was closed before completion. Please ensure popups are allowed and try again.",
-          variant: "default", 
+          variant: "default",
           duration: 5000,
         });
       } else {
@@ -100,10 +146,84 @@ export default function LoginPage() {
     }
   };
 
-  const toggleMode = () => {
-    setIsSignUpMode(!isSignUpMode);
-    setError(null); 
+  const handleSendCode = async () => {
+    if (!auth) {
+      setError("Authentication service not ready.");
+      toast({ title: "Error", description: "Auth service not ready.", variant: "destructive" });
+      return;
+    }
+    if (!window.recaptchaVerifier) {
+        setError("reCAPTCHA verifier not initialized. Please refresh.");
+        toast({ title: "Error", description: "Security check not ready. Please refresh.", variant: "destructive" });
+        return;
+    }
+    if (!phoneNumber.match(/^\+[1-9]\d{1,14}$/)) {
+        setError("Invalid phone number format. Please include '+' and country code (e.g., +12223334444).");
+        toast({ title: "Invalid Phone", description: "Use format like +12223334444.", variant: "destructive" });
+        return;
+    }
+    setIsLoadingPhone(true);
+    setError(null);
+    try {
+      const confirmation = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
+      window.confirmationResult = confirmation;
+      setIsCodeSent(true);
+      toast({ title: "Verification Code Sent", description: `Code sent to ${phoneNumber}.` });
+    } catch (err: any) {
+      console.error("Error sending verification code:", err);
+      setError(err.message || "Failed to send verification code. Ensure reCAPTCHA is configured and phone number is valid.");
+      toast({ title: "Code Send Failed", description: err.message || "Please try again.", variant: "destructive" });
+      // Reset reCAPTCHA if it exists, as it might be a one-time use or expired
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear(); // Clear the existing verifier
+        if (recaptchaContainerRef.current) { // Re-initialize if container exists
+             try {
+                window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, { size: 'invisible' });
+                await window.recaptchaVerifier.render();
+             } catch (renderErr) {
+                console.error("RecaptchaVerifier re-render error:", renderErr);
+             }
+        }
+      }
+    } finally {
+      setIsLoadingPhone(false);
+    }
   };
+
+  const handleVerifyCode = async () => {
+    if (!window.confirmationResult) {
+      setError("No confirmation result found. Please request a new code.");
+      toast({ title: "Error", description: "Verification session expired.", variant: "destructive" });
+      return;
+    }
+    setIsLoadingPhone(true);
+    setError(null);
+    try {
+      await window.confirmationResult.confirm(verificationCode);
+      toast({ title: "Phone Sign-In Successful", description: "Welcome!" });
+      router.push('/');
+    } catch (err: any) {
+      console.error("Error verifying code:", err);
+      setError(err.message || "Failed to verify code. It might be incorrect or expired.");
+      toast({ title: "Verification Failed", description: err.message || "Code incorrect or expired.", variant: "destructive" });
+    } finally {
+      setIsLoadingPhone(false);
+    }
+  };
+
+  const toggleAuthMode = () => {
+    setIsSignUpMode(!isSignUpMode);
+    setError(null);
+  };
+
+  const switchLoginMethod = (method: 'email' | 'phone') => {
+    setLoginMode(method);
+    setError(null);
+    setIsCodeSent(false); // Reset phone auth flow
+    setPhoneNumber('');
+    setVerificationCode('');
+  };
+
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-background to-primary/30">
@@ -113,84 +233,156 @@ export default function LoginPage() {
             <Logo className="h-12 w-auto" />
           </Link>
           <CardTitle className="text-2xl">
-            {isSignUpMode ? "Create Your Rocket Meme Account" : "Welcome Back to Rocket Meme!"}
+            {loginMode === 'email' ? (isSignUpMode ? "Create Your Rocket Meme Account" : "Welcome Back!") : "Sign In with Phone"}
           </CardTitle>
           <CardDescription>
-            {isSignUpMode ? "Fill in your details to get started." : "Enter your credentials or sign in with Google to access your dashboard."}
+            {loginMode === 'email' ? (isSignUpMode ? "Fill in your details to get started." : "Enter your credentials or sign in with Google.") : (isCodeSent ? "Enter the verification code sent to your phone." : "Enter your phone number to receive a verification code.")}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <Button variant="outline" className="w-full text-lg py-6" onClick={handleGoogleLogin} disabled={isLoadingGoogle || isLoadingEmail}>
-            {isLoadingGoogle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
-            Sign in with Google
-          </Button>
-          <p className="text-xs text-center text-muted-foreground -mt-2">
-            If Google Sign-In doesn't work, please ensure popups are enabled for this site in your browser settings.
-          </p>
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
-          <form onSubmit={handleSubmit} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+          {loginMode === 'email' && (
+            <>
+              <Button variant="outline" className="w-full text-lg py-6" onClick={handleGoogleLogin} disabled={isLoadingGoogle || isLoadingEmail || isLoadingPhone}>
+                {isLoadingGoogle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
+                Sign in with Google
+              </Button>
+              <p className="text-xs text-center text-muted-foreground -mt-2">
+                If Google Sign-In doesn't work, ensure popups are enabled.
+              </p>
               <div className="relative">
-                <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="user@rocketmeme.com" 
-                  required 
-                  className="pl-10" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoadingEmail || isLoadingGoogle}
-                />
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">
+                    Or continue with
+                  </span>
+                </div>
               </div>
+              <form onSubmit={handleEmailSubmit} className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <div className="relative">
+                    <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="user@rocketmeme.com"
+                      required
+                      className="pl-10"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={isLoadingEmail || isLoadingGoogle || isLoadingPhone}
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type="password"
+                      required
+                      className="pl-10"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={isLoadingEmail || isLoadingGoogle || isLoadingPhone}
+                      placeholder={isSignUpMode ? "Choose a strong password" : "Enter your password"}
+                    />
+                  </div>
+                </div>
+                <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-lg py-6" disabled={isLoadingEmail || isLoadingGoogle || isLoadingPhone}>
+                  {isLoadingEmail && isSignUpMode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {isLoadingEmail && !isSignUpMode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {!isLoadingEmail && isSignUpMode ? <UserPlus className="mr-2 h-5 w-5" /> : null}
+                  {!isLoadingEmail && !isSignUpMode ? <KeyRound className="mr-2 h-5 w-5" /> : null}
+                  {isSignUpMode ? "Sign Up" : "Login"}
+                </Button>
+              </form>
+            </>
+          )}
+
+          {loginMode === 'phone' && (
+            <div className="grid gap-4">
+              {!isCodeSent ? (
+                <>
+                  <div className="grid gap-2">
+                    <Label htmlFor="phoneNumber">Phone Number</Label>
+                    <div className="relative">
+                      <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input
+                        id="phoneNumber"
+                        type="tel"
+                        placeholder="+12223334444"
+                        required
+                        className="pl-10"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        disabled={isLoadingPhone}
+                      />
+                    </div>
+                     <p className="text-xs text-muted-foreground">Include '+' and country code.</p>
+                  </div>
+                  <Button onClick={handleSendCode} className="w-full bg-primary hover:bg-primary/90 text-lg py-6" disabled={isLoadingPhone || !phoneNumber.trim()}>
+                    {isLoadingPhone ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-5 w-5" />}
+                    Send Verification Code
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="grid gap-2">
+                    <Label htmlFor="verificationCode">Verification Code</Label>
+                     <div className="relative">
+                      <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input
+                        id="verificationCode"
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="Enter 6-digit code"
+                        required
+                        className="pl-10"
+                        value={verificationCode}
+                        onChange={(e) => setVerificationCode(e.target.value)}
+                        disabled={isLoadingPhone}
+                      />
+                    </div>
+                  </div>
+                  <Button onClick={handleVerifyCode} className="w-full bg-primary hover:bg-primary/90 text-lg py-6" disabled={isLoadingPhone || !verificationCode.trim()}>
+                    {isLoadingPhone ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-5 w-5" />}
+                    Verify & Sign In
+                  </Button>
+                   <Button variant="link" size="sm" onClick={() => setIsCodeSent(false)} disabled={isLoadingPhone}>
+                     Entered wrong number or didn't get code?
+                  </Button>
+                </>
+              )}
+              {/* This div is used by RecaptchaVerifier. It can be hidden with CSS if desired. */}
+              <div ref={recaptchaContainerRef} id="recaptcha-container"></div>
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-               <div className="relative">
-                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input 
-                  id="password" 
-                  type="password" 
-                  required  
-                  className="pl-10" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoadingEmail || isLoadingGoogle}
-                  placeholder={isSignUpMode ? "Choose a strong password" : "Enter your password"}
-                />
-              </div>
-            </div>
-            {error && <p className="text-xs text-destructive text-center">{error}</p>}
-            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-lg py-6" disabled={isLoadingEmail || isLoadingGoogle}>
-              {isLoadingEmail && isSignUpMode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {isLoadingEmail && !isSignUpMode ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {!isLoadingEmail && isSignUpMode ? <UserPlus className="mr-2 h-5 w-5" /> : null}
-              {!isLoadingEmail && !isSignUpMode ? <KeyRound className="mr-2 h-5 w-5" /> : null}
-              {isSignUpMode ? "Sign Up" : "Login"}
-            </Button>
-          </form>
+          )}
+
+          {error && <p className="text-xs text-destructive text-center">{error}</p>}
+
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-2 text-sm">
-           {!isSignUpMode && (
+          {loginMode === 'email' && !isSignUpMode && (
             <Link href="#" className="font-medium text-primary hover:text-neon hover:underline">
-                Forgot your password?
+              Forgot your password?
             </Link>
-           )}
-          <Button variant="link" onClick={toggleMode} className="font-medium text-primary hover:text-neon">
-            {isSignUpMode ? "Already have an account? Login" : "Don't have an account? Sign Up"}
+          )}
+          {loginMode === 'email' && (
+            <Button variant="link" onClick={toggleAuthMode} className="font-medium text-primary hover:text-neon">
+              {isSignUpMode ? "Already have an account? Login" : "Don't have an account? Sign Up"}
+            </Button>
+          )}
+          <Button variant="link" onClick={() => switchLoginMethod(loginMode === 'email' ? 'phone' : 'email')} className="font-medium text-primary hover:text-neon">
+            {loginMode === 'email' ? "Sign in with Phone Number" : "Sign in with Email/Password"}
           </Button>
         </CardFooter>
       </Card>
     </div>
   );
 }
+
+    
