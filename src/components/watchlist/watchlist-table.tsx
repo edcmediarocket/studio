@@ -193,12 +193,12 @@ export function WatchlistTable() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[40px] sm:w-[50px]"></TableHead>
-                  <TableHead className="text-xs sm:text-sm">Name</TableHead>
-                  <TableHead className="text-right text-xs sm:text-sm">Price</TableHead>
-                  <TableHead className="text-right text-xs sm:text-sm">24h %</TableHead>
-                  <TableHead className="hidden md:table-cell text-xs sm:text-sm">Notes</TableHead>
-                  <TableHead className="text-center text-xs sm:text-sm">Alerts</TableHead>
-                  <TableHead className="text-center text-xs sm:text-sm">Actions</TableHead>
+                  <TableHead className="text-xs sm:text-sm px-2 sm:px-4">Name</TableHead>
+                  <TableHead className="text-right text-xs sm:text-sm px-2 sm:px-4">Price</TableHead>
+                  <TableHead className="text-right text-xs sm:text-sm px-2 sm:px-4">24h %</TableHead>
+                  <TableHead className="hidden md:table-cell text-xs sm:text-sm px-2 sm:px-4">Notes</TableHead>
+                  <TableHead className="text-center text-xs sm:text-sm px-2 sm:px-4">Alerts</TableHead>
+                  <TableHead className="text-center text-xs sm:text-sm px-2 sm:px-4">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

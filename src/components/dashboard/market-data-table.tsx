@@ -193,19 +193,19 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
       <TableHeader>
         <TableRow>
           <TableHead className="w-[40px] sm:w-[50px] pr-0"></TableHead>
-          <TableHead onClick={() => requestSort('name')} className="cursor-pointer text-xs sm:text-sm">
+          <TableHead onClick={() => requestSort('name')} className="cursor-pointer text-xs sm:text-sm px-2 sm:px-4">
             Name{getSortIndicator('name')}
           </TableHead>
-          <TableHead onClick={() => requestSort('current_price')} className="text-right cursor-pointer text-xs sm:text-sm">
+          <TableHead onClick={() => requestSort('current_price')} className="text-right cursor-pointer text-xs sm:text-sm px-2 sm:px-4">
             Price{getSortIndicator('current_price')}
           </TableHead>
-          <TableHead onClick={() => requestSort('price_change_percentage_24h')} className="text-right cursor-pointer text-xs sm:text-sm">
+          <TableHead onClick={() => requestSort('price_change_percentage_24h')} className="text-right cursor-pointer text-xs sm:text-sm px-2 sm:px-4">
             24h %{getSortIndicator('price_change_percentage_24h')}
           </TableHead>
-          <TableHead onClick={() => requestSort('market_cap')} className="text-right hidden md:table-cell cursor-pointer text-xs sm:text-sm">
+          <TableHead onClick={() => requestSort('market_cap')} className="text-right hidden md:table-cell cursor-pointer text-xs sm:text-sm px-2 sm:px-4">
             Market Cap{getSortIndicator('market_cap')}
           </TableHead>
-          <TableHead className="text-center text-xs sm:text-sm">Actions</TableHead>
+          <TableHead className="text-center text-xs sm:text-sm px-2 sm:px-4">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
