@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react'; // Added useCallback
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -119,7 +119,7 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
   }, []);
 
   useEffect(() => {
-    if(!loading) {
+    if(!loading) { // Only save if not initial loading phase
         try {
             localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(Array.from(favoritedCoins)));
         } catch (e) {
@@ -138,7 +138,7 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
         if (!response.ok) {
            const errorData = await response.json().catch(() => ({}));
            const errorMessage = errorData.error || `Failed to fetch coin data: ${response.statusText}`;
-           if (errorMessage.toLowerCase().includes('failed to fetch')) {
+           if (errorMessage.toLowerCase().includes('failed to fetch') || errorMessage.toLowerCase().includes('networkerror')) {
              throw new TypeError("Network error: Could not fetch coin data. Please check your internet connection and try refreshing.");
            }
            throw new Error(errorMessage);
@@ -194,6 +194,9 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
       sortableItems.sort((a, b) => {
         const valA = a[sortConfig.key!];
         const valB = b[sortConfig.key!];
+
+        if (valA === null || valA === undefined) return 1; // Push nulls/undefined to the end
+        if (valB === null || valB === undefined) return -1;
 
         if (typeof valA === 'number' && typeof valB === 'number') {
             return sortConfig.direction === 'ascending' ? valA - valB : valB - valA;
@@ -254,7 +257,7 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
       <Alert variant="destructive" className="mt-4">
         <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Error Fetching Coin Data</AlertTitle>
-        <AlertDescription>{error} Please try refreshing the page later.</AlertDescription>
+        <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
   }
