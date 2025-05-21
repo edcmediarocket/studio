@@ -11,13 +11,12 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
+// Internal Zod enums - NOT EXPORTED
 const MetricEnum = z.enum(["Price", "MarketCap", "Volume24hChangePercent", "SocialMentions"]);
-export type Metric = z.infer<typeof MetricEnum>;
-
 const ConditionEnum = z.enum(["exceeds", "dropsBelow", "increasesByPercent", "decreasesByPercent"]);
-export type Condition = z.infer<typeof ConditionEnum>;
 
-export const SetupSmartAlertInputSchema = z.object({
+// Internal Zod schema - NOT EXPORTED
+const SetupSmartAlertInputSchema = z.object({
   coinName: z.string().describe('The name of the cryptocurrency for the alert (e.g., Dogecoin).'),
   metric: MetricEnum.describe('The metric to monitor (e.g., Price, MarketCap).'),
   condition: ConditionEnum.describe('The condition for the alert to trigger (e.g., exceeds, dropsBelow).'),
@@ -26,7 +25,8 @@ export const SetupSmartAlertInputSchema = z.object({
 });
 export type SetupSmartAlertInput = z.infer<typeof SetupSmartAlertInputSchema>;
 
-export const SetupSmartAlertOutputSchema = z.object({
+// Internal Zod schema - NOT EXPORTED
+const SetupSmartAlertOutputSchema = z.object({
   alertConfirmation: z.string().describe('A human-readable confirmation of the alert that has been set up.'),
   scenarioAnalysis: z.string().describe("AI-generated insights about the alert's conditions, such as potential likelihood, historical context (simulated), or market implications if triggered."),
   setupTimestamp: z.string().describe('The timestamp when the alert setup was processed.'),

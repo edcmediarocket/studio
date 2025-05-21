@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { setupSmartAlert, type SetupSmartAlertInput, type SetupSmartAlertOutput, type Metric, type Condition } from "@/ai/flows/setup-smart-alert";
+import { setupSmartAlert, type SetupSmartAlertInput, type SetupSmartAlertOutput } from "@/ai/flows/setup-smart-alert";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, BellPlus, Sparkles, AlertTriangle, Info, CheckCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+
+// Define Metric and Condition types locally based on availableOptions
+type Metric = "Price" | "MarketCap" | "Volume24hChangePercent" | "SocialMentions";
+type Condition = "exceeds" | "dropsBelow" | "increasesByPercent" | "decreasesByPercent";
 
 const availableMetrics: { value: Metric; label: string }[] = [
   { value: "Price", label: "Price (USD)" },
