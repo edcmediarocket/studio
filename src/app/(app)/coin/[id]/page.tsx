@@ -10,13 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon, Siren, Hourglass, TrendingUpIcon, TrendingDownIcon, BarChartBig, ActivityIcon, UsersIcon, FileTextIcon } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon, Siren, Hourglass, TrendingUpIcon, TrendingDownIcon, BarChartBig, ActivityIcon, UsersIcon, FileTextIcon, Layers } from 'lucide-react';
 import { Table, TableBody, TableCell, TableRow, TableHead, TableHeader } from '@/components/ui/table';
 import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from '@/ai/flows/get-coin-trading-signal';
 import { getCoinRiskAssessment, type GetCoinRiskAssessmentOutput } from '@/ai/flows/get-coin-risk-assessment';
 import { getViralPrediction, type GetViralPredictionOutput } from '@/ai/flows/get-viral-prediction';
 import { getMemeCoinLifespanPrediction, type GetMemeCoinLifespanPredictionOutput } from '@/ai/flows/get-meme-coin-lifespan-prediction';
-import { getSimulatedSignalPerformance, type GetSimulatedSignalPerformanceOutput } from '@/ai/flows/get-simulated-signal-performance'; // New Import
+import { getSimulatedSignalPerformance, type GetSimulatedSignalPerformanceOutput } from '@/ai/flows/get-simulated-signal-performance';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { StatItem } from '@/components/shared/stat-item';
@@ -63,31 +64,60 @@ interface SectionCardProps {
   noPadding?: boolean;
   titleClassName?: string;
   infoPopoverContent?: React.ReactNode;
+  defaultOpenAccordion?: boolean;
 }
 
-const SectionCardComponent: React.FC<SectionCardProps> = ({ title, icon, children, className, noPadding, titleClassName, infoPopoverContent }) => (
-  <Card className={cn("shadow-lg", className)}>
-    <CardHeader className={cn(noPadding ? "pb-2 pt-4 px-4" : "pb-3", "flex flex-row justify-between items-center")}>
-      <CardTitle className={cn("flex items-center text-xl text-primary", titleClassName)}>
-        {icon}
-        <span className={cn(icon && "ml-2")}>{title}</span>
-      </CardTitle>
-      {infoPopoverContent && (
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7 ml-2 text-muted-foreground hover:text-foreground">
-              <Info className="h-4 w-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-64 text-sm">
-            {infoPopoverContent}
-          </PopoverContent>
-        </Popover>
-      )}
-    </CardHeader>
-    <CardContent className={cn(noPadding ? "p-0" : "text-sm", noPadding && "px-4 pb-4")}>{children}</CardContent>
-  </Card>
-);
+const SectionCardComponent: React.FC<SectionCardProps> = ({ title, icon, children, className, noPadding, titleClassName, infoPopoverContent, defaultOpenAccordion = false }) => {
+  const cardContent = (
+    <>
+      <CardHeader className={cn(noPadding ? "pb-2 pt-4 px-4" : "pb-3", "flex flex-row justify-between items-center")}>
+        <CardTitle className={cn("flex items-center text-xl text-primary", titleClassName)}>
+          {icon}
+          <span className={cn(icon && "ml-2")}>{title}</span>
+        </CardTitle>
+        {infoPopoverContent && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7 ml-2 text-muted-foreground hover:text-foreground">
+                <Info className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 text-sm">
+              {infoPopoverContent}
+            </PopoverContent>
+          </Popover>
+        )}
+      </CardHeader>
+      <CardContent className={cn(noPadding ? "p-0" : "text-sm", noPadding && "px-4 pb-4")}>{children}</CardContent>
+    </>
+  );
+
+  if (title === "Tokenomics Blueprint") {
+    return (
+      <Card className={cn("shadow-lg", className)}>
+        <Accordion type="single" collapsible className="w-full" defaultValue={defaultOpenAccordion ? "item-1" : undefined}>
+          <AccordionItem value="item-1" className="border-b-0">
+            <AccordionTrigger className={cn(noPadding ? "py-3 px-4" : "py-4", "hover:no-underline")}>
+              <CardTitle className={cn("flex items-center text-xl text-primary", titleClassName)}>
+                {icon}
+                <span className={cn(icon && "ml-2")}>{title}</span>
+              </CardTitle>
+            </AccordionTrigger>
+            <AccordionContent className={cn(noPadding ? "p-0" : "text-sm", noPadding && "px-4 pb-4")}>
+              {children}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className={cn("shadow-lg", className)}>
+      {cardContent}
+    </Card>
+  );
+};
 const SectionCard = React.memo(SectionCardComponent);
 
 
@@ -276,9 +306,13 @@ export default function CoinDetailPage() {
 
       } catch (err) {
         console.error("Error in fetchAllCoinData:", err);
-        const specificError = err instanceof TypeError && err.message.toLowerCase().includes('failed to fetch')
-          ? `Network error: Could not connect to fetch coin data for ${coinId}. Please check your internet connection and try again.`
-          : err instanceof Error ? err.message : "An unknown error occurred while fetching coin data.";
+        let specificError = "An unknown error occurred while fetching coin data.";
+        if (err instanceof Error) {
+           specificError = err.message;
+           if (err instanceof TypeError && err.message.toLowerCase().includes('failed to fetch')) {
+             specificError = `Network error: Could not connect to fetch coin data for ${coinId}. Please check your internet connection and try again.`;
+           }
+        }
         setError(specificError);
         setLoading(false);
         setSignalLoading(false);
@@ -310,7 +344,7 @@ export default function CoinDetailPage() {
             </div>
           </div>
         </div>
-        {[...Array(7)].map((_, i) => ( // Increased skeleton count
+        {[...Array(7)].map((_, i) => ( 
           <Card key={i} className="shadow-lg">
             <CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader>
             <CardContent className="space-y-3">
@@ -348,7 +382,7 @@ export default function CoinDetailPage() {
     );
   }
 
-  const { name, symbol, image, market_data, description: coinDescription, links, market_cap_rank } = coinDetail; // Renamed description
+  const { name, symbol, image, market_data, description: coinDescription, links, market_cap_rank } = coinDetail; 
   const currentPrice = market_data.current_price.usd;
   const priceChange24h = market_data.price_change_percentage_24h_in_currency.usd;
 
@@ -437,7 +471,7 @@ export default function CoinDetailPage() {
       <h4 className="font-semibold mb-2 text-base">About AI Trading Signal</h4>
       <p>
         This section provides an AI-generated trading signal (Buy, Sell, or Hold) for the selected coin,
-        based on simulated analysis of various market factors including current price. It includes:
+        based on analysis of various market factors including current price. It includes:
       </p>
       <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
         <li><strong>Recommendation:</strong> The AI's suggested action.</li>
@@ -510,7 +544,7 @@ export default function CoinDetailPage() {
           {riskAssessment.isHighRugRisk && (
             <Alert variant="destructive" className="border-2 border-red-700">
               <Siren className="h-5 w-5 text-red-700" />
-              <AlertTitle className="text-red-700 font-bold">High Rug Pull Risk Detected!</AlertTitle>
+              <AlertTitle className="text-red-700 font-bold">High Rug Risk Detected!</AlertTitle>
               <AlertDescription className="text-red-600">
                 {riskAssessment.rugPullWarningSummary || "AI has flagged this coin as having multiple indicators associated with high rug pull risk. Extreme caution advised. Verify all aspects independently."}
               </AlertDescription>
@@ -579,7 +613,7 @@ export default function CoinDetailPage() {
     <>
       <h4 className="font-semibold mb-2 text-base">About AI Risk Meter & Rug Pull Detector</h4>
       <p>
-        The AI Risk Meter provides a simulated risk assessment for the selected coin, including specific sub-scores for Volatility, Liquidity, Social Sentiment, and Project Fundamentals.
+        The AI Risk Meter provides an risk assessment for the selected coin, including specific sub-scores for Volatility, Liquidity, Social Sentiment, and Project Fundamentals.
         It also includes specific checks for common **Rug Pull Indicators**:
       </p>
       <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
@@ -666,7 +700,7 @@ export default function CoinDetailPage() {
     <>
       <h4 className="font-semibold mb-2 text-base">About AI Time-to-Viral Predictor</h4>
       <p>
-        This AI feature simulates monitoring social media volume, mentions, influencer activity, and market catalysts to estimate a coin's potential to trend or "go viral."
+        This AI feature analyzes social media volume, mentions, influencer activity, and market catalysts to estimate a coin's potential to trend or "go viral."
       </p>
       <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
         <li><strong>Time to Trend Estimate:</strong> AI's speculative timeframe for potential virality.</li>
@@ -745,7 +779,7 @@ export default function CoinDetailPage() {
     <>
       <h4 className="font-semibold mb-2 text-base">About AI Lifespan Predictor</h4>
       <p>
-        This AI feature simulates an analysis of a meme coin's current hype cycle, considering factors like volume decay, social sentiment shifts, and historical patterns to estimate its potential lifespan.
+        This AI feature analyzes a meme coin's current hype cycle, considering factors like volume decay, social sentiment shifts, and historical patterns to estimate its potential lifespan.
       </p>
       <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
         <li><strong>Lifespan Estimate:</strong> AI's speculative timeframe for the current hype.</li>
@@ -844,6 +878,22 @@ export default function CoinDetailPage() {
     </>
   );
 
+  const tokenomicsBlueprintInfo = (
+    <>
+      <h4 className="font-semibold mb-2 text-base">About Tokenomics Blueprint</h4>
+      <p>
+        This section provides an overview of the coin's supply metrics and conceptual information about its tokenomics, such as typical allocation models, vesting schedules, and the importance of audits.
+      </p>
+      <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
+        <li><strong>Supply Metrics:</strong> Circulating, total, and max supply from API.</li>
+        <li><strong>Conceptual Info:</strong> General explanations of token allocation, vesting, audits, and developer wallet considerations. These are illustrative as detailed data isn't always available via basic APIs.</li>
+      </ul>
+      <p className="mt-2 text-xs">
+        Always refer to official project documentation for detailed and verified tokenomics.
+      </p>
+    </>
+  );
+
 
   return (
     <div className="space-y-6">
@@ -892,6 +942,67 @@ export default function CoinDetailPage() {
               >
               {renderRiskAssessmentContent()}
             </SectionCard>
+
+            <SectionCard
+              title="Tokenomics Blueprint"
+              icon={<Layers className="h-5 w-5" />}
+              noPadding
+              infoPopoverContent={tokenomicsBlueprintInfo}
+              defaultOpenAccordion={false}
+            >
+              <div className="p-4 space-y-3">
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="supply">
+                    <AccordionTrigger>Supply Metrics</AccordionTrigger>
+                    <AccordionContent className="!pt-0 !pb-0"> {/* Remove accordion content padding */}
+                      <StatItem label="Circulating Supply" value={market_data.circulating_supply} unit={symbol.toUpperCase()} />
+                      <StatItem label="Total Supply" value={market_data.total_supply} unit={symbol.toUpperCase()} />
+                      <StatItem label="Max Supply" value={market_data.max_supply} unit={symbol.toUpperCase()} />
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="allocation">
+                    <AccordionTrigger>Token Allocation (Conceptual)</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-xs text-muted-foreground">
+                        Actual token allocations vary greatly. A common pattern for meme coins might involve:
+                        <ul className="list-disc pl-5 mt-1">
+                          <li>Community/Airdrop: 40-70%</li>
+                          <li>Liquidity Pool: 20-40%</li>
+                          <li>Team/Development: 5-15% (often with vesting)</li>
+                          <li>Marketing/Treasury: 5-10%</li>
+                        </ul>
+                        Always verify specific allocations from official project sources. This is illustrative.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="vesting">
+                    <AccordionTrigger>Vesting Information (Conceptual)</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-xs text-muted-foreground">
+                        Vesting schedules lock up tokens for team members, advisors, or early investors for a period to prevent immediate sell-offs. Typical vesting for team tokens might be 6-12 months cliff, followed by linear release over 1-3 years. Check official documentation for actual vesting schedules.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                   <AccordionItem value="audit">
+                    <AccordionTrigger>Audit Status (Conceptual)</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-xs text-muted-foreground">
+                        Smart contract audits by reputable firms (e.g., Certik, PeckShield, Hacken) are crucial for identifying vulnerabilities. Always look for publicly available audit reports. Lack of a recent or thorough audit can be a significant risk factor.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="dev-wallets" className="border-b-0">
+                    <AccordionTrigger>Developer Wallet Insights (Conceptual)</AccordionTrigger>
+                    <AccordionContent>
+                      <p className="text-xs text-muted-foreground">
+                        Analyzing developer and top holder wallets can reveal token distribution and potential sell pressure. High concentration in a few wallets, especially if unvested and belonging to the team, is a risk. This requires on-chain analysis tools like Etherscan or Solscan.
+                      </p>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+            </SectionCard>
+
 
             <SectionCard
               title="AI Time-to-Viral Predictor"
