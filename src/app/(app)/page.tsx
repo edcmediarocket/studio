@@ -99,7 +99,9 @@ export default function DashboardPage() {
         }
       } catch (err) {
         console.error("Error fetching market movers:", err);
-        if (err instanceof Error) {
+        if (err instanceof TypeError && err.message.toLowerCase().includes('failed to fetch')) {
+          setMoversError("Network error: Could not load market movers. Please check your internet connection and try again.");
+        } else if (err instanceof Error) {
           setMoversError(err.message);
         } else {
           setMoversError("An unknown error occurred while fetching market movers.");
@@ -131,9 +133,12 @@ export default function DashboardPage() {
       );
     }
 
-    if (items.length === 0 && !moversError) {
+    if (items.length === 0 && !moversError) { // Only show this if there's no broader error
         return <p className="text-xs text-muted-foreground px-3 py-3 sm:px-4 sm:py-2">No significant {type}s found in the top 100 right now.</p>;
     }
+    // If there is a moversError, we don't render items here, the main error alert will cover it.
+    if (moversError) return null;
+
 
     return items.map(coin => (
       <Link href={`/coin/${coin.id}`} key={coin.id} className="block hover:bg-muted/30 transition-colors px-3 py-3 sm:px-4 sm:py-2 border-b last:border-b-0">
@@ -194,7 +199,7 @@ export default function DashboardPage() {
         {moversError && (
           <Alert variant="destructive" className="mb-6 w-full">
             <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>Could not load market movers: {moversError}</AlertDescription>
+            <AlertDescription>{moversError}</AlertDescription>
           </Alert>
         )}
 
@@ -234,3 +239,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

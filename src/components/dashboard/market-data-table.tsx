@@ -72,7 +72,8 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
       try {
         const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false');
         if (!response.ok) {
-          throw new Error(`Failed to fetch coin data: ${response.statusText}`);
+           const errorData = await response.json().catch(() => ({})); // Attempt to parse error, fallback if not JSON
+          throw new Error(errorData.error || `Failed to fetch coin data: ${response.statusText}`);
         }
         const data = await response.json();
         if (Array.isArray(data)) {
@@ -91,7 +92,9 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
         }
       } catch (err) {
         console.error(err);
-        if (err instanceof Error) {
+        if (err instanceof TypeError && err.message.toLowerCase().includes('failed to fetch')) {
+          setError("Network error: Could not fetch coin data. Please check your internet connection and try refreshing.");
+        } else if (err instanceof Error) {
           setError(err.message);
         } else {
           setError("An unknown error occurred while fetching coin data.");
@@ -273,3 +276,4 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
     </Table>
   );
 }
+
