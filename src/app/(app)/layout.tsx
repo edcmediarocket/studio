@@ -58,7 +58,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
               <Logo className="h-7 sm:h-8 w-auto" />
             </Link>
             <Link href="/" className="hidden group-data-[collapsible=icon]:flex items-center justify-center">
-               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="hsl(var(--primary))" className="h-8 w-8">
+               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41.1 47.5" fill="hsl(var(--primary))" className="h-8 w-8">
                   <path d="M20.55,25.22c0-5.52,4.48-10,10-10s10,4.48,10,10c0,4.42-2.87,8.15-6.84,9.44l6.84,12.33h-7.66l-6.84-12.33V25.22z M20.55,15.22v27.5h-7.66V15.22H20.55z M0,42.72h7.66V15.22H0V42.72z" />
                 </svg>
             </Link>
@@ -80,11 +80,11 @@ export default function AppLayout({ children }: PropsWithChildren) {
             </div>
           </SidebarFooter>
         </Sidebar>
-        {/* SidebarInset should be a flex container that allows main content to grow and scroll */}
-        <SidebarInset className="flex-1 flex flex-col overflow-hidden">
+        {/* SidebarInset ensures it grows and contains header, main (scrollable), and footer */}
+        <SidebarInset className="flex-1 flex flex-col overflow-hidden h-full">
           <Header />
           {/* Main content area should be flexible and scrollable */}
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <main className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6">
             {children}
           </main>
           <footer className="py-4 px-4 sm:px-6 md:px-8 border-t border-border/40 text-center text-xs text-muted-foreground">

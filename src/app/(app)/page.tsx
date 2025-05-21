@@ -155,7 +155,7 @@ export default function DashboardPage() {
 
 
   return (
-    <div className="space-y-6 w-full"> {/* Ensure this root div takes full width */}
+    <div className="space-y-6 w-full">
       <div className="w-full">
         <SignalOfTheDayCard
           signalData={signalOfTheDay}
