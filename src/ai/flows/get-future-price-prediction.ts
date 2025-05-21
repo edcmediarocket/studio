@@ -54,7 +54,7 @@ const prompt = ai.definePrompt({
 
 The user is asking for future price predictions for the coin: "{{coinName}}".
 {{#if currentPriceUSD}}
-The current market price provided for {{coinName}} is {{{currentPriceUSD}}} USD. This is the **ONLY** current price you MUST use as a reference for all parts of your response.
+The current market price explicitly provided for {{coinName}} is {{{currentPriceUSD}}} USD. This specific value, {{{currentPriceUSD}}} USD, is the **ONLY** current price you MUST use as a reference for all parts of your response.
 {{else}}
 No specific current market price was provided for {{coinName}}. Your predictions will be general estimations.
 {{/if}}
@@ -68,36 +68,30 @@ Generate predictions for the following timeframes:
 
 Your response MUST strictly follow the JSON output schema.
 
-**CRITICAL INSTRUCTIONS FOR YOUR RESPONSE:**
+**CRITICAL INSTRUCTIONS IF 'currentPriceUSD' (which is {{{currentPriceUSD}}} USD if provided, otherwise it's not set) IS PROVIDED:**
 
 1.  **\`coinName\` (Output Field)**: Must match the input coin name: "{{coinName}}".
 
 2.  **\`reasoning\` (Output Field)**:
-    *   {{#if currentPriceUSD}}
-        Your \`reasoning\` text **MUST** begin with a sentence that explicitly states and uses the provided current price of {{{currentPriceUSD}}} USD for {{coinName}}. For example: "Based on {{coinName}}'s current price of {{{currentPriceUSD}}} USD, our analysis considers..." or "Starting from {{{currentPriceUSD}}} USD for {{coinName}}, the future outlook is...".
-        All subsequent analysis and discussion in this \`reasoning\` field must be consistent with this {{{currentPriceUSD}}} USD starting point. **Under no circumstances should you invent or refer to any other value as the 'current price' in your reasoning if {{{currentPriceUSD}}} was provided.**
-    *   {{else}}
-        Your \`reasoning\` should clearly state that predictions are general estimations because no specific current price was provided.
-    *   {{/if}}
-    *   After acknowledging the current price (if provided), explain the factors considered for your predictions (e.g., simulated market trends, potential catalysts, coin-specific sentiment). Always emphasize the speculative nature of meme coin predictions.
+    *   Your \`reasoning\` text **MUST** begin with a sentence that explicitly states and uses the provided current price of {{{currentPriceUSD}}} USD for {{coinName}}. For example: "Based on {{coinName}}'s current price of {{{currentPriceUSD}}} USD, our analysis considers..." or "Starting from {{{currentPriceUSD}}} USD for {{coinName}}, the future outlook is...".
+    *   All subsequent analysis and discussion in this \`reasoning\` field must be consistent with this {{{currentPriceUSD}}} USD starting point. **Under NO circumstances should you invent or refer to any other value as the 'current price' in your reasoning.**
+    *   After acknowledging the current price, explain the factors considered for your predictions (e.g., simulated market trends, potential catalysts, coin-specific sentiment). Always emphasize the speculative nature of meme coin predictions.
 
 3.  **\`predictions\` (Output Field - Array of {timeframe, predictedPrice})**:
-    *   {{#if currentPriceUSD}}
-        Each \`predictedPrice\` in the array **MUST** be a mathematically plausible future value derived *directly* from the provided 'currentPriceUSD' (which is {{{currentPriceUSD}}} USD).
-        These predictions should represent speculative percentage changes (e.g., a 10% increase from {{{currentPriceUSD}}} would be {{{currentPriceUSD}}} * 1.1; a 5% decrease would be {{{currentPriceUSD}}} * 0.95).
-        The scale of your numerical predictions **MUST** directly reflect the scale of the provided {{{currentPriceUSD}}} USD. For instance, if {{{currentPriceUSD}}} is $2.50, your predictions should be in a similar dollar range (e.g., $2.75, $2.20), not $0.000x or $5000 unless you are predicting an extreme, well-justified event.
-    *   {{else}}
-        \`predictedPrice\` values will be general estimations (e.g., "$0.000x could become $0.00y", "potential for 2x to 3x from current general levels").
-    *   {{/if}}
+    *   Each \`predictedPrice\` in the array **MUST** be a mathematically plausible future value derived *directly* from the provided 'currentPriceUSD' (which is {{{currentPriceUSD}}} USD). These predictions should represent speculative percentage changes or absolute changes from {{{currentPriceUSD}}} USD.
+    *   For example, if {{{currentPriceUSD}}} is $2.50, a 1-week prediction might be "$2.75" (a 10% increase) or "$2.30" (a -8% change). Your predicted prices MUST be in a similar dollar range to {{{currentPriceUSD}}}. **Do NOT generate prices like $0.000x or $5000 if the current price is $2.50, unless you are predicting an extreme, well-justified, and explicitly stated event (e.g., "a potential 100x due to major breakthrough" or "a collapse to near zero due to critical vulnerability").**
     *   Provide \`predictedPrice\` as a string (e.g., "$0.1234", "May test $0.50"). Ensure the currency symbol is appropriate.
 
-4.  **\`confidenceLevel\` (Output Field)**: State your overall confidence ('High', 'Medium', 'Low') in these collective predictions.
-5.  **\`disclaimer\` (Output Field)**: Ensure the standard disclaimer is included.
+**IF 'currentPriceUSD' IS NOT PROVIDED:**
+1.  Your \`reasoning\` should clearly state that predictions are general estimations because no specific current price was provided.
+2.  Your \`predictedPrice\` values will be general estimations (e.g., "$0.000x could become $0.00y", "potential for 2x to 3x from current general levels").
+
+**ALL RESPONSES:**
+-   **\`confidenceLevel\` (Output Field)**: State your overall confidence ('High', 'Medium', 'Low') in these collective predictions.
+-   **\`disclaimer\` (Output Field)**: Ensure the standard disclaimer is included.
 
 Make the predictions sound plausible for a meme coin but clearly speculative.
-{{#if currentPriceUSD}}
-**REITERATION: All references to the current price, both in your textual \`reasoning\` and in calculating numerical \`predictedPrice\` values, MUST use the provided value of {{{currentPriceUSD}}} USD. No other 'current price' should be assumed or mentioned.**
-{{/if}}
+**REITERATION: All references to the current price, both in your textual \`reasoning\` and in calculating numerical \`predictedPrice\` values, MUST use the provided value of {{{currentPriceUSD}}} USD if it was given. No other 'current price' should be assumed or mentioned in that case.**
 `,
 });
 

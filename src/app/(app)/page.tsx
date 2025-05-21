@@ -8,7 +8,7 @@ import { MarketDataTable } from "@/components/dashboard/market-data-table";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, TrendingUp, TrendingDown, Info, Flame, Loader2, AlertTriangle, RefreshCw, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input"; 
+import { Input } from "@/components/ui/input";
 import { HotCoinsTicker } from "@/components/dashboard/hot-coins-ticker";
 import { WeeklyForecastCarousel } from "@/components/dashboard/weekly-forecast-carousel";
 import { Skeleton } from '@/components/ui/skeleton';
@@ -34,7 +34,7 @@ export default function DashboardPage() {
   const [signalOfTheDayLoading, setSignalOfTheDayLoading] = useState(true);
   const [signalOfTheDayError, setSignalOfTheDayError] = useState<string | null>(null);
 
-  const [searchTerm, setSearchTerm] = useState(''); 
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchSignalOfTheDay = useCallback(async () => {
     setSignalOfTheDayLoading(true);
@@ -156,9 +156,9 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <section className="py-4 sm:py-6">
-        <div className="container px-0 sm:px-4"> 
-          <div className="mb-6">
+      <section className="w-full"> {/* Removed py-4 sm:py-6 for tighter top */}
+        <div className="w-full container px-0 sm:px-4">
+          <div className="mb-6 w-full">
             <SignalOfTheDayCard
               signalData={signalOfTheDay}
               loading={signalOfTheDayLoading}
@@ -167,9 +167,11 @@ export default function DashboardPage() {
             />
           </div>
 
-          <HotCoinsTicker />
+          <div className="mb-6 w-full">
+            <HotCoinsTicker />
+          </div>
 
-          <div className="mt-8 mb-6"> 
+          <div className="mt-8 mb-6 w-full">
             <WeeklyForecastCarousel />
           </div>
 
@@ -180,15 +182,25 @@ export default function DashboardPage() {
             Your Launchpad for Meme Coin Insights.
           </p>
 
+          <div className="relative w-full mb-6">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Search coins..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full h-11 pl-10 pr-4 text-sm bg-muted border-primary/30 hover:border-primary/70 focus:border-primary focus:ring-1 focus:ring-primary/50 rounded-lg shadow-sm placeholder:text-muted-foreground/70"
+            />
+          </div>
+
           {moversError && (
-            <Alert variant="destructive" className="mb-6">
+            <Alert variant="destructive" className="mb-6 w-full">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>Could not load market movers: {moversError}</AlertDescription>
             </Alert>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <Card className="shadow-md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 w-full">
+            <Card className="shadow-md w-full">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center text-primary">
                   <TrendingUp className="mr-2 h-5 w-5 text-green-400" /> Top Gainers (24h - Top 100)
@@ -198,7 +210,7 @@ export default function DashboardPage() {
                 {renderMarketMoverCardContent(topGainers, 'gainer')}
               </CardContent>
             </Card>
-            <Card className="shadow-md">
+            <Card className="shadow-md w-full">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center text-primary">
                   <TrendingDown className="mr-2 h-5 w-5 text-red-400" /> Top Losers (24h - Top 100)
@@ -210,24 +222,13 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-between items-center mb-4"> 
-             <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
-                All Coins
-             </h2>
-             <div className="relative w-full sm:w-auto sm:max-w-xs md:max-w-sm"> 
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-                <Input
-                  placeholder="Search coins..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-11 pl-10 pr-4 text-sm bg-muted border-primary/30 hover:border-primary/70 focus:border-primary focus:ring-1 focus:ring-primary/50 rounded-lg shadow-sm placeholder:text-muted-foreground/70"
-                />
-              </div>
-          </div>
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground mb-4">
+             All Coins
+          </h2>
         </div>
       </section>
 
-      <Card className="shadow-md">
+      <Card className="shadow-md w-full"> {/* Ensure this card is also full width */}
         <CardContent className="p-0 sm:p-2 md:p-4">
           <MarketDataTable searchTerm={searchTerm} />
         </CardContent>
@@ -235,4 +236,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
