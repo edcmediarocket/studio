@@ -29,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark h-full">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
         <meta name="application-name" content="Rocket Meme" />
@@ -47,7 +47,8 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="512x512" href="https://placehold.co/512x512.png" data-ai-hint="app icon large" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
+      {/* Ensure body can grow and is a flex container for full-height child layouts */}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground min-h-screen flex flex-col`}>
         <AnimatedGalaxyBackground />
         <Providers>
           {children}
@@ -58,4 +59,3 @@ export default function RootLayout({
     </html>
   );
 }
-

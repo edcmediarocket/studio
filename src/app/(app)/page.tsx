@@ -155,80 +155,78 @@ export default function DashboardPage() {
 
 
   return (
-    <div className="space-y-6">
-      <section className="w-full"> {/* Removed py-4 sm:py-6 for tighter top */}
-        <div className="w-full container px-0 sm:px-4">
-          <div className="mb-6 w-full">
-            <SignalOfTheDayCard
-              signalData={signalOfTheDay}
-              loading={signalOfTheDayLoading}
-              error={signalOfTheDayError}
-              onRefresh={fetchSignalOfTheDay}
-            />
-          </div>
+    <div className="space-y-6 w-full"> {/* Ensure this root div takes full width */}
+      <div className="w-full">
+        <SignalOfTheDayCard
+          signalData={signalOfTheDay}
+          loading={signalOfTheDayLoading}
+          error={signalOfTheDayError}
+          onRefresh={fetchSignalOfTheDay}
+        />
+      </div>
 
-          <div className="mb-6 w-full">
-            <HotCoinsTicker />
-          </div>
+      <div className="w-full">
+        <HotCoinsTicker />
+      </div>
 
-          <div className="mt-8 mb-6 w-full">
-            <WeeklyForecastCarousel />
-          </div>
+      <div className="w-full">
+        <WeeklyForecastCarousel />
+      </div>
 
-          <h1 className="text-2xl sm:text-3xl font-bold mt-8 mb-1 text-neon">
-            Market Overview
-          </h1>
-          <p className="text-md sm:text-lg text-muted-foreground mb-4">
-            Your Launchpad for Meme Coin Insights.
-          </p>
+      <div className="w-full">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-1 text-neon">
+          Market Overview
+        </h1>
+        <p className="text-md sm:text-lg text-muted-foreground mb-4">
+          Your Launchpad for Meme Coin Insights.
+        </p>
 
-          <div className="relative w-full mb-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-            <Input
-              placeholder="Search coins..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-11 pl-10 pr-4 text-sm bg-muted border-primary/30 hover:border-primary/70 focus:border-primary focus:ring-1 focus:ring-primary/50 rounded-lg shadow-sm placeholder:text-muted-foreground/70"
-            />
-          </div>
-
-          {moversError && (
-            <Alert variant="destructive" className="mb-6 w-full">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>Could not load market movers: {moversError}</AlertDescription>
-            </Alert>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 w-full">
-            <Card className="shadow-md w-full">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center text-primary">
-                  <TrendingUp className="mr-2 h-5 w-5 text-green-400" /> Top Gainers (24h - Top 100)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {renderMarketMoverCardContent(topGainers, 'gainer')}
-              </CardContent>
-            </Card>
-            <Card className="shadow-md w-full">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center text-primary">
-                  <TrendingDown className="mr-2 h-5 w-5 text-red-400" /> Top Losers (24h - Top 100)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {renderMarketMoverCardContent(topLosers, 'loser')}
-              </CardContent>
-            </Card>
-          </div>
-
-          <h2 className="text-xl sm:text-2xl font-semibold text-foreground mb-4">
-             All Coins
-          </h2>
+        <div className="relative w-full mb-6">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Search coins..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full h-11 pl-10 pr-4 text-sm bg-muted border-primary/30 hover:border-primary/70 focus:border-primary focus:ring-1 focus:ring-primary/50 rounded-lg shadow-sm placeholder:text-muted-foreground/70"
+          />
         </div>
-      </section>
 
-      <Card className="shadow-md w-full"> {/* Ensure this card is also full width */}
+        {moversError && (
+          <Alert variant="destructive" className="mb-6 w-full">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>Could not load market movers: {moversError}</AlertDescription>
+          </Alert>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 w-full">
+          <Card className="shadow-md w-full">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center text-primary">
+                <TrendingUp className="mr-2 h-5 w-5 text-green-400" /> Top Gainers (24h - Top 100)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {renderMarketMoverCardContent(topGainers, 'gainer')}
+            </CardContent>
+          </Card>
+          <Card className="shadow-md w-full">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center text-primary">
+                <TrendingDown className="mr-2 h-5 w-5 text-red-400" /> Top Losers (24h - Top 100)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {renderMarketMoverCardContent(topLosers, 'loser')}
+            </CardContent>
+          </Card>
+        </div>
+
+        <h2 className="text-xl sm:text-2xl font-semibold text-foreground mb-4">
+           All Coins
+        </h2>
+      </div>
+
+      <Card className="shadow-md w-full">
         <CardContent className="p-0 sm:p-2 md:p-4">
           <MarketDataTable searchTerm={searchTerm} />
         </CardContent>

@@ -80,9 +80,11 @@ export default function AppLayout({ children }: PropsWithChildren) {
             </div>
           </SidebarFooter>
         </Sidebar>
-        <SidebarInset>
+        {/* SidebarInset should be a flex container that allows main content to grow and scroll */}
+        <SidebarInset className="flex-1 flex flex-col overflow-hidden">
           <Header />
-          <main className="flex-1 min-h-0 py-2 px-0 sm:p-4 md:p-6 overflow-y-auto">
+          {/* Main content area should be flexible and scrollable */}
+          <main className="flex-1 overflow-y-auto p-4 md:p-6">
             {children}
           </main>
           <footer className="py-4 px-4 sm:px-6 md:px-8 border-t border-border/40 text-center text-xs text-muted-foreground">
