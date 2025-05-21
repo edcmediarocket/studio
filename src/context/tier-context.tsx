@@ -4,9 +4,9 @@
 import type { PropsWithChildren } from 'react';
 import React, { createContext, useState, useContext, useMemo, useCallback, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { auth } from '@/lib/firebase';
+import { auth, ADMIN_EMAIL, db } from '@/lib/firebase'; // Import ADMIN_EMAIL and db
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { ADMIN_EMAIL } from '@/lib/firebase';
+// import { doc, getDoc, onSnapshot } from 'firebase/firestore'; // Example for real Firestore integration
 
 export type UserTier = "Free" | "Basic" | "Pro" | "Premium";
 
@@ -18,7 +18,7 @@ interface TierContextType {
 
 const TierContext = createContext<TierContextType | undefined>(undefined);
 
-const LOCAL_STORAGE_TIER_PREFIX = "rocketMemeUserTier_v2_"; // Added versioning to key in case of schema changes
+const LOCAL_STORAGE_TIER_PREFIX = "rocketMemeUserTier_v2_";
 
 export function TierProvider({ children }: PropsWithChildren) {
   const [currentTier, _setCurrentTierInternal] = useState<UserTier>("Free");
@@ -28,49 +28,52 @@ export function TierProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     setIsLoadingTier(true);
     const unsubscribe = onAuthStateChanged(auth, (user: FirebaseUser | null) => {
-      let newDeterminedTier: UserTier = "Free"; 
-      const userTierKey = user ? `${LOCAL_STORAGE_TIER_PREFIX}${user.uid}` : null;
-
-      if (user && user.email && userTierKey) {
+      const oldTier = currentTier; // Capture old tier before update
+      
+      if (user && user.email && user.uid) {
+        const userTierKey = `${LOCAL_STORAGE_TIER_PREFIX}${user.uid}`;
         const savedTier = localStorage.getItem(userTierKey) as UserTier | null;
-        
+        let determinedTier: UserTier;
+
         if (savedTier && ["Free", "Basic", "Pro", "Premium"].includes(savedTier)) {
-          newDeterminedTier = savedTier;
+          determinedTier = savedTier;
+          // console.log(`TierProvider: Loaded tier '${determinedTier}' for user ${user.uid} from localStorage.`);
         } else {
           // No valid tier in localStorage or first time for this user. Determine by email.
-          if (user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-            newDeterminedTier = "Premium";
-          } else if (user.email.toLowerCase() === "premium@rocketmeme.com") {
-            newDeterminedTier = "Premium";
-          } else if (user.email.toLowerCase() === "pro@rocketmeme.com") {
-            newDeterminedTier = "Pro";
-          } else if (user.email.toLowerCase() === "basic@rocketmeme.com") {
-            newDeterminedTier = "Basic";
+          if (user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) { // Admin gets Premium
+            determinedTier = "Premium";
+          } else if (user.email.toLowerCase() === "premium@rocketmeme.com") { // Demo premium email
+            determinedTier = "Premium";
+          } else if (user.email.toLowerCase() === "pro@rocketmeme.com") { // Demo pro email
+            determinedTier = "Pro";
+          } else if (user.email.toLowerCase() === "basic@rocketmeme.com") { // Demo basic email
+            determinedTier = "Basic";
           } else {
-            newDeterminedTier = "Free"; // Default if no special email match
+            determinedTier = "Free"; // Default if no special email match
           }
           
           // Persist this newly determined (or re-determined if localStorage was invalid) tier
           try {
-            localStorage.setItem(userTierKey, newDeterminedTier);
+            localStorage.setItem(userTierKey, determinedTier);
+            // console.log(`TierProvider: Saved email-determined tier '${determinedTier}' for user ${user.uid} to localStorage.`);
           } catch (e) {
             console.error("TierProvider: Failed to save email-determined tier to localStorage", e);
           }
         }
+        _setCurrentTierInternal(determinedTier);
+        // Toast logic moved to explicit setCurrentTier to avoid firing on initial load
       } else {
-        // No user logged in, or user.email/userTierKey is not available.
-        // Tier remains "Free" as per initial newDeterminedTier.
+        _setCurrentTierInternal("Free");
       }
-      
-      _setCurrentTierInternal(newDeterminedTier);
       setIsLoadingTier(false);
     });
 
     return () => unsubscribe();
-  }, []); // Dependency array is empty for onAuthStateChanged
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // currentTier removed from deps to avoid loop with oldTier comparison
 
   const setCurrentTier = useCallback((tier: UserTier, fromSimulatedSubscription: boolean = false) => {
-    const oldTier = currentTier; // Capture old tier before updating
+    const oldTierForToast = currentTier; // Capture current tier before _setCurrentTierInternal updates it
     _setCurrentTierInternal(tier);
     const currentUser = auth.currentUser;
 
@@ -78,21 +81,22 @@ export function TierProvider({ children }: PropsWithChildren) {
       const userTierKey = `${LOCAL_STORAGE_TIER_PREFIX}${currentUser.uid}`;
       try {
         localStorage.setItem(userTierKey, tier);
+        // console.log(`TierProvider: User explicitly set tier '${tier}' for user ${currentUser.uid} to localStorage.`);
       } catch (e) {
         console.error("TierProvider: Failed to save tier to localStorage on explicit action", e);
       }
     }
 
     // Show toast only for explicit user actions resulting in a tier change,
-    // and only if a user is logged in and the tier actually changed.
-    if (fromSimulatedSubscription && !isLoadingTier && currentUser && tier !== oldTier) { 
+    // and only if the tier actually changed.
+    if (fromSimulatedSubscription && tier !== oldTierForToast) { 
       toast({
         title: "Subscription Updated",
         description: `You are now on the ${tier} plan. Features have been updated.`,
         variant: "default",
       });
     }
-  }, [toast, isLoadingTier, currentTier]); // Added currentTier to deps for toast logic
+  }, [toast, currentTier]); // currentTier is needed here for comparison in toast logic
 
   const value = useMemo(() => ({
     currentTier,

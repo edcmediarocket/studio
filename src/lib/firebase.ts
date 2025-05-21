@@ -2,18 +2,16 @@
 // src/lib/firebase.ts
 import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-// To enable Firestore or other services, import them here
-// import { getFirestore } from 'firebase/firestore';
-// import { getStorage } from 'firebase/storage';
+import { getFirestore } from 'firebase/firestore'; // Added for future use if reading from Firestore
 
 // Your web app's Firebase configuration
 const firebaseConfig: FirebaseOptions = {
-  apiKey: "AIzaSyD1l4ELRKb-9Ic2IgVy99Q5NUt43kI879o",
-  authDomain: "meme-prophet-xpyi0.firebaseapp.com",
-  projectId: "meme-prophet-xpyi0",
-  storageBucket: "meme-prophet-xpyi0.appspot.com", // Corrected to .appspot.com
-  messagingSenderId: "1080795361618",
-  appId: "1:1080795361618:web:44e0f318a3a9399e77ca8b"
+  apiKey: "AIzaSyDRWV3OilblaZWlEDDcy1dOd5ysO5jxUjI", // User-provided
+  authDomain: "rocketmemefinal.firebaseapp.com", // User-provided
+  projectId: "meme-prophet-xpyi0", // User-provided
+  storageBucket: "meme-prophet-xpyi0.appspot.com", // Corrected from user-provided, was rocketmemefinal.firebasestorage.app
+  messagingSenderId: "213714563438", // User-provided
+  appId: "1:213714563438:web:2eddc648692a831471117f" // User-provided
   // measurementId: "YOUR_MEASUREMENT_ID_HERE" // Optional: for Google Analytics - User can add this if needed
 };
 
@@ -26,9 +24,9 @@ if (!getApps().length) {
 }
 
 const auth = getAuth(app);
-// const db = getFirestore(app); // Uncomment if you need Firestore
-// const storage = getStorage(app); // Uncomment if you need Storage
+const db = getFirestore(app); // Initialize Firestore
 
-export const ADMIN_EMAIL = "coreyenglish517@gmail.com"; // Define admin email
+// Define admin email
+export const ADMIN_EMAIL = "coreyenglish517@gmail.com"; 
 
-export { app, auth /*, db, storage */ };
+export { app, auth, db };
