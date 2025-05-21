@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { MarketDataTable } from "@/components/dashboard/market-data-table";
@@ -16,17 +16,39 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getSignalOfTheDay, type GetSignalOfTheDayOutput } from '@/ai/flows/get-signal-of-the-day';
 import { SignalOfTheDayCard } from '@/components/dashboard/signal-of-the-day-card';
 
-interface MarketMoverItem {
+interface MarketMoverItemProps {
   id: string;
   name: string;
   symbol: string;
   image: string;
   change: number;
+  type: 'gainer' | 'loser';
 }
 
+const MarketMoverItemCard: React.FC<MarketMoverItemProps> = React.memo(({ id, name, symbol, image, change, type }) => {
+  return (
+    <Link href={`/coin/${id}`} key={id} className="block hover:bg-muted/30 transition-colors px-3 py-3 sm:px-4 sm:py-2 border-b last:border-b-0">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <Image src={image} alt={name} width={24} height={24} className="rounded-full" data-ai-hint="coin logo crypto"/>
+          <div>
+            <span className="text-xs sm:text-sm font-medium">{name}</span>
+            <span className="text-xs text-muted-foreground ml-1 sm:ml-1.5">{symbol.toUpperCase()}</span>
+          </div>
+        </div>
+        <span className={`text-xs sm:text-sm font-semibold ${type === 'gainer' ? 'text-green-400' : 'text-red-400'}`}>
+          {change.toFixed(2)}%
+        </span>
+      </div>
+    </Link>
+  );
+});
+MarketMoverItemCard.displayName = 'MarketMoverItemCard';
+
+
 export default function DashboardPage() {
-  const [topGainers, setTopGainers] = useState<MarketMoverItem[]>([]);
-  const [topLosers, setTopLosers] = useState<MarketMoverItem[]>([]);
+  const [topGainers, setTopGainers] = useState<MarketMoverItemProps[]>([]);
+  const [topLosers, setTopLosers] = useState<MarketMoverItemProps[]>([]);
   const [isLoadingMovers, setIsLoadingMovers] = useState(true);
   const [moversError, setMoversError] = useState<string | null>(null);
 
@@ -70,7 +92,11 @@ export default function DashboardPage() {
         const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false');
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `Failed to fetch market data: ${response.statusText}`);
+           const errorMessage = errorData.error || `Failed to fetch market data: ${response.statusText}`;
+          if (errorMessage.toLowerCase().includes('failed to fetch')) {
+            throw new TypeError("Network error: Could not load market movers. Please check your internet connection and try again.");
+          }
+          throw new Error(errorMessage);
         }
         const data = await response.json();
 
@@ -81,18 +107,20 @@ export default function DashboardPage() {
           setTopGainers(sortedByGain.slice(0, 3).map(coin => ({
             id: coin.id,
             name: coin.name,
-            symbol: coin.symbol.toUpperCase(),
+            symbol: coin.symbol,
             image: coin.image,
             change: coin.price_change_percentage_24h,
+            type: 'gainer',
           })));
 
           const sortedByLoss = [...validCoins].sort((a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h);
           setTopLosers(sortedByLoss.slice(0, 3).map(coin => ({
             id: coin.id,
             name: coin.name,
-            symbol: coin.symbol.toUpperCase(),
+            symbol: coin.symbol,
             image: coin.image,
             change: coin.price_change_percentage_24h,
+            type: 'loser',
           })));
         } else {
           throw new Error("Unexpected data format from API.");
@@ -116,7 +144,7 @@ export default function DashboardPage() {
     fetchMarketMovers();
   }, []);
 
-  const renderMarketMoverCardContent = (items: MarketMoverItem[], type: 'gainer' | 'loser') => {
+  const renderMarketMoverCardContent = (items: MarketMoverItemProps[], type: 'gainer' | 'loser') => {
     if (isLoadingMovers) {
       return (
         <div className="space-y-3 px-3 py-3 sm:px-4 sm:py-2">
@@ -133,29 +161,13 @@ export default function DashboardPage() {
       );
     }
 
-    if (items.length === 0 && !moversError) { // Only show this if there's no broader error
+    if (items.length === 0 && !moversError) {
         return <p className="text-xs text-muted-foreground px-3 py-3 sm:px-4 sm:py-2">No significant {type}s found in the top 100 right now.</p>;
     }
-    // If there is a moversError, we don't render items here, the main error alert will cover it.
     if (moversError) return null;
 
 
-    return items.map(coin => (
-      <Link href={`/coin/${coin.id}`} key={coin.id} className="block hover:bg-muted/30 transition-colors px-3 py-3 sm:px-4 sm:py-2 border-b last:border-b-0">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            <Image src={coin.image} alt={coin.name} width={24} height={24} className="rounded-full" data-ai-hint="coin logo crypto"/>
-            <div>
-              <span className="text-xs sm:text-sm font-medium">{coin.name}</span>
-              <span className="text-xs text-muted-foreground ml-1 sm:ml-1.5">{coin.symbol}</span>
-            </div>
-          </div>
-          <span className={`text-xs sm:text-sm font-semibold ${type === 'gainer' ? 'text-green-400' : 'text-red-400'}`}>
-            {coin.change.toFixed(2)}%
-          </span>
-        </div>
-      </Link>
-    ));
+    return items.map(coin => <MarketMoverItemCard key={coin.id} {...coin} />);
   };
 
 
@@ -179,13 +191,13 @@ export default function DashboardPage() {
       </div>
 
       <div className="w-full">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-1 text-neon">
+        <h1 className="text-2xl sm:text-3xl font-bold text-neon mb-1">
           Market Overview
         </h1>
         <p className="text-md sm:text-lg text-muted-foreground mb-4">
-          Your Launchpad for Meme Coin Insights.
+            Your Launchpad for Meme Coin Insights.
         </p>
-
+        
         <div className="relative w-full mb-6">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
           <Input
@@ -195,6 +207,7 @@ export default function DashboardPage() {
             className="w-full h-11 pl-10 pr-4 text-sm bg-muted border-primary/30 hover:border-primary/70 focus:border-primary focus:ring-1 focus:ring-primary/50 rounded-lg shadow-sm placeholder:text-muted-foreground/70"
           />
         </div>
+
 
         {moversError && (
           <Alert variant="destructive" className="mb-6 w-full">

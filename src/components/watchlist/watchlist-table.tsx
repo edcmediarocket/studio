@@ -1,9 +1,10 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import dynamic from 'next/dynamic'; // Import dynamic
 import {
   Table,
   TableBody,
@@ -18,11 +19,19 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '../ui/skeleton';
 import { cn } from '@/lib/utils';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+// Dynamically import Dialog components
+const Dialog = dynamic(() => import('@/components/ui/dialog').then(mod => mod.Dialog));
+const DialogContent = dynamic(() => import('@/components/ui/dialog').then(mod => mod.DialogContent));
+const DialogDescription = dynamic(() => import('@/components/ui/dialog').then(mod => mod.DialogDescription));
+const DialogFooter = dynamic(() => import('@/components/ui/dialog').then(mod => mod.DialogFooter));
+const DialogHeader = dynamic(() => import('@/components/ui/dialog').then(mod => mod.DialogHeader));
+const DialogTitle = dynamic(() => import('@/components/ui/dialog').then(mod => mod.DialogTitle));
+const DialogClose = dynamic(() => import('@/components/ui/dialog').then(mod => mod.DialogClose));
+
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea'; // Import Textarea
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 
 interface AlertCondition {
@@ -37,7 +46,7 @@ interface WatchlistItem {
   image: string;
   current_price: number;
   price_change_percentage_24h: number;
-  notes?: string; // Added notes field
+  notes?: string;
   alert_active?: boolean;
   alertCondition?: AlertCondition;
 }
@@ -49,16 +58,79 @@ const placeholderWatchlistData: WatchlistItem[] = [
 
 const WATCHLIST_STORAGE_KEY = "rocketMemeUserWatchlist_v1";
 
+interface WatchlistRowProps {
+  coin: WatchlistItem;
+  onOpenAlertConfig: (coin: WatchlistItem) => void;
+  onOpenNotesDialog: (coin: WatchlistItem) => void;
+  onRemoveItem: (id: string) => void;
+}
+
+const WatchlistRow: React.FC<WatchlistRowProps> = React.memo(({ coin, onOpenAlertConfig, onOpenNotesDialog, onRemoveItem }) => {
+  return (
+    <TableRow key={coin.id} className="hover:bg-muted/50">
+      <TableCell className="py-3 px-2 sm:px-4">
+        <Link href={`/coin/${coin.id}`}>
+          <Image src={coin.image} alt={coin.name} width={24} height={24} className="rounded-full" data-ai-hint="coin logo crypto"/>
+        </Link>
+      </TableCell>
+      <TableCell className="py-3 px-2 sm:px-4">
+        <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors">
+          <div className="font-medium text-sm sm:text-base">{coin.name}</div>
+          <div className="text-xs text-muted-foreground">{coin.symbol.toUpperCase()}</div>
+        </Link>
+      </TableCell>
+      <TableCell className="text-right font-mono py-3 px-2 sm:px-4 text-sm sm:text-base">
+         <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
+            ${coin.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: coin.current_price > 0.01 ? 2 : 8 })}
+         </Link>
+      </TableCell>
+      <TableCell className={cn("text-right font-mono py-3 px-2 sm:px-4 text-sm sm:text-base", coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400')}>
+        <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
+          {coin.price_change_percentage_24h.toFixed(2)}%
+        </Link>
+      </TableCell>
+      <TableCell className="hidden md:table-cell text-sm text-muted-foreground py-3 px-2 sm:px-4">
+        {coin.notes ? (
+          <span title={coin.notes} className="truncate block max-w-[150px]">{coin.notes}</span>
+        ) : (
+          'N/A'
+        )}
+      </TableCell>
+      <TableCell className="text-center py-3 px-2 sm:px-4">
+        <Button variant="ghost" size="icon" onClick={() => onOpenAlertConfig(coin)} title={coin.alert_active ? "Manage Alert" : "Set Alert"} className="h-7 w-7 sm:h-9 sm:w-9">
+          {coin.alert_active ? <BellRing className="h-4 w-4 sm:h-5 sm:w-5 text-neon fill-neon/30" /> : <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />}
+        </Button>
+      </TableCell>
+      <TableCell className="text-center py-3 px-2 sm:px-4">
+        <div className="flex items-center justify-center space-x-0 sm:space-x-1">
+          <Button variant="ghost" size="icon" title="View Details" asChild className="h-7 w-7 sm:h-9 sm:w-9">
+            <Link href={`/coin/${coin.id}`}>
+              <LineChart className="h-4 w-4 sm:h-5 sm:w-5" />
+            </Link>
+          </Button>
+           <Button variant="ghost" size="icon" title="Edit Notes" onClick={() => onOpenNotesDialog(coin)} className="h-7 w-7 sm:h-9 sm:w-9">
+            <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => onRemoveItem(coin.id)} title="Remove from Watchlist" className="text-destructive hover:text-destructive h-7 w-7 sm:h-9 sm:w-9">
+            <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+});
+WatchlistRow.displayName = 'WatchlistRow';
+
 
 export function WatchlistTable() {
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
-  const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false); // State for notes dialog
+  const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false);
   const [selectedCoinForOperation, setSelectedCoinForOperation] = useState<WatchlistItem | null>(null);
   const [alertEnabled, setAlertEnabled] = useState(false);
   const [priceTarget, setPriceTarget] = useState<string>("");
-  const [currentNotes, setCurrentNotes] = useState<string>(""); // State for current notes being edited
+  const [currentNotes, setCurrentNotes] = useState<string>("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -66,30 +138,30 @@ export function WatchlistTable() {
     if (storedWatchlist) {
       setWatchlist(JSON.parse(storedWatchlist));
     } else {
-      setWatchlist(placeholderWatchlistData); 
+      setWatchlist(placeholderWatchlistData);
     }
     setLoading(false);
   }, []);
 
   useEffect(() => {
-    if (!loading) { 
+    if (!loading) {
       localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(watchlist));
     }
   }, [watchlist, loading]);
 
 
-  const openAlertConfig = (coin: WatchlistItem) => {
+  const openAlertConfig = useCallback((coin: WatchlistItem) => {
     setSelectedCoinForOperation(coin);
     setAlertEnabled(coin.alert_active || false);
     setPriceTarget(coin.alertCondition?.value?.toString() || "");
     setIsAlertDialogOpen(true);
-  };
-  
-  const openNotesDialog = (coin: WatchlistItem) => {
+  }, []);
+
+  const openNotesDialog = useCallback((coin: WatchlistItem) => {
     setSelectedCoinForOperation(coin);
     setCurrentNotes(coin.notes || "");
     setIsNotesDialogOpen(true);
-  };
+  }, []);
 
   const handleSaveAlert = () => {
     if (!selectedCoinForOperation) return;
@@ -107,11 +179,11 @@ export function WatchlistTable() {
     setWatchlist(prev =>
       prev.map(item =>
         item.id === selectedCoinForOperation.id
-          ? { ...item, 
-              alert_active: alertEnabled, 
-              alertCondition: alertEnabled 
-                              ? { type: selectedCoinForOperation.current_price > targetValue ? 'price_below' : 'price_above', value: targetValue } // Simple logic for type
-                              : { type: 'none', value: null } 
+          ? { ...item,
+              alert_active: alertEnabled,
+              alertCondition: alertEnabled
+                              ? { type: selectedCoinForOperation.current_price > targetValue ? 'price_below' : 'price_above', value: targetValue }
+                              : { type: 'none', value: null }
             }
           : item
       )
@@ -123,7 +195,7 @@ export function WatchlistTable() {
     setIsAlertDialogOpen(false);
     setSelectedCoinForOperation(null);
   };
-  
+
   const handleRemoveAlert = () => {
      if (!selectedCoinForOperation) return;
      setWatchlist(prev =>
@@ -143,10 +215,10 @@ export function WatchlistTable() {
 
   const handleSaveNotes = () => {
     if (!selectedCoinForOperation) return;
-    setWatchlist(prev => 
-      prev.map(item => 
-        item.id === selectedCoinForOperation.id 
-          ? { ...item, notes: currentNotes.trim() } 
+    setWatchlist(prev =>
+      prev.map(item =>
+        item.id === selectedCoinForOperation.id
+          ? { ...item, notes: currentNotes.trim() }
           : item
       )
     );
@@ -159,13 +231,13 @@ export function WatchlistTable() {
   };
 
 
-  const removeItem = (id: string) => {
+  const removeItem = useCallback((id: string) => {
     setWatchlist(prev => prev.filter(item => item.id !== id));
     toast({
         title: "Coin Removed",
         description: "Coin successfully removed from your watchlist.",
     });
-  };
+  }, [toast]);
 
   if (loading) {
     return (
@@ -228,56 +300,13 @@ export function WatchlistTable() {
               </TableHeader>
               <TableBody>
                 {watchlist.map((coin) => (
-                  <TableRow key={coin.id} className="hover:bg-muted/50">
-                    <TableCell className="py-3 px-2 sm:px-4">
-                      <Link href={`/coin/${coin.id}`}>
-                        <Image src={coin.image} alt={coin.name} width={24} height={24} className="rounded-full" data-ai-hint="coin logo crypto"/>
-                      </Link>
-                    </TableCell>
-                    <TableCell className="py-3 px-2 sm:px-4">
-                      <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors">
-                        <div className="font-medium text-sm sm:text-base">{coin.name}</div>
-                        <div className="text-xs text-muted-foreground">{coin.symbol.toUpperCase()}</div>
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-right font-mono py-3 px-2 sm:px-4 text-sm sm:text-base">
-                       <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
-                          ${coin.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: coin.current_price > 0.01 ? 2 : 8 })}
-                       </Link>
-                    </TableCell>
-                    <TableCell className={cn("text-right font-mono py-3 px-2 sm:px-4 text-sm sm:text-base", coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400')}>
-                      <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
-                        {coin.price_change_percentage_24h.toFixed(2)}%
-                      </Link>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground py-3 px-2 sm:px-4">
-                      {coin.notes ? (
-                        <span title={coin.notes} className="truncate block max-w-[150px]">{coin.notes}</span>
-                      ) : (
-                        'N/A'
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center py-3 px-2 sm:px-4">
-                      <Button variant="ghost" size="icon" onClick={() => openAlertConfig(coin)} title={coin.alert_active ? "Manage Alert" : "Set Alert"} className="h-7 w-7 sm:h-9 sm:w-9">
-                        {coin.alert_active ? <BellRing className="h-4 w-4 sm:h-5 sm:w-5 text-neon fill-neon/30" /> : <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />}
-                      </Button>
-                    </TableCell>
-                    <TableCell className="text-center py-3 px-2 sm:px-4">
-                      <div className="flex items-center justify-center space-x-0 sm:space-x-1">
-                        <Button variant="ghost" size="icon" title="View Details" asChild className="h-7 w-7 sm:h-9 sm:w-9">
-                          <Link href={`/coin/${coin.id}`}>
-                            <LineChart className="h-4 w-4 sm:h-5 sm:w-5" />
-                          </Link>
-                        </Button>
-                         <Button variant="ghost" size="icon" title="Edit Notes" onClick={() => openNotesDialog(coin)} className="h-7 w-7 sm:h-9 sm:w-9">
-                          <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => removeItem(coin.id)} title="Remove from Watchlist" className="text-destructive hover:text-destructive h-7 w-7 sm:h-9 sm:w-9">
-                          <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <WatchlistRow
+                    key={coin.id}
+                    coin={coin}
+                    onOpenAlertConfig={openAlertConfig}
+                    onOpenNotesDialog={openNotesDialog}
+                    onRemoveItem={removeItem}
+                  />
                 ))}
               </TableBody>
             </Table>
@@ -286,10 +315,10 @@ export function WatchlistTable() {
       </Card>
 
       {/* Alert Configuration Dialog */}
-      {selectedCoinForOperation && (
+      {isAlertDialogOpen && selectedCoinForOperation && Dialog && (
         <Dialog open={isAlertDialogOpen} onOpenChange={(open) => {
             setIsAlertDialogOpen(open);
-            if (!open) setSelectedCoinForOperation(null); 
+            if (!open) setSelectedCoinForOperation(null);
         }}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
@@ -343,7 +372,7 @@ export function WatchlistTable() {
       )}
 
       {/* Notes Dialog */}
-      {selectedCoinForOperation && (
+      {isNotesDialogOpen && selectedCoinForOperation && Dialog && (
         <Dialog open={isNotesDialogOpen} onOpenChange={(open) => {
           setIsNotesDialogOpen(open);
           if(!open) setSelectedCoinForOperation(null);
@@ -376,5 +405,3 @@ export function WatchlistTable() {
   );
 }
 
-
-    

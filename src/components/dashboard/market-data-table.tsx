@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -36,6 +36,70 @@ interface MarketDataTableProps {
   searchTerm: string;
 }
 
+interface MarketDataRowProps {
+  coin: CoinData;
+  isFavorited: boolean;
+  onToggleFavorite: (coinId: string) => void;
+}
+
+const MarketDataRow: React.FC<MarketDataRowProps> = React.memo(({ coin, isFavorited, onToggleFavorite }) => {
+  return (
+    <TableRow key={coin.id} className="hover:bg-muted/50">
+      <TableCell className="pr-0 py-3 px-2 sm:px-4">
+        {coin.image && typeof coin.image === 'string' && coin.image.trim() !== '' ? (
+            <Link href={`/coin/${coin.id}`} className="block">
+                <Image src={coin.image} alt={coin.name} width={28} height={28} className="rounded-full" data-ai-hint="coin logo crypto" />
+            </Link>
+        ) : (
+          <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-xs">
+            {coin.symbol ? coin.symbol[0].toUpperCase() : '?'}
+          </div>
+        )}
+      </TableCell>
+      <TableCell className="py-3 px-2 sm:px-4">
+        <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors">
+          <div className="font-medium text-sm sm:text-base">{coin.name}</div>
+          <div className="text-xs text-muted-foreground">{coin.symbol.toUpperCase()}</div>
+        </Link>
+      </TableCell>
+      <TableCell className="text-right font-mono py-3 px-2 sm:px-4 text-sm sm:text-base">
+        <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
+            ${coin.current_price !== null && coin.current_price !== undefined ? coin.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: coin.current_price > 0.01 ? 2 : 8 }) : 'N/A'}
+        </Link>
+      </TableCell>
+      <TableCell className={cn("text-right font-mono py-3 px-2 sm:px-4 text-sm sm:text-base", coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400')}>
+        <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
+            {coin.price_change_percentage_24h !== null && coin.price_change_percentage_24h !== undefined ? coin.price_change_percentage_24h.toFixed(2) + '%' : 'N/A'}
+        </Link>
+      </TableCell>
+      <TableCell className="text-right font-mono hidden md:table-cell py-3 px-2 sm:px-4 text-sm sm:text-base">
+         <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
+            ${coin.market_cap !== null && coin.market_cap !== undefined ? coin.market_cap.toLocaleString() : 'N/A'}
+         </Link>
+        </TableCell>
+      <TableCell className="text-center py-3 px-2 sm:px-4">
+        <div className="flex items-center justify-center space-x-0 sm:space-x-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            title={isFavorited ? "Remove from Watchlist" : "Add to Watchlist"}
+            className="h-7 w-7 sm:h-9 sm:w-9"
+            onClick={() => onToggleFavorite(coin.id)}
+          >
+            <Star className={cn("h-4 w-4 sm:h-5 sm:w-5", isFavorited ? "text-primary fill-primary" : "text-muted-foreground")} />
+          </Button>
+          <Button variant="ghost" size="icon" title="View Details" asChild className="h-7 w-7 sm:h-9 sm:w-9">
+            <Link href={`/coin/${coin.id}`}>
+              <LineChart className="h-4 w-4 sm:h-5 sm:w-5" />
+            </Link>
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+});
+MarketDataRow.displayName = 'MarketDataRow';
+
 export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
   const [sortConfig, setSortConfig] = useState<{ key: keyof CoinData | null; direction: 'ascending' | 'descending' }>({ key: 'market_cap', direction: 'descending' });
   const [loading, setLoading] = useState(true);
@@ -55,7 +119,7 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
   }, []);
 
   useEffect(() => {
-    if(!loading) { 
+    if(!loading) {
         try {
             localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(Array.from(favoritedCoins)));
         } catch (e) {
@@ -72,8 +136,12 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
       try {
         const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false');
         if (!response.ok) {
-           const errorData = await response.json().catch(() => ({})); // Attempt to parse error, fallback if not JSON
-          throw new Error(errorData.error || `Failed to fetch coin data: ${response.statusText}`);
+           const errorData = await response.json().catch(() => ({}));
+           const errorMessage = errorData.error || `Failed to fetch coin data: ${response.statusText}`;
+           if (errorMessage.toLowerCase().includes('failed to fetch')) {
+             throw new TypeError("Network error: Could not fetch coin data. Please check your internet connection and try refreshing.");
+           }
+           throw new Error(errorMessage);
         }
         const data = await response.json();
         if (Array.isArray(data)) {
@@ -108,7 +176,7 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
     fetchCoinData();
   }, []);
 
-  const toggleFavorite = (coinId: string) => {
+  const toggleFavorite = useCallback((coinId: string) => {
     setFavoritedCoins(prevFavorites => {
       const newFavorites = new Set(prevFavorites);
       if (newFavorites.has(coinId)) {
@@ -118,7 +186,7 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
       }
       return newFavorites;
     });
-  };
+  }, []);
 
   const sortedCoins = useMemo(() => {
     let sortableItems = [...coins];
@@ -213,58 +281,12 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
       </TableHeader>
       <TableBody>
         {sortedCoins.length > 0 ? sortedCoins.map((coin) => (
-          <TableRow key={coin.id} className="hover:bg-muted/50">
-            <TableCell className="pr-0 py-3 px-2 sm:px-4">
-              {coin.image && typeof coin.image === 'string' && coin.image.trim() !== '' ? (
-                  <Link href={`/coin/${coin.id}`} className="block">
-                      <Image src={coin.image} alt={coin.name} width={28} height={28} className="rounded-full" data-ai-hint="coin logo crypto" />
-                  </Link>
-              ) : (
-                <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-xs">
-                  {coin.symbol ? coin.symbol[0].toUpperCase() : '?'}
-                </div>
-              )}
-            </TableCell>
-            <TableCell className="py-3 px-2 sm:px-4">
-              <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors">
-                <div className="font-medium text-sm sm:text-base">{coin.name}</div>
-                <div className="text-xs text-muted-foreground">{coin.symbol.toUpperCase()}</div>
-              </Link>
-            </TableCell>
-            <TableCell className="text-right font-mono py-3 px-2 sm:px-4 text-sm sm:text-base">
-              <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
-                  ${coin.current_price !== null && coin.current_price !== undefined ? coin.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: coin.current_price > 0.01 ? 2 : 8 }) : 'N/A'}
-              </Link>
-            </TableCell>
-            <TableCell className={cn("text-right font-mono py-3 px-2 sm:px-4 text-sm sm:text-base", coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400')}>
-              <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
-                  {coin.price_change_percentage_24h !== null && coin.price_change_percentage_24h !== undefined ? coin.price_change_percentage_24h.toFixed(2) + '%' : 'N/A'}
-              </Link>
-            </TableCell>
-            <TableCell className="text-right font-mono hidden md:table-cell py-3 px-2 sm:px-4 text-sm sm:text-base">
-               <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
-                  ${coin.market_cap !== null && coin.market_cap !== undefined ? coin.market_cap.toLocaleString() : 'N/A'}
-               </Link>
-              </TableCell>
-            <TableCell className="text-center py-3 px-2 sm:px-4">
-              <div className="flex items-center justify-center space-x-0 sm:space-x-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title={favoritedCoins.has(coin.id) ? "Remove from Watchlist" : "Add to Watchlist"}
-                  className="h-7 w-7 sm:h-9 sm:w-9"
-                  onClick={() => toggleFavorite(coin.id)}
-                >
-                  <Star className={cn("h-4 w-4 sm:h-5 sm:w-5", favoritedCoins.has(coin.id) ? "text-primary fill-primary" : "text-muted-foreground")} />
-                </Button>
-                <Button variant="ghost" size="icon" title="View Details" asChild className="h-7 w-7 sm:h-9 sm:w-9">
-                  <Link href={`/coin/${coin.id}`}>
-                    <LineChart className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </Link>
-                </Button>
-              </div>
-            </TableCell>
-          </TableRow>
+          <MarketDataRow
+            key={coin.id}
+            coin={coin}
+            isFavorited={favoritedCoins.has(coin.id)}
+            onToggleFavorite={toggleFavorite}
+          />
         )) : (
           <TableRow>
             <TableCell colSpan={6} className="text-center text-muted-foreground h-24">
