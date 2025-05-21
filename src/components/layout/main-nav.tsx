@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, BarChart2, Eye, UserCircle, BotMessageSquare, Signal, Calculator, GitCompareArrows, Activity, SlidersHorizontal, Newspaper, Rocket, Siren, Lightbulb, DatabaseZap, ShieldQuestion, ShieldAlert, Flame, SearchCode } from "lucide-react";
+import { LayoutDashboard, BarChart2, Eye, UserCircle, BotMessageSquare, Signal, Calculator, GitCompareArrows, Activity, SlidersHorizontal, Newspaper, Rocket, Siren, Lightbulb, DatabaseZap, ShieldQuestion, ShieldAlert, Flame, SearchCode, BellPlus } from "lucide-react";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
 import { useTier } from "@/context/tier-context";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
@@ -30,7 +30,8 @@ const baseNavItems: NavItem[] = [
   { href: "/onchain-intelligence", label: "On-Chain Intel", icon: DatabaseZap, isPremiumFeature: true },
   { href: "/market-anomalies", label: "Market Anomalies", icon: Siren, isPremiumFeature: true },
   { href: "/confidence-dashboard", label: "Confidence Dashboard", icon: ShieldQuestion, isPremiumFeature: true },
-  { href: "/pre-launch-radar", label: "Pre-Launch Radar", icon: SearchCode, isPremiumFeature: true }, // Added Pre-Launch Radar
+  { href: "/pre-launch-radar", label: "Pre-Launch Radar", icon: SearchCode, isPremiumFeature: true }, 
+  { href: "/smart-alerts", label: "Smart Alerts", icon: BellPlus, isPremiumFeature: true },
   { href: "/watchlist", label: "Watchlist", icon: Eye },
   { href: "/roi-calculator", label: "ROI Calculator", icon: Calculator },
   { href: "/coin-comparison", label: "Coin Comparison", icon: GitCompareArrows },
@@ -68,17 +69,26 @@ export function MainNav() {
     <SidebarMenu>
       {navItemsToDisplay.map((item) => {
         let tooltipText = item.label;
-        let featureIsEffectivelyLocked = false; // Does the CURRENT tier lock THIS feature?
-        let featureIsProOrPremium = item.isProFeature || item.isPremiumFeature; // Is the feature generally Pro/Premium?
+        let featureRequiresPro = item.isProFeature && !item.isPremiumFeature;
+        let featureRequiresPremium = item.isPremiumFeature;
         
-        if (item.isPremiumFeature && currentTier !== 'Premium') {
-          featureIsEffectivelyLocked = true;
-          tooltipText = `${item.label} (Upgrade to Premium)`;
-        } else if (item.isProFeature && currentTier !== 'Pro' && currentTier !== 'Premium') {
-           featureIsEffectivelyLocked = true;
-           tooltipText = `${item.label} (Upgrade to Pro or Premium)`;
+        // User access: Premium has access to Pro and Premium features. Pro has access to Pro features.
+        let userHasAccess = false;
+        if (featureRequiresPremium) {
+          userHasAccess = currentTier === 'Premium';
+          if (!userHasAccess) tooltipText = `${item.label} (Upgrade to Premium)`;
+        } else if (featureRequiresPro) {
+          userHasAccess = currentTier === 'Pro' || currentTier === 'Premium';
+          if (!userHasAccess) tooltipText = `${item.label} (Upgrade to Pro/Premium)`;
+        } else {
+          userHasAccess = true; // Feature is not specifically Pro or Premium, so all tiers have access
         }
-
+        
+        // Admin link is a special case, not tier-locked in the same way
+        if (item.href === "/admin/dashboard") {
+          userHasAccess = true; // Visibility is handled by getNavItems based on isAdmin
+          tooltipText = item.label; // Reset tooltip for admin if it was modified
+        }
 
         return (
           <SidebarMenuItem key={item.href}>
@@ -91,15 +101,15 @@ export function MainNav() {
               }}
               className={cn(
                 "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                // No blur/opacity here; controlled by page content
+                // No blur/opacity here; page content will be blurred if locked
               )}
-              aria-disabled={false} 
+              aria-disabled={false} // Always allow navigation, page will handle content lock
             >
               <Link href={item.href} onClick={handleLinkClick}>
                 <item.icon />
                 <span className="flex items-center">
                   {item.label}
-                  {(featureIsProOrPremium && item.href !== "/admin/dashboard") && (
+                  {(featureRequiresPro || featureRequiresPremium) && item.href !== "/admin/dashboard" && (
                      <Rocket className="ml-auto h-3.5 w-3.5 text-neon opacity-80 group-data-[collapsible=icon]:hidden" />
                   )}
                 </span>

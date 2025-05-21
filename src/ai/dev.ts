@@ -24,3 +24,4 @@ import '@/ai/flows/get-signal-of-the-day.ts';
 import '@/ai/flows/get-pre-launch-gems.ts'; // Added new flow for Pre-Launch Radar
 import '@/ai/flows/get-meme-coin-lifespan-prediction.ts'; // Added new flow for Lifespan Predictor
 import '@/ai/flows/get-weekly-forecasts.ts'; // Added new flow for Weekly Forecasts
+import '@/ai/flows/setup-smart-alert.ts'; // Added new flow for Smart Alerts
