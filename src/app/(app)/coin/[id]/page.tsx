@@ -249,11 +249,11 @@ export default function CoinDetailPage() {
             console.error("Error fetching signal performance:", err);
             const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
             if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
-              setPerformanceError("Network error: Failed to fetch AI signal performance. Please check your connection.");
+              setPerformanceError("Network error: Failed to fetch AI signal performance. Please check your connection and try again.");
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
               setPerformanceError("AI service for signal performance is temporarily overloaded or unavailable. Please try again later.");
             } else {
-              setPerformanceError("Failed to fetch AI signal performance. Please try again later.");
+              setPerformanceError("Failed to fetch AI signal performance. The AI might be backtesting its own decisions, please try again.");
             }
           } finally {
             setPerformanceLoading(false);
@@ -994,3 +994,4 @@ export default function CoinDetailPage() {
     </div>
   );
 }
+
