@@ -32,7 +32,7 @@ const themes: ThemeOption[] = [
   { value: "neon-yellow", label: "Neon Yellow", className: "theme-neon-yellow" },
 ];
 
-const LOCAL_STORAGE_THEME_KEY = "rocketMemeUserTheme_v3"; // Updated key version
+const LOCAL_STORAGE_THEME_KEY = "rocketMemeUserTheme_v3";
 
 export function ThemeSwitcher() {
   const [currentTheme, setCurrentTheme] = React.useState<ThemeValue>(() => {
@@ -42,20 +42,18 @@ export function ThemeSwitcher() {
         return storedTheme;
       }
     }
-    return "logo-cyan"; // Default theme
+    return "logo-cyan"; // Default theme matching new logo colors
   });
 
   React.useEffect(() => {
-    // This effect runs only on the client after initial mount
     const storedTheme = localStorage.getItem(LOCAL_STORAGE_THEME_KEY) as ThemeValue | null;
     if (storedTheme && themes.some(t => t.value === storedTheme) && storedTheme !== currentTheme) {
-      // If localStorage has a theme different from initial state (which might be default)
       setCurrentTheme(storedTheme);
     }
-  }, []); // Empty dependency array ensures this runs once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
 
   React.useEffect(() => {
-    // Remove all potential theme classes first
     themes.forEach(themeOption => {
       if (themeOption.className) { 
         document.documentElement.classList.remove(themeOption.className);
