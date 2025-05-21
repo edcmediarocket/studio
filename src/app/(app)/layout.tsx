@@ -82,7 +82,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
         </Sidebar>
         <SidebarInset>
           <Header />
-          <main className="flex-1 p-4 md:p-6 overflow-y-auto">
+          <main className="flex-1 min-h-0 py-2 px-0 sm:p-4 md:p-6 overflow-y-auto">
             {children}
           </main>
           <footer className="py-4 px-4 sm:px-6 md:px-8 border-t border-border/40 text-center text-xs text-muted-foreground">
