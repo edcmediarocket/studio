@@ -2,6 +2,7 @@
 "use client";
 
 import type { FC } from 'react';
+import React from 'react'; // Import React for React.memo
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -15,7 +16,7 @@ interface StatItemProps {
   labelClassName?: string;
 }
 
-export const StatItem: FC<StatItemProps> = ({ label, value, unit, isPercentage, className, valueClassName, labelClassName }) => {
+const StatItemComponent: FC<StatItemProps> = ({ label, value, unit, isPercentage, className, valueClassName, labelClassName }) => {
   const displayValue = useMemo(() => {
     if (value === null || typeof value === 'undefined' || value === '') return 'N/A';
     if (typeof value === 'number') {
@@ -34,3 +35,5 @@ export const StatItem: FC<StatItemProps> = ({ label, value, unit, isPercentage, 
     </div>
   );
 };
+
+export const StatItem = React.memo(StatItemComponent);

@@ -1,6 +1,7 @@
 
 "use client";
 
+import React from 'react'; // Import React
 import Link from 'next/link';
 import type { GetSignalOfTheDayOutput } from "@/ai/flows/get-signal-of-the-day";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +19,7 @@ interface SignalOfTheDayCardProps {
   onRefresh?: () => void;
 }
 
-export function SignalOfTheDayCard({ signalData, loading, error, onRefresh }: SignalOfTheDayCardProps) {
+const SignalOfTheDayCardComponent: React.FC<SignalOfTheDayCardProps> = ({ signalData, loading, error, onRefresh }) => {
   if (loading) {
     return (
       <Card className="shadow-xl border-2 border-neon/70 animate-pulse">
@@ -129,3 +130,5 @@ export function SignalOfTheDayCard({ signalData, loading, error, onRefresh }: Si
     </Card>
   );
 }
+
+export const SignalOfTheDayCard = React.memo(SignalOfTheDayCardComponent);

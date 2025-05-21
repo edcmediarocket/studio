@@ -1,6 +1,7 @@
 
 "use client";
 
+import React from 'react'; // Import React for React.memo
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, AlertTriangle, Star, Clock } from "lucide-react";
@@ -16,7 +17,7 @@ export interface SignalCardProps { // Exporting the interface
   details: string;
 }
 
-export function SignalCard({ coinName, signal, confidence, timeframe, riskLevel, lastUpdate, details }: SignalCardProps) {
+const SignalCardComponent: React.FC<SignalCardProps> = ({ coinName, signal, confidence, timeframe, riskLevel, lastUpdate, details }) => {
   const signalColor = signal === "Buy" ? "text-green-400" : signal === "Sell" ? "text-red-400" : "text-yellow-400";
   const signalIcon = signal === "Buy" ? <TrendingUp className={`mr-2 ${signalColor}`} /> : signal === "Sell" ? <TrendingDown className={`mr-2 ${signalColor}`} /> : <AlertTriangle className={`mr-2 ${signalColor}`} />;
   
@@ -71,4 +72,5 @@ export function SignalCard({ coinName, signal, confidence, timeframe, riskLevel,
   );
 }
 
+export const SignalCard = React.memo(SignalCardComponent);
     

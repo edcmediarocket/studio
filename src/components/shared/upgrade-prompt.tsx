@@ -1,6 +1,7 @@
 
 "use client";
 
+import React from 'react'; // Import React
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +13,7 @@ interface UpgradePromptProps {
   requiredTier?: UserTier | string; // Allow string for "Pro or Premium" etc.
 }
 
-export function UpgradePrompt({ featureName, requiredTier = "Pro" }: UpgradePromptProps) {
+const UpgradePromptComponent: React.FC<UpgradePromptProps> = ({ featureName, requiredTier = "Pro" }) => {
   return (
     <Card className="w-full max-w-lg mx-auto my-8 shadow-xl border-neon">
       <CardHeader className="text-center">
@@ -35,3 +36,5 @@ export function UpgradePrompt({ featureName, requiredTier = "Pro" }: UpgradeProm
     </Card>
   );
 }
+
+export const UpgradePrompt = React.memo(UpgradePromptComponent);

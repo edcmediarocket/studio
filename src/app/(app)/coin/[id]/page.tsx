@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react'; // Import React
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -64,7 +64,7 @@ interface SectionCardProps {
   infoPopoverContent?: React.ReactNode;
 }
 
-const SectionCard: React.FC<SectionCardProps> = ({ title, icon, children, className, noPadding, titleClassName, infoPopoverContent }) => (
+const SectionCardComponent: React.FC<SectionCardProps> = ({ title, icon, children, className, noPadding, titleClassName, infoPopoverContent }) => (
   <Card className={cn("shadow-lg", className)}>
     <CardHeader className={cn(noPadding ? "pb-2 pt-4 px-4" : "pb-3", "flex flex-row justify-between items-center")}>
       <CardTitle className={cn("flex items-center text-xl text-primary", titleClassName)}>
@@ -87,6 +87,8 @@ const SectionCard: React.FC<SectionCardProps> = ({ title, icon, children, classN
     <CardContent className={cn(noPadding ? "p-0" : "text-sm", noPadding && "px-4 pb-4")}>{children}</CardContent>
   </Card>
 );
+const SectionCard = React.memo(SectionCardComponent);
+
 
 const RocketScoreDisplay: React.FC<{ score: number }> = ({ score }) => (
   <div className="flex">
@@ -118,7 +120,7 @@ export default function CoinDetailPage() {
   const [viralPrediction, setViralPrediction] = useState<GetViralPredictionOutput | null>(null);
   const [viralPredictionLoading, setViralPredictionLoading] = useState(false);
   const [viralPredictionError, setViralPredictionError] = useState<string | null>(null);
-
+  
   const [lifespanPrediction, setLifespanPrediction] = useState<GetMemeCoinLifespanPredictionOutput | null>(null);
   const [lifespanLoading, setLifespanLoading] = useState(false);
   const [lifespanError, setLifespanError] = useState<string | null>(null);
@@ -166,7 +168,7 @@ export default function CoinDetailPage() {
               if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
                 setSignalError("Network error: Failed to fetch AI trading signal. Please check your connection.");
               } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
-                setSignalError("AI service is temporarily overloaded for trading signals. Please try again later.");
+                setSignalError("AI service for trading signals is temporarily overloaded or unavailable. Please try again later.");
               } else {
                 setSignalError("Failed to fetch AI trading signal. Please try again later.");
               }
@@ -188,7 +190,7 @@ export default function CoinDetailPage() {
             if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
               setRiskError("Network error: Failed to fetch AI risk assessment. Please check your connection.");
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
-                setRiskError("AI service is temporarily overloaded for risk assessment. Please try again later.");
+                setRiskError("AI service for risk assessment is temporarily overloaded or unavailable. Please try again later.");
             } else {
               setRiskError("Failed to fetch AI risk assessment. Please try again later.");
             }
@@ -206,7 +208,7 @@ export default function CoinDetailPage() {
             if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
               setViralPredictionError("Network error: Failed to fetch AI virality prediction. Please check your connection.");
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
-              setViralPredictionError("AI service is temporarily overloaded for virality prediction. Please try again later.");
+              setViralPredictionError("AI service for virality prediction is temporarily overloaded or unavailable. Please try again later.");
             } else {
               setViralPredictionError("Failed to fetch AI virality prediction. Please try again later.");
             }
@@ -224,7 +226,7 @@ export default function CoinDetailPage() {
             if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
               setLifespanError("Network error: Failed to fetch AI lifespan prediction. Please check your connection.");
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
-              setLifespanError("AI service is temporarily overloaded for lifespan prediction. Please try again later.");
+              setLifespanError("AI service for lifespan prediction is temporarily overloaded or unavailable. Please try again later.");
             } else {
               setLifespanError("Failed to fetch AI lifespan prediction. Please try again later.");
             }
