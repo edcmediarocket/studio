@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react'; // Import React
+import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -10,12 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon, Siren, Hourglass, TrendingUpIcon, TrendingDownIcon } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon, Siren, Hourglass, TrendingUpIcon, TrendingDownIcon, BarChartBig, ActivityIcon, UsersIcon, FileTextIcon } from 'lucide-react';
 import { Table, TableBody, TableCell, TableRow, TableHead, TableHeader } from '@/components/ui/table';
 import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from '@/ai/flows/get-coin-trading-signal';
 import { getCoinRiskAssessment, type GetCoinRiskAssessmentOutput } from '@/ai/flows/get-coin-risk-assessment';
 import { getViralPrediction, type GetViralPredictionOutput } from '@/ai/flows/get-viral-prediction';
 import { getMemeCoinLifespanPrediction, type GetMemeCoinLifespanPredictionOutput } from '@/ai/flows/get-meme-coin-lifespan-prediction';
+import { getSimulatedSignalPerformance, type GetSimulatedSignalPerformanceOutput } from '@/ai/flows/get-simulated-signal-performance'; // New Import
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { StatItem } from '@/components/shared/stat-item';
@@ -120,10 +121,14 @@ export default function CoinDetailPage() {
   const [viralPrediction, setViralPrediction] = useState<GetViralPredictionOutput | null>(null);
   const [viralPredictionLoading, setViralPredictionLoading] = useState(false);
   const [viralPredictionError, setViralPredictionError] = useState<string | null>(null);
-  
+
   const [lifespanPrediction, setLifespanPrediction] = useState<GetMemeCoinLifespanPredictionOutput | null>(null);
   const [lifespanLoading, setLifespanLoading] = useState(false);
   const [lifespanError, setLifespanError] = useState<string | null>(null);
+
+  const [signalPerformance, setSignalPerformance] = useState<GetSimulatedSignalPerformanceOutput | null>(null);
+  const [performanceLoading, setPerformanceLoading] = useState(false);
+  const [performanceError, setPerformanceError] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -134,12 +139,14 @@ export default function CoinDetailPage() {
       setSignalLoading(true);
       setRiskLoading(true);
       setViralPredictionLoading(true);
-      setLifespanLoading(true); 
+      setLifespanLoading(true);
+      setPerformanceLoading(true);
       setError(null);
       setSignalError(null);
       setRiskError(null);
       setViralPredictionError(null);
-      setLifespanError(null); 
+      setLifespanError(null);
+      setPerformanceError(null);
 
       try {
         // Fetch main coin details
@@ -157,9 +164,9 @@ export default function CoinDetailPage() {
           // Trading Signal
           if (detailData.market_data?.current_price?.usd !== undefined) {
             try {
-              const signal = await getCoinTradingSignal({ 
+              const signal = await getCoinTradingSignal({
                 coinName: detailData.name,
-                currentPriceUSD: detailData.market_data.current_price.usd 
+                currentPriceUSD: detailData.market_data.current_price.usd
               });
               setTradingSignal(signal);
             } catch (err) {
@@ -176,7 +183,7 @@ export default function CoinDetailPage() {
               setSignalLoading(false);
             }
           } else {
-            setSignalLoading(false); 
+            setSignalLoading(false);
             setSignalError("Current price data missing, cannot generate trading signal.");
           }
 
@@ -215,7 +222,7 @@ export default function CoinDetailPage() {
           } finally {
             setViralPredictionLoading(false);
           }
-          
+
           // Lifespan Prediction
           try {
             const lifespan = await getMemeCoinLifespanPrediction({ coinName: detailData.name });
@@ -234,22 +241,42 @@ export default function CoinDetailPage() {
             setLifespanLoading(false);
           }
 
+          // Simulated Signal Performance
+          try {
+            const performance = await getSimulatedSignalPerformance({ coinName: detailData.name });
+            setSignalPerformance(performance);
+          } catch (err) {
+            console.error("Error fetching signal performance:", err);
+            const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+            if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
+              setPerformanceError("Network error: Failed to fetch AI signal performance. Please check your connection.");
+            } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
+              setPerformanceError("AI service for signal performance is temporarily overloaded or unavailable. Please try again later.");
+            } else {
+              setPerformanceError("Failed to fetch AI signal performance. Please try again later.");
+            }
+          } finally {
+            setPerformanceLoading(false);
+          }
+
 
         } else {
-          setSignalLoading(false); 
-          setRiskLoading(false); 
+          setSignalLoading(false);
+          setRiskLoading(false);
           setViralPredictionLoading(false);
-          setLifespanLoading(false); 
+          setLifespanLoading(false);
+          setPerformanceLoading(false);
           const errorMsg = "Coin name missing from fetched data, cannot proceed with AI analyses.";
           setSignalError(errorMsg);
           setRiskError(errorMsg);
           setViralPredictionError(errorMsg);
-          setLifespanError(errorMsg); 
+          setLifespanError(errorMsg);
+          setPerformanceError(errorMsg);
         }
 
       } catch (err) {
         console.error("Error in fetchAllCoinData:", err);
-        const specificError = err instanceof TypeError && err.message.toLowerCase().includes('failed to fetch') 
+        const specificError = err instanceof TypeError && err.message.toLowerCase().includes('failed to fetch')
           ? `Network error: Could not connect to fetch coin data for ${coinId}. Please check your internet connection and try again.`
           : err instanceof Error ? err.message : "An unknown error occurred while fetching coin data.";
         setError(specificError);
@@ -257,7 +284,8 @@ export default function CoinDetailPage() {
         setSignalLoading(false);
         setRiskLoading(false);
         setViralPredictionLoading(false);
-        setLifespanLoading(false); 
+        setLifespanLoading(false);
+        setPerformanceLoading(false);
       }
     };
 
@@ -265,10 +293,10 @@ export default function CoinDetailPage() {
   }, [coinId]);
 
 
-  if (loading && !coinDetail) { 
+  if (loading && !coinDetail) {
     return (
       <div className="space-y-6 p-4">
-        <Skeleton className="h-8 w-32 mb-4" /> 
+        <Skeleton className="h-8 w-32 mb-4" />
         <div className="p-4 bg-card rounded-lg shadow-lg">
           <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-4">
             <Skeleton className="h-16 w-16 rounded-full" />
@@ -282,7 +310,7 @@ export default function CoinDetailPage() {
             </div>
           </div>
         </div>
-        {[...Array(6)].map((_, i) => (
+        {[...Array(7)].map((_, i) => ( // Increased skeleton count
           <Card key={i} className="shadow-lg">
             <CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader>
             <CardContent className="space-y-3">
@@ -320,19 +348,19 @@ export default function CoinDetailPage() {
     );
   }
 
-  const { name, symbol, image, market_data, description, links, market_cap_rank } = coinDetail;
+  const { name, symbol, image, market_data, description: coinDescription, links, market_cap_rank } = coinDetail; // Renamed description
   const currentPrice = market_data.current_price.usd;
   const priceChange24h = market_data.price_change_percentage_24h_in_currency.usd;
 
-  const cleanDescription = description.en?.replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" class="text-primary hover:underline" ');
+  const cleanDescription = coinDescription.en?.replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" class="text-primary hover:underline" ');
 
   const getRecommendationBadgeVariant = (recommendation?: 'Buy' | 'Sell' | 'Hold') => {
-    if (recommendation === 'Buy') return 'default'; 
+    if (recommendation === 'Buy') return 'default';
     if (recommendation === 'Sell') return 'destructive';
     if (recommendation === 'Hold') return 'secondary';
     return 'outline';
   };
-  
+
   const renderSignalContent = () => {
     if (signalLoading) {
       return (
@@ -341,8 +369,8 @@ export default function CoinDetailPage() {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <p className="ml-3 text-muted-foreground text-lg">Fetching Advanced AI Analysis...</p>
           </div>
-          <Skeleton className="h-6 w-1/3 mx-auto" /> 
-          <Skeleton className="h-5 w-1/2 mx-auto" /> 
+          <Skeleton className="h-6 w-1/3 mx-auto" />
+          <Skeleton className="h-5 w-1/2 mx-auto" />
           <Skeleton className="h-20 w-full" />
           <Skeleton className="h-16 w-full" />
           <Skeleton className="h-24 w-full" />
@@ -375,7 +403,7 @@ export default function CoinDetailPage() {
             <h4 className="text-md font-semibold text-primary mb-2 flex items-center"><HelpCircle className="mr-2 h-5 w-5"/>Detailed Analysis</h4>
             <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md whitespace-pre-wrap">{tradingSignal.detailedAnalysis}</p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
                  <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><Target className="mr-2 h-5 w-5"/>Future Price Outlook</h4>
@@ -391,7 +419,7 @@ export default function CoinDetailPage() {
                 {tradingSignal.tradingTargets.takeProfit3 && <StatItem label="Take Profit 3" value={tradingSignal.tradingTargets.takeProfit3} className="px-3 py-1.5 bg-muted/30 rounded-b-md" labelClassName="text-xs" valueClassName="text-sm"/>}
             </div>
           </div>
-          
+
           <div>
             <h4 className="text-md font-semibold text-primary mb-2 flex items-center"><Briefcase className="mr-2 h-5 w-5"/>Investment Advice</h4>
             <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md whitespace-pre-wrap">{tradingSignal.investmentAdvice}</p>
@@ -408,7 +436,7 @@ export default function CoinDetailPage() {
     <>
       <h4 className="font-semibold mb-2 text-base">About AI Trading Signal</h4>
       <p>
-        This section provides an AI-generated trading signal (Buy, Sell, or Hold) for the selected coin, 
+        This section provides an AI-generated trading signal (Buy, Sell, or Hold) for the selected coin,
         based on simulated analysis of various market factors including current price. It includes:
       </p>
       <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
@@ -436,7 +464,7 @@ export default function CoinDetailPage() {
       default: return 'bg-muted text-muted-foreground';
     }
   };
-  
+
   const renderRiskAssessmentContent = () => {
     if (riskLoading) {
       return (
@@ -462,6 +490,12 @@ export default function CoinDetailPage() {
       );
     }
     if (riskAssessment) {
+      const riskSubScores = [
+        { label: "Volatility Risk", score: riskAssessment.volatilityScore, icon: <TrendingUpIcon className="mr-1.5 h-4 w-4"/> },
+        { label: "Liquidity Risk", score: riskAssessment.liquidityScore, icon: <ActivityIcon className="mr-1.5 h-4 w-4"/> },
+        { label: "Social Sentiment Risk", score: riskAssessment.socialSentimentRiskScore, icon: <UsersIcon className="mr-1.5 h-4 w-4"/> },
+        { label: "Project Fundamentals Risk", score: riskAssessment.projectFundamentalsScore, icon: <FileTextIcon className="mr-1.5 h-4 w-4"/> },
+      ];
       return (
         <div className="space-y-4">
           <div className="text-center">
@@ -472,7 +506,7 @@ export default function CoinDetailPage() {
             <Progress value={riskAssessment.riskScore} className="h-2 mt-1 max-w-xs mx-auto [&>div]:bg-primary" />
              <p className="text-xs text-muted-foreground mt-1">Assessed on: {new Date(riskAssessment.assessmentDate).toLocaleDateString()}</p>
           </div>
-          
+
           {riskAssessment.isHighRugRisk && (
             <Alert variant="destructive" className="border-2 border-red-700">
               <Siren className="h-5 w-5 text-red-700" />
@@ -484,21 +518,35 @@ export default function CoinDetailPage() {
           )}
 
           <Separator />
-          
+
           <div>
             <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><RiskIcon className="mr-1.5 h-5 w-5"/>Overall Assessment:</h4>
             <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md whitespace-pre-wrap">{riskAssessment.overallAssessment}</p>
           </div>
-          
+
+           <Card className="bg-card border-border/50">
+            <CardHeader className="pb-2 pt-3">
+                <CardTitle className="text-base text-primary/90">Risk Sub-Scores (0-100, Higher = More Risk)</CardTitle>
+            </CardHeader>
+            <CardContent className="text-xs space-y-2 px-3 py-2">
+                {riskSubScores.filter(sub => sub.score !== undefined && sub.score !== null).map(sub => (
+                    <div key={sub.label} className="flex justify-between items-center">
+                        <span className="flex items-center text-muted-foreground">{sub.icon}{sub.label}:</span>
+                        <Badge variant="outline" className="text-xs">{sub.score}</Badge>
+                    </div>
+                ))}
+            </CardContent>
+          </Card>
+
           <Card className="bg-card border-border/50">
             <CardHeader className="pb-2 pt-3">
                 <CardTitle className="text-base text-primary/90">Rug Pull Indicators</CardTitle>
             </CardHeader>
-            <CardContent className="text-xs space-y-1.5">
-                <StatItem label="Liquidity Lock" value={riskAssessment.liquidityLockStatus || "N/A"} className="px-2 py-1" labelClassName="text-xs" valueClassName="text-xs" />
-                <StatItem label="Dev Wallet/Holder Concentration" value={riskAssessment.devWalletConcentration || "N/A"} className="px-2 py-1" labelClassName="text-xs" valueClassName="text-xs"/>
-                <StatItem label="Contract Verified" value={riskAssessment.contractVerified === undefined ? "N/A" : riskAssessment.contractVerified ? "Yes" : "No"} className="px-2 py-1" labelClassName="text-xs" valueClassName="text-xs"/>
-                <StatItem label="Honeypot Signs" value={riskAssessment.honeypotIndicators || "N/A"} className="px-2 py-1" labelClassName="text-xs" valueClassName="text-xs"/>
+            <CardContent className="text-xs space-y-1.5 px-3 py-2">
+                <StatItem label="Liquidity Lock" value={riskAssessment.liquidityLockStatus || "N/A"} className="px-0 py-1" labelClassName="text-xs" valueClassName="text-xs" />
+                <StatItem label="Dev Wallet/Holder Concentration" value={riskAssessment.devWalletConcentration || "N/A"} className="px-0 py-1" labelClassName="text-xs" valueClassName="text-xs"/>
+                <StatItem label="Contract Verified" value={riskAssessment.contractVerified === undefined ? "N/A" : riskAssessment.contractVerified ? "Yes" : "No"} className="px-0 py-1" labelClassName="text-xs" valueClassName="text-xs"/>
+                <StatItem label="Honeypot Signs" value={riskAssessment.honeypotIndicators || "N/A"} className="px-0 py-1" labelClassName="text-xs" valueClassName="text-xs"/>
             </CardContent>
           </Card>
 
@@ -511,7 +559,7 @@ export default function CoinDetailPage() {
               ))}
             </ul>
           </div>
-          
+
           <div>
             <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><Zap className="mr-1.5 h-5 w-5"/>Mitigation Suggestions:</h4>
              <ul className="list-disc list-inside space-y-1 pl-4 text-sm text-muted-foreground">
@@ -531,8 +579,8 @@ export default function CoinDetailPage() {
     <>
       <h4 className="font-semibold mb-2 text-base">About AI Risk Meter & Rug Pull Detector</h4>
       <p>
-        The AI Risk Meter provides a simulated risk assessment for the selected coin, considering factors like volatility, liquidity, market cap, and on-chain metrics (simulated).
-        It now includes specific checks for common **Rug Pull Indicators**:
+        The AI Risk Meter provides a simulated risk assessment for the selected coin, including specific sub-scores for Volatility, Liquidity, Social Sentiment, and Project Fundamentals.
+        It also includes specific checks for common **Rug Pull Indicators**:
       </p>
       <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
         <li><strong>Liquidity Lock Status:</strong> Checks if LP tokens are locked.</li>
@@ -585,15 +633,15 @@ export default function CoinDetailPage() {
               {viralPrediction.timeToTrendEstimate}
             </Badge>
             <div className="text-sm text-muted-foreground mt-1">
-              AI Confidence: 
-              <Badge className={`ml-1.5 text-xs ${getConfidenceBadgeColor(viralPrediction.confidence)}`}>
+              AI Confidence:
+              <Badge className={cn("ml-1.5 text-xs", getConfidenceBadgeColor(viralPrediction.confidence))}>
                 {viralPrediction.confidence}
               </Badge>
             </div>
           </div>
 
           <Separator />
-          
+
           <div>
             <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><ViralityIcon className="mr-1.5 h-5 w-5"/>Reasoning:</h4>
             <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md whitespace-pre-wrap">{viralPrediction.reasoning}</p>
@@ -632,7 +680,7 @@ export default function CoinDetailPage() {
     </>
   );
 
-  const renderLifespanPredictionContent = () => { 
+  const renderLifespanPredictionContent = () => {
     if (lifespanLoading) {
       return (
         <div className="space-y-3 py-4">
@@ -663,15 +711,15 @@ export default function CoinDetailPage() {
               {lifespanPrediction.lifespanEstimate}
             </Badge>
              <div className="text-sm text-muted-foreground mt-1">
-              AI Confidence: 
-              <Badge className={`ml-1.5 text-xs ${getConfidenceBadgeColor(lifespanPrediction.confidence)}`}>
+              AI Confidence:
+              <Badge className={cn("ml-1.5 text-xs", getConfidenceBadgeColor(lifespanPrediction.confidence))}>
                 {lifespanPrediction.confidence}
               </Badge>
             </div>
           </div>
 
           <Separator />
-          
+
           <div>
             <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><TrendingDownIcon className="mr-1.5 h-5 w-5 text-orange-500"/>Exit Recommendation:</h4>
             <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md whitespace-pre-wrap">{lifespanPrediction.exitRecommendation}</p>
@@ -693,7 +741,7 @@ export default function CoinDetailPage() {
     return <p className="text-muted-foreground text-sm text-center">No AI lifespan prediction available for this coin.</p>;
   };
 
-  const aiLifespanInfo = ( 
+  const aiLifespanInfo = (
     <>
       <h4 className="font-semibold mb-2 text-base">About AI Lifespan Predictor</h4>
       <p>
@@ -711,6 +759,91 @@ export default function CoinDetailPage() {
     </>
   );
 
+  const renderSignalPerformanceContent = () => {
+    if (performanceLoading) {
+      return (
+        <div className="space-y-3 py-4">
+          <div className="flex items-center justify-center">
+             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+             <p className="ml-3 text-muted-foreground text-lg">Analyzing Simulated Signal Performance...</p>
+          </div>
+          <Skeleton className="h-6 w-1/4 mx-auto" />
+          <Skeleton className="h-4 w-1/2 mx-auto mb-2" />
+          <Skeleton className="h-20 w-full" />
+        </div>
+      );
+    }
+    if (performanceError) {
+      return (
+        <Alert variant="destructive" className="my-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Performance Analysis Error</AlertTitle>
+          <AlertDescription>{performanceError}</AlertDescription>
+        </Alert>
+      );
+    }
+    if (signalPerformance) {
+      return (
+        <div className="space-y-4">
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">Last Simulated Backtest: {signalPerformance.lastSimulatedBacktestDate}</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <StatItem label="Simulated Accuracy" value={`${signalPerformance.simulatedAccuracyRate.toFixed(1)}%`} className="bg-muted/30 p-2 rounded-md text-center flex-col h-auto" labelClassName="text-xs" valueClassName="text-lg font-bold text-neon" />
+            <StatItem label="Simulated Profit Factor" value={`${signalPerformance.simulatedProfitFactor.toFixed(2)}`} className="bg-muted/30 p-2 rounded-md text-center flex-col h-auto" labelClassName="text-xs" valueClassName="text-lg font-bold text-neon" />
+          </div>
+
+          <Separator />
+
+          <div>
+            <h4 className="text-md font-semibold text-primary mb-1">Summary of Simulated Performance:</h4>
+            <p className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md whitespace-pre-wrap">{signalPerformance.summary}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-md font-semibold text-primary mb-1">Key Strengths:</h4>
+              <ul className="list-disc list-inside space-y-1 pl-4 text-sm text-muted-foreground">
+                {signalPerformance.keyStrengths.map((strength, index) => (
+                  <li key={`strength-${index}`}>{strength}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-md font-semibold text-primary mb-1">Key Weaknesses:</h4>
+              <ul className="list-disc list-inside space-y-1 pl-4 text-sm text-muted-foreground">
+                {signalPerformance.keyWeaknesses.map((weakness, index) => (
+                  <li key={`weakness-${index}`}>{weakness}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground pt-3 border-t border-muted/30 mt-3">{signalPerformance.disclaimer}</p>
+        </div>
+      );
+    }
+    return <p className="text-muted-foreground text-sm text-center">No AI signal performance data available for this coin.</p>;
+  };
+
+  const aiSignalPerformanceInfo = (
+    <>
+      <h4 className="font-semibold mb-2 text-base">About AI Signal Performance (Simulated)</h4>
+      <p>
+        This section provides a simulated historical performance analysis of the AI's trading signals for this specific coin. It's designed to give an idea of how the AI *might* have performed in the past.
+      </p>
+      <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
+        <li><strong>Simulated Accuracy Rate:</strong> An estimated percentage of historically "correct" signals.</li>
+        <li><strong>Simulated Profit Factor:</strong> A ratio of conceptual gross profit to gross loss from past signals.</li>
+        <li><strong>Key Strengths/Weaknesses:</strong> AI's self-assessment of its signal strategy for this coin.</li>
+        <li><strong>Summary:</strong> Overall textual analysis of the simulated performance.</li>
+      </ul>
+      <p className="mt-2 font-bold text-xs">
+        IMPORTANT: This is entirely simulated and not based on actual trading or real backtesting. Past simulated performance is not indicative of future results. DYOR.
+      </p>
+    </>
+  );
+
 
   return (
     <div className="space-y-6">
@@ -719,7 +852,7 @@ export default function CoinDetailPage() {
           <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard</Link>
         </Button>
       </div>
-      
+
       <Card className="shadow-lg overflow-hidden">
         <CardHeader className="bg-card p-4">
             <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
@@ -732,34 +865,34 @@ export default function CoinDetailPage() {
                 </div>
                 <div className="text-center sm:text-right">
                 <p className="text-2xl sm:text-3xl font-bold text-foreground">${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: currentPrice > 0.01 ? 2 : 8 })}</p>
-                <p className={`text-base font-semibold ${priceChange24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                <p className={cn("text-base font-semibold", priceChange24h >= 0 ? 'text-green-400' : 'text-red-400')}>
                     {priceChange24h.toFixed(2)}% (24h)
                 </p>
                 </div>
             </div>
         </CardHeader>
       </Card>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-           <SectionCard 
-             title="AI Trading Signal & Analysis" 
-             icon={<BrainCircuit className="h-5 w-5"/>} 
-             noPadding 
+           <SectionCard
+             title="AI Trading Signal & Analysis"
+             icon={<BrainCircuit className="h-5 w-5"/>}
+             noPadding
              infoPopoverContent={aiSignalInfo}
            >
              {renderSignalContent()}
            </SectionCard>
 
-            <SectionCard 
-                title="AI Risk Meter & Rug Pull Detector" 
-                icon={<RiskIcon className="h-5 w-5"/>} 
+            <SectionCard
+                title="AI Risk Meter & Rug Pull Detector"
+                icon={<RiskIcon className="h-5 w-5"/>}
                 noPadding
                 infoPopoverContent={aiRiskMeterInfo}
               >
               {renderRiskAssessmentContent()}
             </SectionCard>
-            
+
             <SectionCard
               title="AI Time-to-Viral Predictor"
               icon={<ViralityIcon className="h-5 w-5" />}
@@ -768,14 +901,23 @@ export default function CoinDetailPage() {
             >
               {renderViralPredictionContent()}
             </SectionCard>
-            
-            <SectionCard 
+
+            <SectionCard
               title="AI Lifespan Predictor"
               icon={<Hourglass className="h-5 w-5" />}
               noPadding
               infoPopoverContent={aiLifespanInfo}
             >
               {renderLifespanPredictionContent()}
+            </SectionCard>
+
+            <SectionCard
+              title="AI Signal Performance (Simulated)"
+              icon={<BarChartBig className="h-5 w-5" />}
+              noPadding
+              infoPopoverContent={aiSignalPerformanceInfo}
+            >
+              {renderSignalPerformanceContent()}
             </SectionCard>
 
           <SectionCard title="Description" icon={<BookOpen className="h-5 w-5"/>}>
@@ -852,4 +994,3 @@ export default function CoinDetailPage() {
     </div>
   );
 }
-

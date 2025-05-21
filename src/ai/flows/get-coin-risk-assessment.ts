@@ -1,7 +1,7 @@
 
 'use server';
 /**
- * @fileOverview An AI agent that assesses the risk profile of a given cryptocurrency, including rug pull indicators.
+ * @fileOverview An AI agent that assesses the risk profile of a given cryptocurrency, including rug pull indicators and sub-scores.
  *
  * - getCoinRiskAssessment - A function that provides a risk assessment for a coin.
  * - GetCoinRiskAssessmentInput - The input type for the function.
@@ -17,10 +17,10 @@ const GetCoinRiskAssessmentInputSchema = z.object({
 export type GetCoinRiskAssessmentInput = z.infer<typeof GetCoinRiskAssessmentInputSchema>;
 
 const RiskLevelSchema = z.enum([
-    "Low", 
-    "Medium", 
-    "High", 
-    "Very High", 
+    "Low",
+    "Medium",
+    "High",
+    "Very High",
     "Degenerate Gambler Zone"
 ]).describe("The AI's overall assessed risk level for the coin.");
 
@@ -28,7 +28,13 @@ const GetCoinRiskAssessmentOutputSchema = z.object({
   coinName: z.string().describe("The name of the coin assessed."),
   riskLevel: RiskLevelSchema,
   riskScore: z.number().min(0).max(100).int().describe('A numerical score from 0 (lowest risk) to 100 (highest risk).'),
-  
+
+  // Sub-scores
+  volatilityScore: z.number().min(0).max(100).int().optional().describe('Simulated score (0-100) for price volatility risk. Higher means more volatile/risky.'),
+  liquidityScore: z.number().min(0).max(100).int().optional().describe('Simulated score (0-100) for liquidity risk (e.g., low volume, wide spreads leading to slippage). Higher score means higher liquidity risk.'),
+  socialSentimentRiskScore: z.number().min(0).max(100).int().optional().describe('Simulated score (0-100) for risks from negative or unstable social sentiment. Higher means more risk from sentiment factors.'),
+  projectFundamentalsScore: z.number().min(0).max(100).int().optional().describe('Simulated score (0-100) assessing risks related to project fundamentals (e.g., team, utility, roadmap clarity, tokenomics). Higher score means weaker fundamentals/higher project risk.'),
+
   contributingFactors: z
     .array(z.string())
     .describe('Key factors contributing to the assessed risk level (e.g., "High price volatility in the last 30 days", "Low trading volume and liquidity", "History of pump and dump patterns", "Small market capitalization", "Anonymous development team", "Concentrated token holdings among top wallets", "Lack of clear utility or use case").'),
@@ -37,10 +43,10 @@ const GetCoinRiskAssessmentOutputSchema = z.object({
     .describe('General suggestions for mitigating risks if considering involvement with this coin (e.g., "Consider smaller position sizes", "Set tight stop-loss orders", "Diversify investments", "Conduct thorough personal research beyond this assessment", "Be aware of potential for sudden price drops").'),
   overallAssessment: z
     .string()
-    .describe('A comprehensive textual summary explaining the risk level and score, integrating the contributing factors and rug pull assessment.'),
+    .describe('A comprehensive textual summary explaining the risk level and score, integrating the contributing factors, sub-scores, and rug pull assessment.'),
   assessmentDate: z.string().describe("The date this risk assessment was performed (YYYY-MM-DD)."),
 
-  // New Rug Pull Specific Fields
+  // Rug Pull Specific Fields
   isHighRugRisk: z.boolean().default(false).describe("Whether the AI assesses a high probability of this coin being a rug pull or scam based on simulated indicators."),
   rugPullWarningSummary: z.string().optional().describe("If 'isHighRugRisk' is true, a concise GPT-generated warning summary highlighting the key red flags (e.g., 'Liquidity not locked. Dev wallet holds 82%. No verified contract. Avoid.'). This field should only be populated if isHighRugRisk is true."),
   liquidityLockStatus: z.string().optional().describe("Simulated liquidity lock status (e.g., 'Liquidity locked for 12 months via UniCrypt', 'No lock detected', 'Liquidity appears to be unlocked', 'Partially locked', 'Not Applicable for this coin type')."),
@@ -77,32 +83,34 @@ const prompt = ai.definePrompt({
   output: {schema: GetCoinRiskAssessmentOutputSchema},
   prompt: `You are an AI Crypto Risk Analyst with expertise in identifying potential scams and rug pulls, particularly within the meme coin space. Your task is to provide a detailed risk assessment for the cryptocurrency: "{{coinName}}".
 
-Simulate a comprehensive analysis considering the following factors:
--   **Volatility**: Historical price fluctuations, recent sharp movements.
--   **Liquidity**: Trading volume, exchange listings, ease of buying/selling without significant price impact.
--   **Pump & Dump History**: Past instances of rapid, coordinated price manipulation followed by a crash.
+Simulate a comprehensive analysis considering the following factors and generate corresponding sub-scores (0-100, higher score = higher risk for that factor if applicable, or weaker fundamentals):
+-   **Volatility**: Historical price fluctuations, recent sharp movements. Generate 'volatilityScore'.
+-   **Liquidity**: Trading volume, exchange listings, ease of buying/selling. Generate 'liquidityScore'.
+-   **Social Sentiment Risk**: Risks from unstable or predominantly negative social sentiment. Generate 'socialSentimentRiskScore'.
+-   **Project Fundamentals**: Clarity of use case, development team reputation (if known/anonymous), community strength, roadmap progress, tokenomics. Generate 'projectFundamentalsScore' (higher score indicates weaker fundamentals/higher project risk).
 -   **Market Capitalization**: Smaller caps are generally riskier.
+-   **Pump & Dump History**: Past instances of rapid, coordinated price manipulation followed by a crash.
 -   **On-Chain Metrics (Simulated)**: Holder distribution (whale concentration), tokenomics (inflation/deflation), developer activity.
--   **Project Fundamentals**: Clarity of use case, development team reputation (if known/anonymous), community strength and sentiment, roadmap progress.
 -   **External Factors**: Regulatory news, broader market sentiment.
 
 **Crucially, you must also analyze for Rug Pull Indicators:**
--   **Liquidity Lock Status**: Simulate checking if liquidity is locked (e.g., via platforms like UniCrypt, Pinksale) and for how long. If not applicable (e.g., for a coin like Bitcoin), state so.
--   **Dev Wallet Concentration**: Simulate analysis of developer wallet holdings and large, concentrated wallets.
--   **Smart Contract Verification**: Simulate checking if the contract source code is verified on block explorers (e.g., Etherscan, BscScan).
--   **Honeypot Indicators**: Simulate scanning for common honeypot characteristics in the contract (e.g., high sell taxes, transfer restrictions, malicious functions). If it's not a smart contract based token (e.g. Bitcoin), state 'Not a smart contract based token'.
+-   **Liquidity Lock Status**: Simulate checking if liquidity is locked and for how long.
+-   **Dev Wallet Concentration**: Simulate analysis of developer wallet holdings.
+-   **Smart Contract Verification**: Simulate checking if the contract source code is verified.
+-   **Honeypot Indicators**: Simulate scanning for common honeypot characteristics.
 
 Based on your simulated analysis, generate a risk assessment adhering to the JSON output schema.
 
 Key instructions for output fields:
--   'riskLevel': Classify the risk (e.g., "Low", "Medium", "High", "Very High", "Degenerate Gambler Zone").
--   'riskScore': An integer from 0 (lowest risk) to 100 (highest risk). This should correlate with 'riskLevel'.
--   'isHighRugRisk': Set to 'true' if your simulated analysis indicates a high probability of rug pull based on multiple red flags. Otherwise, 'false'.
--   'rugPullWarningSummary': If 'isHighRugRisk' is true, provide a concise summary of the key red flags found (e.g., "Liquidity not locked. Dev wallet holds 82%. No verified contract. Avoid."). This field MUST be populated if 'isHighRugRisk' is true.
--   'liquidityLockStatus', 'devWalletConcentration', 'contractVerified', 'honeypotIndicators': Populate these based on your simulated analysis.
+-   'riskLevel': Classify the overall risk.
+-   'riskScore': An integer from 0 (lowest risk) to 100 (highest risk). This should correlate with 'riskLevel' and be informed by the sub-scores.
+-   'volatilityScore', 'liquidityScore', 'socialSentimentRiskScore', 'projectFundamentalsScore': Populate these integer sub-scores (0-100).
+-   'isHighRugRisk': Set to 'true' if your simulated analysis indicates a high probability of rug pull based on multiple red flags.
+-   'rugPullWarningSummary': If 'isHighRugRisk' is true, provide a concise summary of the key red flags.
+-   'liquidityLockStatus', 'devWalletConcentration', 'contractVerified', 'honeypotIndicators': Populate these based on your simulated analysis. If a factor is not applicable (e.g., contract for Bitcoin), state so.
 -   'contributingFactors': List 3-5 specific, distinct factors that most significantly contribute to the overall risk.
--   'mitigationSuggestions': Provide 2-4 actionable, general suggestions for someone considering this coin.
--   'overallAssessment': A 2-4 sentence summary that justifies the risk level and score, weaving in the primary contributing factors AND the rug pull assessment.
+-   'mitigationSuggestions': Provide 2-4 actionable, general suggestions.
+-   'overallAssessment': A 2-4 sentence summary that justifies the risk level and score, weaving in the primary contributing factors, the general impact of the sub-scores, AND the rug pull assessment.
 -   'assessmentDate': This will be set by the system.
 -   'disclaimer': Include the standard disclaimer.
 
@@ -122,7 +130,6 @@ const getCoinRiskAssessmentFlow = ai.defineFlow(
       if (!output.disclaimer) {
         output.disclaimer = 'This AI-generated risk assessment is for informational purposes only and not financial advice. Cryptocurrency investments are inherently risky. Always conduct your own thorough research (DYOR) and consult with a financial advisor before making investment decisions.';
       }
-      // The calling function will set coinName and assessmentDate, and can add a default rugPullWarningSummary if needed.
     }
     return output!;
   }
