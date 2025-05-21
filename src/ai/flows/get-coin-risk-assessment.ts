@@ -35,6 +35,12 @@ const GetCoinRiskAssessmentOutputSchema = z.object({
   socialSentimentRiskScore: z.number().min(0).max(100).int().optional().describe('Simulated score (0-100) for risks from negative or unstable social sentiment. Higher means more risk from sentiment factors.'),
   projectFundamentalsScore: z.number().min(0).max(100).int().optional().describe('Simulated score (0-100) assessing risks related to project fundamentals (e.g., team, utility, roadmap clarity, tokenomics). Higher score means weaker fundamentals/higher project risk.'),
 
+  // DNA Strip Scores
+  marketCapTierScore: z.number().min(0).max(100).int().optional().describe('Score (0-100) representing market cap tier. Higher for larger, more established market caps.'),
+  communityStrengthScore: z.number().min(0).max(100).int().optional().describe('Score (0-100) representing community strength, engagement, and size. Higher is stronger.'),
+  developerActivityScore: z.number().min(0).max(100).int().optional().describe('Score (0-100) representing simulated developer activity, code commits, and project updates. Higher is more active.'),
+  memeStrengthScore: z.number().min(0).max(100).int().optional().describe('Score (0-100) representing the "meme-ability", virality potential, and cultural impact of the coin. Higher means stronger meme potential.'),
+
   contributingFactors: z
     .array(z.string())
     .describe('Key factors contributing to the assessed risk level (e.g., "High price volatility in the last 30 days", "Low trading volume and liquidity", "History of pump and dump patterns", "Small market capitalization", "Anonymous development team", "Concentrated token holdings among top wallets", "Lack of clear utility or use case").'),
@@ -99,18 +105,24 @@ Simulate a comprehensive analysis considering the following factors and generate
 -   **Smart Contract Verification**: Simulate checking if the contract source code is verified.
 -   **Honeypot Indicators**: Simulate scanning for common honeypot characteristics.
 
+**Additionally, generate "Token DNA Strip" scores (0-100):**
+-   **marketCapTierScore**: Based on its market cap. Higher for larger caps (e.g., >$1B = 80-100, $100M-$1B = 60-80, $10M-$100M = 40-60, <$10M = 0-40).
+-   **communityStrengthScore**: Assess social media presence, engagement, and member counts.
+-   **developerActivityScore**: Simulate assessing GitHub commits, protocol updates, and roadmap progress.
+-   **memeStrengthScore**: Assess its virality, cultural relevance, and uniqueness of its meme.
+
 Based on your simulated analysis, generate a risk assessment adhering to the JSON output schema.
 
 Key instructions for output fields:
 -   'riskLevel': Classify the overall risk.
--   'riskScore': An integer from 0 (lowest risk) to 100 (highest risk). This should correlate with 'riskLevel' and be informed by the sub-scores.
--   'volatilityScore', 'liquidityScore', 'socialSentimentRiskScore', 'projectFundamentalsScore': Populate these integer sub-scores (0-100).
+-   'riskScore': An integer from 0 (lowest risk) to 100 (highest risk). This should correlate with 'riskLevel' and be informed by the sub-scores and DNA scores.
+-   Populate all sub-scores and DNA scores.
 -   'isHighRugRisk': Set to 'true' if your simulated analysis indicates a high probability of rug pull based on multiple red flags.
 -   'rugPullWarningSummary': If 'isHighRugRisk' is true, provide a concise summary of the key red flags.
--   'liquidityLockStatus', 'devWalletConcentration', 'contractVerified', 'honeypotIndicators': Populate these based on your simulated analysis. If a factor is not applicable (e.g., contract for Bitcoin), state so.
+-   Populate 'liquidityLockStatus', 'devWalletConcentration', 'contractVerified', 'honeypotIndicators' based on your simulated analysis. If a factor is not applicable (e.g., contract for Bitcoin), state so.
 -   'contributingFactors': List 3-5 specific, distinct factors that most significantly contribute to the overall risk.
 -   'mitigationSuggestions': Provide 2-4 actionable, general suggestions.
--   'overallAssessment': A 2-4 sentence summary that justifies the risk level and score, weaving in the primary contributing factors, the general impact of the sub-scores, AND the rug pull assessment.
+-   'overallAssessment': A 2-4 sentence summary that justifies the risk level and score, weaving in the primary contributing factors, the general impact of the sub-scores, DNA scores, AND the rug pull assessment.
 -   'assessmentDate': This will be set by the system.
 -   'disclaimer': Include the standard disclaimer.
 

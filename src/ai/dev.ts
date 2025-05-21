@@ -26,3 +26,4 @@ import '@/ai/flows/get-meme-coin-lifespan-prediction.ts'; // Added new flow for 
 import '@/ai/flows/get-weekly-forecasts.ts'; // Added new flow for Weekly Forecasts
 import '@/ai/flows/setup-smart-alert.ts'; // Added new flow for Smart Alerts
 import '@/ai/flows/get-simulated-signal-performance.ts'; // Added new flow
+import '@/ai/flows/get-entry-zone-status.ts'; // Added for Entry Timer Overlay

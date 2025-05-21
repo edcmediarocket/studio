@@ -10,19 +10,22 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon, Siren, Hourglass, TrendingUpIcon, TrendingDownIcon, BarChartBig, ActivityIcon, UsersIcon, FileTextIcon, Layers } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon, Siren, Hourglass, TrendingUpIcon, TrendingDownIcon, BarChartBig, ActivityIcon, UsersIcon, FileTextIcon, Layers, Dna, MapPin } from 'lucide-react';
 import { Table, TableBody, TableCell, TableRow, TableHead, TableHeader } from '@/components/ui/table';
 import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from '@/ai/flows/get-coin-trading-signal';
 import { getCoinRiskAssessment, type GetCoinRiskAssessmentOutput } from '@/ai/flows/get-coin-risk-assessment';
 import { getViralPrediction, type GetViralPredictionOutput } from '@/ai/flows/get-viral-prediction';
 import { getMemeCoinLifespanPrediction, type GetMemeCoinLifespanPredictionOutput } from '@/ai/flows/get-meme-coin-lifespan-prediction';
 import { getSimulatedSignalPerformance, type GetSimulatedSignalPerformanceOutput } from '@/ai/flows/get-simulated-signal-performance';
+import { getEntryZoneStatus, type GetEntryZoneStatusOutput } from '@/ai/flows/get-entry-zone-status'; // New Import
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { StatItem } from '@/components/shared/stat-item';
+import { TokenDnaStrip } from '@/components/shared/token-dna-strip'; // New Import
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Progress } from '@/components/ui/progress';
+
 
 interface CoinDetail {
   id: string;
@@ -160,6 +163,10 @@ export default function CoinDetailPage() {
   const [performanceLoading, setPerformanceLoading] = useState(false);
   const [performanceError, setPerformanceError] = useState<string | null>(null);
 
+  const [entryZoneStatus, setEntryZoneStatus] = useState<GetEntryZoneStatusOutput | null>(null); // New State
+  const [entryZoneLoading, setEntryZoneLoading] = useState(false); // New State
+  const [entryZoneError, setEntryZoneError] = useState<string | null>(null); // New State
+
 
   useEffect(() => {
     if (!coinId) return;
@@ -171,15 +178,16 @@ export default function CoinDetailPage() {
       setViralPredictionLoading(true);
       setLifespanLoading(true);
       setPerformanceLoading(true);
+      setEntryZoneLoading(true); // New
       setError(null);
       setSignalError(null);
       setRiskError(null);
       setViralPredictionError(null);
       setLifespanError(null);
       setPerformanceError(null);
+      setEntryZoneError(null); // New
 
       try {
-        // Fetch main coin details
         const detailResponse = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`);
         if (!detailResponse.ok) {
           const errorData = await detailResponse.json().catch(() => ({ error: "Failed to parse error response" }));
@@ -189,14 +197,16 @@ export default function CoinDetailPage() {
         setCoinDetail(detailData);
         setLoading(false);
 
-        // Once main details are fetched, fetch AI analyses
         if (detailData?.name) {
+          const currentPriceUSD = detailData.market_data?.current_price?.usd;
+          const currentMarketCapUSD = detailData.market_data?.market_cap?.usd;
+
           // Trading Signal
-          if (detailData.market_data?.current_price?.usd !== undefined) {
+          if (currentPriceUSD !== undefined) {
             try {
               const signal = await getCoinTradingSignal({
                 coinName: detailData.name,
-                currentPriceUSD: detailData.market_data.current_price.usd
+                currentPriceUSD: currentPriceUSD
               });
               setTradingSignal(signal);
             } catch (err) {
@@ -217,7 +227,7 @@ export default function CoinDetailPage() {
             setSignalError("Current price data missing, cannot generate trading signal.");
           }
 
-          // Risk Assessment
+          // Risk Assessment (includes DNA strip data)
           try {
             const risk = await getCoinRiskAssessment({ coinName: detailData.name });
             setRiskAssessment(risk);
@@ -288,20 +298,37 @@ export default function CoinDetailPage() {
           } finally {
             setPerformanceLoading(false);
           }
-
+          
+          // Entry Zone Status (New)
+          try {
+            const status = await getEntryZoneStatus({ 
+              coinName: detailData.name,
+              currentMarketCap: currentMarketCapUSD,
+              currentPrice: currentPriceUSD
+            });
+            setEntryZoneStatus(status);
+          } catch (err) {
+            console.error("Error fetching entry zone status:", err);
+            const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+            if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
+              setEntryZoneError("Network error: Failed to fetch AI Entry Zone Status. Please check your connection.");
+            } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
+              setEntryZoneError("AI service for Entry Zone Status is temporarily overloaded or unavailable. Please try again later.");
+            } else {
+              setEntryZoneError("Failed to fetch AI Entry Zone Status. Please try again later.");
+            }
+          } finally {
+            setEntryZoneLoading(false);
+          }
 
         } else {
-          setSignalLoading(false);
-          setRiskLoading(false);
-          setViralPredictionLoading(false);
-          setLifespanLoading(false);
-          setPerformanceLoading(false);
-          const errorMsg = "Coin name missing from fetched data, cannot proceed with AI analyses.";
-          setSignalError(errorMsg);
-          setRiskError(errorMsg);
-          setViralPredictionError(errorMsg);
-          setLifespanError(errorMsg);
-          setPerformanceError(errorMsg);
+          const errorMsg = "Coin name missing from fetched data, cannot proceed with all AI analyses.";
+          setSignalLoading(false); setSignalError(errorMsg);
+          setRiskLoading(false); setRiskError(errorMsg);
+          setViralPredictionLoading(false); setViralPredictionError(errorMsg);
+          setLifespanLoading(false); setLifespanError(errorMsg);
+          setPerformanceLoading(false); setPerformanceError(errorMsg);
+          setEntryZoneLoading(false); setEntryZoneError(errorMsg); // New
         }
 
       } catch (err) {
@@ -320,6 +347,7 @@ export default function CoinDetailPage() {
         setViralPredictionLoading(false);
         setLifespanLoading(false);
         setPerformanceLoading(false);
+        setEntryZoneLoading(false); // New
       }
     };
 
@@ -636,6 +664,38 @@ export default function CoinDetailPage() {
     return 'bg-muted text-muted-foreground';
   };
 
+  const getEntryZoneStatusBadgeClass = (status?: GetEntryZoneStatusOutput['status']) => {
+    if (!status) return 'border-muted-foreground text-muted-foreground';
+    const s = status.toLowerCase();
+    if (s.includes('early') || s.includes('breakout') || s.includes('accumulation')) return 'border-green-500 text-green-500';
+    if (s.includes('overheated') || s.includes('caution')) return 'border-red-500 text-red-500';
+    if (s.includes('neutral') || s.includes('monitor')) return 'border-yellow-500 text-yellow-500';
+    return 'border-muted-foreground text-muted-foreground';
+  };
+
+  const renderEntryZoneStatus = () => {
+    if (entryZoneLoading) return <Skeleton className="h-6 w-32" />;
+    if (entryZoneError) return <Badge variant="destructive" className="text-xs">Status Error</Badge>;
+    if (entryZoneStatus) {
+      return (
+        <Popover>
+          <PopoverTrigger asChild>
+             <Badge variant="outline" className={`text-xs cursor-pointer ${getEntryZoneStatusBadgeClass(entryZoneStatus.status)}`}>
+              <MapPin className="mr-1 h-3 w-3" /> {entryZoneStatus.status}
+            </Badge>
+          </PopoverTrigger>
+          <PopoverContent className="w-60 text-xs p-2">
+            <p className="font-semibold mb-1">AI Entry Zone Reasoning:</p>
+            <p className="text-muted-foreground mb-1">{entryZoneStatus.reasoning}</p>
+            <p className="text-muted-foreground/80">Confidence: {entryZoneStatus.confidence}</p>
+            <p className="text-muted-foreground/70 text-xs mt-2">{entryZoneStatus.disclaimer}</p>
+          </PopoverContent>
+        </Popover>
+      );
+    }
+    return null;
+  };
+
   const renderViralPredictionContent = () => {
     if (viralPredictionLoading) {
       return (
@@ -908,10 +968,29 @@ export default function CoinDetailPage() {
             <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
                 <Image src={image.large || 'https://placehold.co/128x128.png'} alt={name} width={64} height={64} className="rounded-full border-2 border-primary" data-ai-hint="coin logo crypto"/>
                 <div className="flex-grow text-center sm:text-left">
-                <h1 className="text-2xl sm:text-3xl font-bold text-neon flex items-center justify-center sm:justify-start">
-                    {name} <Badge variant="secondary" className="ml-2 text-base sm:text-lg">{symbol.toUpperCase()}</Badge>
-                </h1>
-                {market_cap_rank && <p className="text-sm text-muted-foreground">Market Cap Rank: #{market_cap_rank}</p>}
+                    <h1 className="text-2xl sm:text-3xl font-bold text-neon flex items-center justify-center sm:justify-start">
+                        {name} <Badge variant="secondary" className="ml-2 text-base sm:text-lg">{symbol.toUpperCase()}</Badge>
+                        {entryZoneStatus && <span className="ml-2">{renderEntryZoneStatus()}</span>}
+                    </h1>
+                    {market_cap_rank && <p className="text-sm text-muted-foreground">Market Cap Rank: #{market_cap_rank}</p>}
+                    
+                    {riskAssessment && (
+                        <div className="mt-2">
+                            <TokenDnaStrip
+                            marketCapTierScore={riskAssessment.marketCapTierScore}
+                            communityStrengthScore={riskAssessment.communityStrengthScore}
+                            developerActivityScore={riskAssessment.developerActivityScore}
+                            memeStrengthScore={riskAssessment.memeStrengthScore}
+                            />
+                        </div>
+                    )}
+                    {(riskLoading || loading) && !riskAssessment && (
+                        <div className="mt-2">
+                            <Skeleton className="h-10 w-full rounded-md" /> 
+                        </div>
+                    )}
+
+
                 </div>
                 <div className="text-center sm:text-right">
                 <p className="text-2xl sm:text-3xl font-bold text-foreground">${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: currentPrice > 0.01 ? 2 : 8 })}</p>
