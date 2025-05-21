@@ -13,9 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, Bell, BellRing, Edit3, LineChart, AlertTriangle, X } from "lucide-react";
+import { Trash2, Bell, BellRing, Edit3, LineChart, AlertTriangle, X, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '../ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -23,6 +22,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea'; // Import Textarea
 import { useToast } from '@/hooks/use-toast';
 
 interface AlertCondition {
@@ -37,14 +37,14 @@ interface WatchlistItem {
   image: string;
   current_price: number;
   price_change_percentage_24h: number;
-  notes?: string;
+  notes?: string; // Added notes field
   alert_active?: boolean;
   alertCondition?: AlertCondition;
 }
 
 const placeholderWatchlistData: WatchlistItem[] = [
-  { id: 'dogecoin', name: 'Dogecoin', symbol: 'DOGE', image: 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png?1547792256', current_price: 0.158, price_change_percentage_24h: 3.1, notes: 'Waiting for $0.20', alert_active: true, alertCondition: { type: 'price_above', value: 0.20 } },
-  { id: 'pepe', name: 'Pepe', symbol: 'PEPE', image: 'https://assets.coingecko.com/coins/images/29850/small/Time_to_get_frogy_with_it_mien.jpeg?1682322348', current_price: 0.00000155, price_change_percentage_24h: -0.5, alert_active: false, alertCondition: {type: 'none', value: null} },
+  { id: 'dogecoin', name: 'Dogecoin', symbol: 'DOGE', image: 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png?1547792256', current_price: 0.158, price_change_percentage_24h: 3.1, notes: 'Waiting for $0.20, potential Elon tweet soon.', alert_active: true, alertCondition: { type: 'price_above', value: 0.20 } },
+  { id: 'pepe', name: 'Pepe', symbol: 'PEPE', image: 'https://assets.coingecko.com/coins/images/29850/small/Time_to_get_frogy_with_it_mien.jpeg?1682322348', current_price: 0.00000155, price_change_percentage_24h: -0.5, notes: 'Monitor for volume increase.', alert_active: false, alertCondition: {type: 'none', value: null} },
 ];
 
 const WATCHLIST_STORAGE_KEY = "rocketMemeUserWatchlist_v1";
@@ -54,9 +54,11 @@ export function WatchlistTable() {
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAlertDialogOpen, setIsAlertDialogOpen] = useState(false);
-  const [selectedCoinForAlert, setSelectedCoinForAlert] = useState<WatchlistItem | null>(null);
+  const [isNotesDialogOpen, setIsNotesDialogOpen] = useState(false); // State for notes dialog
+  const [selectedCoinForOperation, setSelectedCoinForOperation] = useState<WatchlistItem | null>(null);
   const [alertEnabled, setAlertEnabled] = useState(false);
   const [priceTarget, setPriceTarget] = useState<string>("");
+  const [currentNotes, setCurrentNotes] = useState<string>(""); // State for current notes being edited
   const { toast } = useToast();
 
   useEffect(() => {
@@ -77,14 +79,20 @@ export function WatchlistTable() {
 
 
   const openAlertConfig = (coin: WatchlistItem) => {
-    setSelectedCoinForAlert(coin);
+    setSelectedCoinForOperation(coin);
     setAlertEnabled(coin.alert_active || false);
     setPriceTarget(coin.alertCondition?.value?.toString() || "");
     setIsAlertDialogOpen(true);
   };
+  
+  const openNotesDialog = (coin: WatchlistItem) => {
+    setSelectedCoinForOperation(coin);
+    setCurrentNotes(coin.notes || "");
+    setIsNotesDialogOpen(true);
+  };
 
   const handleSaveAlert = () => {
-    if (!selectedCoinForAlert) return;
+    if (!selectedCoinForOperation) return;
 
     const targetValue = parseFloat(priceTarget);
     if (alertEnabled && (isNaN(targetValue) || targetValue <= 0)) {
@@ -98,11 +106,11 @@ export function WatchlistTable() {
 
     setWatchlist(prev =>
       prev.map(item =>
-        item.id === selectedCoinForAlert.id
+        item.id === selectedCoinForOperation.id
           ? { ...item, 
               alert_active: alertEnabled, 
               alertCondition: alertEnabled 
-                              ? { type: 'price_above', value: targetValue } 
+                              ? { type: selectedCoinForOperation.current_price > targetValue ? 'price_below' : 'price_above', value: targetValue } // Simple logic for type
                               : { type: 'none', value: null } 
             }
           : item
@@ -110,28 +118,45 @@ export function WatchlistTable() {
     );
     toast({
         title: "Alert Updated",
-        description: `Alert settings for ${selectedCoinForAlert.name} have been saved.`,
+        description: `Alert settings for ${selectedCoinForOperation.name} have been saved.`,
     });
     setIsAlertDialogOpen(false);
-    setSelectedCoinForAlert(null);
+    setSelectedCoinForOperation(null);
   };
   
   const handleRemoveAlert = () => {
-     if (!selectedCoinForAlert) return;
+     if (!selectedCoinForOperation) return;
      setWatchlist(prev =>
       prev.map(item =>
-        item.id === selectedCoinForAlert.id
+        item.id === selectedCoinForOperation.id
           ? { ...item, alert_active: false, alertCondition: { type: 'none', value: null } }
           : item
       )
     );
     toast({
         title: "Alert Removed",
-        description: `Alert for ${selectedCoinForAlert.name} has been removed.`,
+        description: `Alert for ${selectedCoinForOperation.name} has been removed.`,
     });
     setIsAlertDialogOpen(false);
-    setSelectedCoinForAlert(null);
-  }
+    setSelectedCoinForOperation(null);
+  };
+
+  const handleSaveNotes = () => {
+    if (!selectedCoinForOperation) return;
+    setWatchlist(prev => 
+      prev.map(item => 
+        item.id === selectedCoinForOperation.id 
+          ? { ...item, notes: currentNotes.trim() } 
+          : item
+      )
+    );
+    toast({
+        title: "Notes Saved",
+        description: `Notes for ${selectedCoinForOperation.name} have been updated.`,
+    });
+    setIsNotesDialogOpen(false);
+    setSelectedCoinForOperation(null);
+  };
 
 
   const removeItem = (id: string) => {
@@ -185,7 +210,7 @@ export function WatchlistTable() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl">My Watchlist</CardTitle>
-          <CardDescription>Track your favorite meme coins and set alerts. (Alerts are simulated)</CardDescription>
+          <CardDescription>Track your favorite meme coins, set alerts, and add notes. (Alerts are simulated)</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
@@ -225,7 +250,13 @@ export function WatchlistTable() {
                         {coin.price_change_percentage_24h.toFixed(2)}%
                       </Link>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground py-3 px-2 sm:px-4">{coin.notes || 'N/A'}</TableCell>
+                    <TableCell className="hidden md:table-cell text-sm text-muted-foreground py-3 px-2 sm:px-4">
+                      {coin.notes ? (
+                        <span title={coin.notes} className="truncate block max-w-[150px]">{coin.notes}</span>
+                      ) : (
+                        'N/A'
+                      )}
+                    </TableCell>
                     <TableCell className="text-center py-3 px-2 sm:px-4">
                       <Button variant="ghost" size="icon" onClick={() => openAlertConfig(coin)} title={coin.alert_active ? "Manage Alert" : "Set Alert"} className="h-7 w-7 sm:h-9 sm:w-9">
                         {coin.alert_active ? <BellRing className="h-4 w-4 sm:h-5 sm:w-5 text-neon fill-neon/30" /> : <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />}
@@ -238,8 +269,8 @@ export function WatchlistTable() {
                             <LineChart className="h-4 w-4 sm:h-5 sm:w-5" />
                           </Link>
                         </Button>
-                         <Button variant="ghost" size="icon" title="Edit Notes (coming soon)" disabled className="h-7 w-7 sm:h-9 sm:w-9">
-                          <Edit3 className="h-4 w-4 sm:h-5 sm:w-5" />
+                         <Button variant="ghost" size="icon" title="Edit Notes" onClick={() => openNotesDialog(coin)} className="h-7 w-7 sm:h-9 sm:w-9">
+                          <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
                         </Button>
                         <Button variant="ghost" size="icon" onClick={() => removeItem(coin.id)} title="Remove from Watchlist" className="text-destructive hover:text-destructive h-7 w-7 sm:h-9 sm:w-9">
                           <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -254,14 +285,15 @@ export function WatchlistTable() {
         </CardContent>
       </Card>
 
-      {selectedCoinForAlert && (
+      {/* Alert Configuration Dialog */}
+      {selectedCoinForOperation && (
         <Dialog open={isAlertDialogOpen} onOpenChange={(open) => {
             setIsAlertDialogOpen(open);
-            if (!open) setSelectedCoinForAlert(null); 
+            if (!open) setSelectedCoinForOperation(null); 
         }}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Configure Alert for {selectedCoinForAlert.name}</DialogTitle>
+              <DialogTitle>Configure Alert for {selectedCoinForOperation.name}</DialogTitle>
               <DialogDescription>
                 Set up a (simulated) price alert. In a real app, this would notify you.
               </DialogDescription>
@@ -309,6 +341,40 @@ export function WatchlistTable() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Notes Dialog */}
+      {selectedCoinForOperation && (
+        <Dialog open={isNotesDialogOpen} onOpenChange={(open) => {
+          setIsNotesDialogOpen(open);
+          if(!open) setSelectedCoinForOperation(null);
+        }}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Notes for {selectedCoinForOperation.name}</DialogTitle>
+              <DialogDescription>
+                Add or edit your personal notes for this coin.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <Textarea
+                placeholder="Type your notes here..."
+                value={currentNotes}
+                onChange={(e) => setCurrentNotes(e.target.value)}
+                className="min-h-[100px]"
+              />
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="outline">Cancel</Button>
+              </DialogClose>
+              <Button onClick={handleSaveNotes}>Save Notes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }
+
+
+    
