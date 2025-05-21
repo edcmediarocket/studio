@@ -32,23 +32,33 @@ const themes: ThemeOption[] = [
   { value: "neon-yellow", label: "Neon Yellow", className: "theme-neon-yellow" },
 ];
 
-const LOCAL_STORAGE_THEME_KEY = "rocket-meme-theme-v2"; 
+const LOCAL_STORAGE_THEME_KEY = "rocketMemeUserTheme_v3"; // Updated key version
 
 export function ThemeSwitcher() {
-  const [currentTheme, setCurrentTheme] = React.useState<ThemeValue>("logo-cyan"); 
+  const [currentTheme, setCurrentTheme] = React.useState<ThemeValue>(() => {
+    if (typeof window !== "undefined") {
+      const storedTheme = localStorage.getItem(LOCAL_STORAGE_THEME_KEY) as ThemeValue | null;
+      if (storedTheme && themes.some(t => t.value === storedTheme)) {
+        return storedTheme;
+      }
+    }
+    return "logo-cyan"; // Default theme
+  });
 
   React.useEffect(() => {
+    // This effect runs only on the client after initial mount
     const storedTheme = localStorage.getItem(LOCAL_STORAGE_THEME_KEY) as ThemeValue | null;
-    if (storedTheme && themes.some(t => t.value === storedTheme)) {
+    if (storedTheme && themes.some(t => t.value === storedTheme) && storedTheme !== currentTheme) {
+      // If localStorage has a theme different from initial state (which might be default)
       setCurrentTheme(storedTheme);
     }
-  }, []);
+  }, []); // Empty dependency array ensures this runs once on mount
 
   React.useEffect(() => {
     // Remove all potential theme classes first
-    themes.forEach(theme => {
-      if (theme.className) { 
-        document.documentElement.classList.remove(theme.className);
+    themes.forEach(themeOption => {
+      if (themeOption.className) { 
+        document.documentElement.classList.remove(themeOption.className);
       }
     });
 
@@ -57,7 +67,9 @@ export function ThemeSwitcher() {
       document.documentElement.classList.add(selectedThemeObject.className);
     }
     
-    localStorage.setItem(LOCAL_STORAGE_THEME_KEY, currentTheme);
+    if (typeof window !== "undefined") {
+        localStorage.setItem(LOCAL_STORAGE_THEME_KEY, currentTheme);
+    }
   }, [currentTheme]);
 
   return (
@@ -84,4 +96,3 @@ export function ThemeSwitcher() {
     </DropdownMenu>
   );
 }
-

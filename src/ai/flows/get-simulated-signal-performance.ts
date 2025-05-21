@@ -30,13 +30,17 @@ export type GetSimulatedSignalPerformanceOutput = z.infer<typeof GetSimulatedSig
 
 export async function getSimulatedSignalPerformance(input: GetSimulatedSignalPerformanceInput): Promise<GetSimulatedSignalPerformanceOutput> {
   const result = await getSimulatedSignalPerformanceFlow(input);
-  if (result) {
-    result.coinName = input.coinName; // Ensure coin name is in output
-    if (!result.lastSimulatedBacktestDate) {
-        result.lastSimulatedBacktestDate = `As of ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
-    }
+  // Ensure coinName and a valid date are always in the output
+  result.coinName = input.coinName; 
+  if (!result.lastSimulatedBacktestDate || !isValidDateString(result.lastSimulatedBacktestDate)) {
+      result.lastSimulatedBacktestDate = `As of ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`;
   }
   return result;
+}
+
+// Helper function to check if a date string is somewhat valid (basic check)
+function isValidDateString(dateString: string): boolean {
+    return /\d{4}-\d{2}-\d{2}/.test(dateString) || dateString.toLowerCase().includes("as of");
 }
 
 const prompt = ai.definePrompt({
@@ -47,16 +51,15 @@ const prompt = ai.definePrompt({
 This is a conceptual exercise. Act as if you have access to a history of signals you've generated for this coin and the coin's past price action.
 
 Your output MUST adhere to the JSON schema. Provide:
-- 'coinName': "{{coinName}}".
-- 'simulatedAccuracyRate': An estimated percentage (0-100) of how often your signals for this coin might have been "correct" in the past.
-- 'simulatedProfitFactor': A plausible profit factor (e.g., 1.2, 2.5). This is total conceptual gains divided by total conceptual losses.
-- 'keyStrengths': 2-3 concise bullet points on what your signal strategy for {{coinName}} seems to do well (e.g., "Capturing momentum swings", "Identifying oversold conditions").
-- 'keyWeaknesses': 2-3 concise bullet points on limitations or areas where signals might be less reliable for {{coinName}} (e.g., "Susceptible to sudden FUD events", "Less effective in choppy, sideways markets").
-- 'lastSimulatedBacktestDate': A recent-sounding date for this conceptual backtest (e.g., "As of May 10, 2025"). This will be overridden if not provided by the AI.
+- 'simulatedAccuracyRate': An estimated percentage (0-100) of how often your signals for this coin might have been "correct" in the past. Make this plausible.
+- 'simulatedProfitFactor': A plausible profit factor (e.g., 1.2, 2.5, ensure it is a positive number). This is total conceptual gains divided by total conceptual losses.
+- 'keyStrengths': 2-3 concise bullet points on what your signal strategy for {{coinName}} seems to do well (e.g., "Capturing momentum swings", "Identifying oversold conditions", "Strong performance in trending markets").
+- 'keyWeaknesses': 2-3 concise bullet points on limitations or areas where signals might be less reliable for {{coinName}} (e.g., "Susceptible to sudden FUD events", "Less effective in choppy, sideways markets", "Difficulty with extremely low liquidity coins").
+- 'lastSimulatedBacktestDate': A recent-sounding date for this conceptual backtest (e.g., "As of May 10, 2025" or "2025-05-10").
 - 'summary': A 2-3 sentence textual summary synthesizing these points, providing context on how the AI's signals might have performed for {{coinName}}.
 - 'disclaimer': Ensure the standard disclaimer is included.
 
-Focus on generating plausible and insightful-sounding metrics and descriptions. The goal is to give a *sense* of potential past performance, not an actual backtest.
+Focus on generating plausible and insightful-sounding metrics and descriptions. The goal is to give a *sense* of potential past performance, not an actual backtest. Ensure all fields are populated.
 `,
 });
 
@@ -72,8 +75,9 @@ const getSimulatedSignalPerformanceFlow = ai.defineFlow(
       if (!output.disclaimer) {
         output.disclaimer = "This is a simulated historical performance analysis based on AI interpretations and NOT on actual trading results or rigorous backtesting. Past simulated performance is not indicative of future results. DYOR and consult a financial advisor.";
       }
-      // The calling function will set coinName and can override lastSimulatedBacktestDate if needed.
+      // coinName and lastSimulatedBacktestDate will be handled by the wrapper function
     }
     return output!;
   }
 );
+
