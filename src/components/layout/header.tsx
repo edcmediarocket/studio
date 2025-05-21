@@ -10,11 +10,13 @@ import { Rocket, Mic, Loader2 } from "lucide-react";
 import { useState } from 'react'; 
 import { useToast } from '@/hooks/use-toast'; 
 import { getCoinAdvice, type GetCoinAdviceInput } from '@/ai/flows/get-coin-advice'; 
-import { ThemeSwitcher } from "./theme-switcher"; // Added ThemeSwitcher import
+import { ThemeSwitcher } from "./theme-switcher";
+import { useTier } from "@/context/tier-context"; // Import useTier
 
 export function Header() {
   const { toast } = useToast();
   const [isVoiceAssistantLoading, setIsVoiceAssistantLoading] = useState(false);
+  const { currentTier } = useTier(); // Get current tier
 
   const handleVoiceAssistantClick = async () => {
     const userQuery = window.prompt("Ask Rocket Meme AI (e.g., 'What's the outlook for Dogecoin?', 'Explain market cap'):");
@@ -76,8 +78,8 @@ export function Header() {
           </Link>
         </div>
         
-        <div className="flex items-center gap-1 sm:gap-2"> {/* Reduced gap slightly for theme switcher */}
-          <ThemeSwitcher /> {/* Added ThemeSwitcher */}
+        <div className="flex items-center gap-1 sm:gap-2">
+          <ThemeSwitcher />
           <Button 
             variant="ghost" 
             size="icon" 
@@ -88,12 +90,14 @@ export function Header() {
           >
             {isVoiceAssistantLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Mic className="h-5 w-5" />}
           </Button>
-          <Button asChild variant="outline" className="hidden sm:flex border-neon text-neon hover:bg-neon hover:text-primary-foreground">
-            <Link href="/account#subscription">
-              <Rocket className="mr-2 h-4 w-4" />
-              Go Pro
-            </Link>
-          </Button>
+          {(currentTier === "Free" || currentTier === "Basic") && (
+            <Button asChild variant="outline" className="hidden sm:flex border-neon text-neon hover:bg-neon hover:text-primary-foreground">
+              <Link href="/account#subscription">
+                <Rocket className="mr-2 h-4 w-4" />
+                Go Pro
+              </Link>
+            </Button>
+          )}
           <UserNav />
         </div>
       </div>
