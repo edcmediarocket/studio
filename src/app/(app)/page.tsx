@@ -10,7 +10,7 @@ import { LayoutDashboard, TrendingUp, TrendingDown, Info, Flame, Loader2, AlertT
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input"; 
 import { HotCoinsTicker } from "@/components/dashboard/hot-coins-ticker";
-import { WeeklyForecastCarousel } from "@/components/dashboard/weekly-forecast-carousel"; // Added import
+import { WeeklyForecastCarousel } from "@/components/dashboard/weekly-forecast-carousel";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getSignalOfTheDay, type GetSignalOfTheDayOutput } from '@/ai/flows/get-signal-of-the-day';
@@ -117,7 +117,7 @@ export default function DashboardPage() {
   const renderMarketMoverCardContent = (items: MarketMoverItem[], type: 'gainer' | 'loser') => {
     if (isLoadingMovers) {
       return (
-        <div className="space-y-3 px-3 sm:px-4 md:px-6 py-2">
+        <div className="space-y-3 px-3 py-3 sm:px-4 sm:py-2">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex items-center space-x-3">
               <Skeleton className="h-6 w-6 rounded-full" />
@@ -132,20 +132,20 @@ export default function DashboardPage() {
     }
 
     if (items.length === 0 && !moversError) {
-        return <p className="text-xs text-muted-foreground px-3 sm:px-4 md:px-6 py-2">No significant {type}s found in the top 100 right now.</p>;
+        return <p className="text-xs text-muted-foreground px-3 py-3 sm:px-4 sm:py-2">No significant {type}s found in the top 100 right now.</p>;
     }
 
     return items.map(coin => (
-      <Link href={`/coin/${coin.id}`} key={coin.id} className="block hover:bg-muted/30 transition-colors px-3 py-3 sm:px-4 md:px-6 sm:py-2 border-b last:border-b-0">
+      <Link href={`/coin/${coin.id}`} key={coin.id} className="block hover:bg-muted/30 transition-colors px-3 py-3 sm:px-4 sm:py-2 border-b last:border-b-0">
         <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             <Image src={coin.image} alt={coin.name} width={24} height={24} className="rounded-full" data-ai-hint="coin logo crypto"/>
             <div>
-              <span className="text-sm font-medium">{coin.name}</span>
-              <span className="text-xs text-muted-foreground ml-1.5">{coin.symbol}</span>
+              <span className="text-xs sm:text-sm font-medium">{coin.name}</span>
+              <span className="text-xs text-muted-foreground ml-1 sm:ml-1.5">{coin.symbol}</span>
             </div>
           </div>
-          <span className={`text-sm font-semibold ${type === 'gainer' ? 'text-green-400' : 'text-red-400'}`}>
+          <span className={`text-xs sm:text-sm font-semibold ${type === 'gainer' ? 'text-green-400' : 'text-red-400'}`}>
             {coin.change.toFixed(2)}%
           </span>
         </div>
@@ -235,4 +235,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

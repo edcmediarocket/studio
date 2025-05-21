@@ -55,7 +55,7 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
   }, []);
 
   useEffect(() => {
-    if(!loading) { // Ensure we don't try to save during initial load before state is set
+    if(!loading) { 
         try {
             localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(Array.from(favoritedCoins)));
         } catch (e) {
@@ -192,71 +192,71 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[50px] pr-0"></TableHead>
-          <TableHead onClick={() => requestSort('name')} className="cursor-pointer">
+          <TableHead className="w-[40px] sm:w-[50px] pr-0"></TableHead>
+          <TableHead onClick={() => requestSort('name')} className="cursor-pointer text-xs sm:text-sm">
             Name{getSortIndicator('name')}
           </TableHead>
-          <TableHead onClick={() => requestSort('current_price')} className="text-right cursor-pointer">
+          <TableHead onClick={() => requestSort('current_price')} className="text-right cursor-pointer text-xs sm:text-sm">
             Price{getSortIndicator('current_price')}
           </TableHead>
-          <TableHead onClick={() => requestSort('price_change_percentage_24h')} className="text-right cursor-pointer">
+          <TableHead onClick={() => requestSort('price_change_percentage_24h')} className="text-right cursor-pointer text-xs sm:text-sm">
             24h %{getSortIndicator('price_change_percentage_24h')}
           </TableHead>
-          <TableHead onClick={() => requestSort('market_cap')} className="text-right hidden md:table-cell cursor-pointer">
+          <TableHead onClick={() => requestSort('market_cap')} className="text-right hidden md:table-cell cursor-pointer text-xs sm:text-sm">
             Market Cap{getSortIndicator('market_cap')}
           </TableHead>
-          <TableHead className="text-center">Actions</TableHead>
+          <TableHead className="text-center text-xs sm:text-sm">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {sortedCoins.length > 0 ? sortedCoins.map((coin) => (
           <TableRow key={coin.id} className="hover:bg-muted/50">
-            <TableCell className="pr-0">
+            <TableCell className="pr-0 py-3 px-2 sm:px-4">
               {coin.image && typeof coin.image === 'string' && coin.image.trim() !== '' ? (
                   <Link href={`/coin/${coin.id}`} className="block">
                       <Image src={coin.image} alt={coin.name} width={28} height={28} className="rounded-full" data-ai-hint="coin logo crypto" />
                   </Link>
               ) : (
-                <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-xs">
+                <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center text-xs">
                   {coin.symbol ? coin.symbol[0].toUpperCase() : '?'}
                 </div>
               )}
             </TableCell>
-            <TableCell>
+            <TableCell className="py-3 px-2 sm:px-4">
               <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors">
-                <div className="font-medium">{coin.name}</div>
+                <div className="font-medium text-sm sm:text-base">{coin.name}</div>
                 <div className="text-xs text-muted-foreground">{coin.symbol.toUpperCase()}</div>
               </Link>
             </TableCell>
-            <TableCell className="text-right font-mono">
+            <TableCell className="text-right font-mono py-3 px-2 sm:px-4 text-sm sm:text-base">
               <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
                   ${coin.current_price !== null && coin.current_price !== undefined ? coin.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: coin.current_price > 0.01 ? 2 : 8 }) : 'N/A'}
               </Link>
             </TableCell>
-            <TableCell className={cn("text-right font-mono", coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400')}>
+            <TableCell className={cn("text-right font-mono py-3 px-2 sm:px-4 text-sm sm:text-base", coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400')}>
               <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
                   {coin.price_change_percentage_24h !== null && coin.price_change_percentage_24h !== undefined ? coin.price_change_percentage_24h.toFixed(2) + '%' : 'N/A'}
               </Link>
             </TableCell>
-            <TableCell className="text-right font-mono hidden md:table-cell">
+            <TableCell className="text-right font-mono hidden md:table-cell py-3 px-2 sm:px-4 text-sm sm:text-base">
                <Link href={`/coin/${coin.id}`} className="hover:text-neon transition-colors block">
                   ${coin.market_cap !== null && coin.market_cap !== undefined ? coin.market_cap.toLocaleString() : 'N/A'}
                </Link>
               </TableCell>
-            <TableCell className="text-center">
-              <div className="flex items-center justify-center space-x-1">
+            <TableCell className="text-center py-3 px-2 sm:px-4">
+              <div className="flex items-center justify-center space-x-0 sm:space-x-1">
                 <Button
                   variant="ghost"
                   size="icon"
                   title={favoritedCoins.has(coin.id) ? "Remove from Watchlist" : "Add to Watchlist"}
-                  className="h-9 w-9"
+                  className="h-7 w-7 sm:h-9 sm:w-9"
                   onClick={() => toggleFavorite(coin.id)}
                 >
-                  <Star className={cn("h-5 w-5", favoritedCoins.has(coin.id) ? "text-primary fill-primary" : "text-muted-foreground")} />
+                  <Star className={cn("h-4 w-4 sm:h-5 sm:w-5", favoritedCoins.has(coin.id) ? "text-primary fill-primary" : "text-muted-foreground")} />
                 </Button>
-                <Button variant="ghost" size="icon" title="View Details" asChild className="h-9 w-9">
+                <Button variant="ghost" size="icon" title="View Details" asChild className="h-7 w-7 sm:h-9 sm:w-9">
                   <Link href={`/coin/${coin.id}`}>
-                    <LineChart className="h-5 w-5" />
+                    <LineChart className="h-4 w-4 sm:h-5 sm:w-5" />
                   </Link>
                 </Button>
               </div>
