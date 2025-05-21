@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type ThemeValue = "logo-cyan" | "logo-magenta" | "logo-pink" | "neon-orange" | "neon-green" | "neon-blue" | "neon-lime" | "neon-yellow";
+type ThemeValue = "logo-cyan" | "logo-magenta" | "logo-pink" | "neon-orange" | "neon-green" | "neon-blue" | "neon-lime" | "neon-yellow" | "neon-royal-blue";
 
 interface ThemeOption {
   value: ThemeValue;
@@ -23,6 +23,7 @@ interface ThemeOption {
 const themes: ThemeOption[] = [
   { value: "logo-cyan", label: "Logo Cyan (Default)", className: "theme-logo-cyan" }, 
   { value: "neon-blue", label: "Neon Blue", className: "theme-neon-blue" },
+  { value: "neon-royal-blue", label: "Neon Royal Blue", className: "theme-neon-royal-blue" },
   { value: "logo-magenta", label: "Logo Magenta", className: "theme-logo-magenta" },
   { value: "logo-pink", label: "Logo Pink", className: "theme-logo-pink" },
   { value: "neon-orange", label: "Neon Orange", className: "theme-orange" },
@@ -83,3 +84,4 @@ export function ThemeSwitcher() {
     </DropdownMenu>
   );
 }
+
