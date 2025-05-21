@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type ThemeValue = "logo-cyan" | "logo-magenta" | "logo-pink" | "neon-orange" | "neon-green" | "neon-blue";
+type ThemeValue = "logo-cyan" | "logo-magenta" | "logo-pink" | "neon-orange" | "neon-green" | "neon-blue" | "neon-lime" | "neon-yellow";
 
 interface ThemeOption {
   value: ThemeValue;
@@ -27,12 +27,14 @@ const themes: ThemeOption[] = [
   { value: "logo-pink", label: "Logo Pink", className: "theme-logo-pink" },
   { value: "neon-orange", label: "Neon Orange", className: "theme-orange" },
   { value: "neon-green", label: "Neon Green", className: "theme-green" },
+  { value: "neon-lime", label: "Neon Lime", className: "theme-neon-lime" },
+  { value: "neon-yellow", label: "Neon Yellow", className: "theme-neon-yellow" },
 ];
 
-const LOCAL_STORAGE_THEME_KEY = "rocket-meme-theme-v2"; // Changed key to reset if old one exists with "blue"
+const LOCAL_STORAGE_THEME_KEY = "rocket-meme-theme-v2"; 
 
 export function ThemeSwitcher() {
-  const [currentTheme, setCurrentTheme] = React.useState<ThemeValue>("logo-cyan"); // Default to "logo-cyan"
+  const [currentTheme, setCurrentTheme] = React.useState<ThemeValue>("logo-cyan"); 
 
   React.useEffect(() => {
     const storedTheme = localStorage.getItem(LOCAL_STORAGE_THEME_KEY) as ThemeValue | null;
@@ -44,7 +46,7 @@ export function ThemeSwitcher() {
   React.useEffect(() => {
     // Remove all potential theme classes first
     themes.forEach(theme => {
-      if (theme.className) { // Ensure className is defined
+      if (theme.className) { 
         document.documentElement.classList.remove(theme.className);
       }
     });

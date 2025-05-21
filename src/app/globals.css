@@ -17,6 +17,8 @@ body {
     --theme-orange-hsl: 25 100% 50%;   /* Neon Orange */
     --theme-green-hsl: 145 100% 45%;  /* Neon Green */
     --theme-neon-blue-hsl: 220 100% 55%; /* Distinct Neon Blue */
+    --theme-neon-lime-hsl: 90 100% 50%;   /* New Neon Lime */
+    --theme-neon-yellow-hsl: 60 100% 50%; /* New Neon Yellow */
 
     /* Default Theme Accent (Logo Cyan) */
     --current-accent-hsl: var(--theme-logo-cyan-hsl);
@@ -86,6 +88,12 @@ body {
   }
   html.theme-green {
     --current-accent-hsl: var(--theme-green-hsl);
+  }
+  html.theme-neon-lime {
+    --current-accent-hsl: var(--theme-neon-lime-hsl);
+  }
+  html.theme-neon-yellow {
+    --current-accent-hsl: var(--theme-neon-yellow-hsl);
   }
 }
 
@@ -171,4 +179,3 @@ body {
 .animate-blastoff {
   animation: blastoff 6s ease-in forwards 1s;
 }
-
