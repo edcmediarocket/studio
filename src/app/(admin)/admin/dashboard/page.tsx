@@ -45,7 +45,7 @@ export default function AdminDashboardPage() {
         setCurrentUser(user);
         if (user) {
           try {
-            const tokenResult = await user.getIdTokenResult(true); 
+            const tokenResult = await user.getIdTokenResult(true);
             if (tokenResult.claims.admin === true) {
               setIsAdmin(true);
             } else {
@@ -54,10 +54,10 @@ export default function AdminDashboardPage() {
           } catch (error) {
             console.error("AdminDashboard: Error getting ID token result:", error);
             setIsAdmin(false);
-            toast({ title: "Error", description: "Failed to verify admin status.", variant: "destructive" });
+            // Toast moved to separate useEffect to avoid calling during initial loading state
           }
         } else {
-          setIsAdmin(false); 
+          setIsAdmin(false);
         }
       } catch (e) {
         console.error("AdminDashboard: Error in onAuthStateChanged callback:", e);
@@ -68,15 +68,23 @@ export default function AdminDashboardPage() {
     });
 
     return () => unsubscribe();
-  }, [auth, toast]); 
+  }, [auth, toast]);
+
+  // Moved this useEffect to the top level
+  useEffect(() => {
+    // Condition to show toast is now inside the hook
+    if (!authCheckLoading && currentUser && !isAdmin) {
+      toast({ title: "Access Denied", description: "You do not have the necessary permissions to view this page. Admin role via custom claims required.", variant: "destructive" });
+    }
+  }, [authCheckLoading, currentUser, isAdmin, toast]);
 
   useEffect(() => {
-    if (authCheckLoading) return; 
+    if (authCheckLoading) return;
 
     if (!isAdmin || !currentUser) {
       setLoadingUsers(false);
       if (currentUser && !isAdmin) {
-        setUsers([]); 
+        setUsers([]);
       }
       return;
     }
@@ -154,12 +162,7 @@ export default function AdminDashboardPage() {
   }
 
   if (!isAdmin) {
-    useEffect(() => {
-      if(!authCheckLoading && currentUser && !isAdmin) {
-        toast({ title: "Access Denied", description: "You do not have the necessary permissions to view this page. Admin role via custom claims required.", variant: "destructive" });
-      }
-    }, [authCheckLoading, currentUser, isAdmin, toast]);
-
+    // The toast logic is now handled by the top-level useEffect
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] text-center p-4">
         <ShieldAlert className="h-16 w-16 text-destructive mb-4" />
