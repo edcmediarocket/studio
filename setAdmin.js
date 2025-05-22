@@ -6,7 +6,7 @@ admin.initializeApp({
 });
 
 const uid = "5LBf6CZydDZHXctKBBOl9CeZ2QV2";
-
+const uid = "xCyY0zaCW8bcFWN8Uru06NelIcS2";
 admin.auth().setCustomUserClaims(uid, { admin: true })
   .then(() => {
     console.log(`✅ Admin claim successfully set for UID: ${uid}`);

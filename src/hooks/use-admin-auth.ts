@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { ADMIN_EMAIL } from '@/lib/firebase';
+import { ADMIN_EMAILS } from '@/lib/firebase';
 
 export function useAdminAuth() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -13,7 +13,7 @@ export function useAdminAuth() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      if (currentUser && currentUser.email === ADMIN_EMAIL) {
+      if (currentUser && currentUser.email && ADMIN_EMAILS.includes(currentUser.email.toLowerCase())) {
         setIsAdmin(true);
       } else {
         setIsAdmin(false);

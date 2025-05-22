@@ -6,12 +6,12 @@ import { getFirestore } from 'firebase/firestore'; // Added for future use if re
 
 // Your web app's Firebase configuration
 const firebaseConfig: FirebaseOptions = {
-  apiKey: "AIzaSyD1l4ELRKb-9Ic2IgVy99Q5NUt43kI879o", // User-provided
-  authDomain: "meme-prophet-xpyi0.firebaseapp.com", // User-provided
-  projectId: "meme-prophet-xpyi0", // User-provided
-  storageBucket: "meme-prophet-xpyi0.appspot.com", // Corrected from user-provided
-  messagingSenderId: "1080795361618", // User-provided
-  appId: "1:1080795361618:web:44e0f318a3a9399e77ca8b" // User-provided
+  apiKey: "AIzaSyD1l4ELRKb-9Ic2IgVy99Q5NUt43kI879o",
+  authDomain: "meme-prophet-xpyi0.firebaseapp.com",
+  projectId: "meme-prophet-xpyi0",
+  storageBucket: "meme-prophet-xpyi0.appspot.com",
+  messagingSenderId: "1080795361618",
+  appId: "1:1080795361618:web:44e0f318a3a9399e77ca8b"
   // measurementId: "YOUR_MEASUREMENT_ID_HERE" // Optional: for Google Analytics - User can add this if needed
 };
 
@@ -26,8 +26,11 @@ if (!getApps().length) {
 const auth = getAuth(app);
 const db = getFirestore(app); // Initialize Firestore
 
-// Define admin email
-export const ADMIN_EMAIL = "coreyenglish517@gmail.com"; 
+// Define admin emails
+export const ADMIN_EMAILS = [
+  "coreyenglish517@gmail.com".toLowerCase(),
+  "giomazetti@gmail.com".toLowerCase()
+];
 
 export { app, auth, db };
 
