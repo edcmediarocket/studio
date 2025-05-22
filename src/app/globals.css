@@ -21,6 +21,7 @@ body {
     --theme-neon-yellow-hsl: 60 100% 50%; /* New Neon Yellow */
     --theme-neon-royal-blue-hsl: 230 100% 55%; /* New Neon Royal Blue */
     --theme-neon-purple-hsl: 270 100% 60%; /* New Neon Purple */
+    --theme-neon-red-hsl: 0 100% 50%; /* New Neon Red */
 
     /* Default Theme Accent (Logo Cyan) */
     --current-accent-hsl: var(--theme-logo-cyan-hsl);
@@ -100,8 +101,11 @@ body {
   html.theme-neon-yellow {
     --current-accent-hsl: var(--theme-neon-yellow-hsl);
   }
-  html.theme-neon-purple { /* Added Neon Purple theme class */
+  html.theme-neon-purple { 
     --current-accent-hsl: var(--theme-neon-purple-hsl);
+  }
+  html.theme-neon-red { /* Added Neon Red theme class */
+    --current-accent-hsl: var(--theme-neon-red-hsl);
   }
 }
 
