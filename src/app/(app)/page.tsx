@@ -30,7 +30,7 @@ const MarketMoverItemCard: React.FC<MarketMoverItemProps> = React.memo(({ id, na
     <Link href={`/coin/${id}`} key={id} className="block hover:bg-muted/30 transition-colors px-3 py-3 sm:px-4 sm:py-2 border-b last:border-b-0">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-2 sm:space-x-3">
-          <Image src={image} alt={name} width={24} height={24} className="rounded-full" data-ai-hint="coin logo crypto"/>
+          <Image src={image} alt={name} width={24} height={24} className="rounded-full" data-ai-hint="coin logo crypto" />
           <div>
             <span className="text-xs sm:text-sm font-medium">{name}</span>
             <span className="text-xs text-muted-foreground ml-1 sm:ml-1.5">{symbol.toUpperCase()}</span>
@@ -164,7 +164,7 @@ export default function DashboardPage() {
     if (items.length === 0 && !moversError) {
         return <p className="text-xs text-muted-foreground px-3 py-3 sm:px-4 sm:py-2">No significant {type}s found in the top 100 right now.</p>;
     }
-    if (moversError) return null;
+    if (moversError && items.length === 0) return null; // Don't show "no movers" if there's a general error and items is empty
 
 
     return items.map(coin => <MarketMoverItemCard key={coin.id} {...coin} />);
