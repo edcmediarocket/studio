@@ -109,7 +109,7 @@ export default function LoginPage() {
       console.error("Email/Password action error:", err);
       let errorMessage = err.message || `Failed to ${isSignUpMode ? 'sign up' : 'login'}. Please check your credentials.`;
       if (err.code === 'auth/user-not-found' && !isSignUpMode) {
-        errorMessage = "User not found with this email. Have you signed up yet? Or try signing in with Google.";
+        errorMessage = "User not found with this email. Have you signed up with email/password yet? Or try signing in with Google.";
       } else if (err.code === 'auth/wrong-password' && !isSignUpMode) {
         errorMessage = "Incorrect password. Please try again or reset your password if needed.";
       } else if (err.code === 'auth/email-already-in-use' && isSignUpMode) {
@@ -136,7 +136,6 @@ export default function LoginPage() {
       toast({ title: "Google Sign-In Successful", description: "Welcome!" });
       router.push('/');
     } catch (err: any) {
-      console.error("Google sign-in error:", err);
       const errorCode = err.code;
       const errorMessageText = err.message;
       if (errorCode === 'auth/popup-closed-by-user' || errorCode === 'auth/cancelled-popup-request') {
@@ -148,6 +147,7 @@ export default function LoginPage() {
         });
         setError(null); 
       } else {
+        console.error("Google sign-in error:", err);
         setError(errorMessageText || "Failed to login with Google. Please try again.");
         toast({ title: "Google Sign-In Failed", description: errorMessageText || "Please try again.", variant: "destructive" });
       }
@@ -304,7 +304,7 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       disabled={isLoadingEmail || isLoadingGoogle || isLoadingPhone}
-                      placeholder={isSignUpMode ? "Choose a strong password" : "Enter your password"}
+                      placeholder={isSignUpMode ? "Choose a strong password (min. 6 characters)" : "Enter your password"}
                     />
                   </div>
                 </div>
@@ -399,5 +399,7 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
 
     
