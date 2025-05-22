@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/icons/logo";
-import { KeyRound, AtSign, Loader2, UserPlus, Smartphone, MessageSquare } from "lucide-react";
+import { KeyRound, AtSign, Loader2, UserPlus, Smartphone, MessageSquare, Send } from "lucide-react"; // Added Send icon
 import { auth } from '@/lib/firebase';
 import {
   signInWithEmailAndPassword,
@@ -49,42 +49,41 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSignUpMode, setIsSignUpMode] = useState(false);
 
-  // Phone Auth State
   const [phoneNumber, setPhoneNumber] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [isLoadingPhone, setIsLoadingPhone] = useState(false);
   const [isCodeSent, setIsCodeSent] = useState(false);
-  const [loginMode, setLoginMode] = useState<'email' | 'phone'>('email'); // 'email' or 'phone'
+  const [loginMode, setLoginMode] = useState<'email' | 'phone'>('email'); 
 
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (loginMode === 'phone' && !window.recaptchaVerifier && recaptchaContainerRef.current) {
+    if (loginMode === 'phone' && !window.recaptchaVerifier && recaptchaContainerRef.current && auth) {
       try {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
           'size': 'invisible',
           'callback': (response: any) => {
-            // reCAPTCHA solved, allow signInWithPhoneNumber.
             // console.log("reCAPTCHA verified");
           },
           'expired-callback': () => {
-            // Response expired. Ask user to solve reCAPTCHA again.
             toast({ title: "reCAPTCHA Expired", description: "Please try sending the code again.", variant: "default" });
           }
         });
         window.recaptchaVerifier.render().catch(err => {
             console.error("RecaptchaVerifier render error:", err);
-            setError("Failed to initialize reCAPTCHA. Please ensure it's configured correctly in Firebase and try refreshing.");
-            toast({ title: "reCAPTCHA Error", description: "Could not initialize security check.", variant: "destructive" });
+            const detailedErrorMsg = "Failed to initialize reCAPTCHA for phone sign-in. This might be due to browser settings (e.g., blocking cookies/sessionStorage, strict privacy extensions) or network issues. Please check your browser settings and try refreshing.";
+            setError(detailedErrorMsg);
+            toast({ title: "Phone Sign-In Security Check Failed", description: detailedErrorMsg, variant: "destructive", duration: 10000 });
         });
       } catch (err) {
         console.error("Error initializing RecaptchaVerifier:", err);
-        setError("Failed to initialize phone sign-in. Please check Firebase configuration for reCAPTCHA.");
-        toast({ title: "Phone Sign-In Error", description: "Security check setup failed.", variant: "destructive" });
+        const detailedErrorMsg = "Failed to initialize phone sign-in security. Please check Firebase reCAPTCHA configuration and browser settings. If the issue persists, try refreshing the page.";
+        setError(detailedErrorMsg);
+        toast({ title: "Phone Sign-In Error", description: detailedErrorMsg, variant: "destructive", duration: 10000 });
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loginMode]); // Only run when loginMode changes to 'phone'
+  }, [loginMode]); 
 
 
   const handleEmailSubmit = async (event: React.FormEvent) => {
@@ -128,18 +127,20 @@ export default function LoginPage() {
       await signInWithPopup(auth, provider);
       toast({ title: "Google Sign-In Successful", description: "Welcome!" });
       router.push('/');
-    } catch (err: any) {
-      console.warn("Google login error:", err);
-      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+    } catch (err: any)_LOG_Type.ERROR, "Auth", "signInWithPopup", err);
+      const errorCode = err.code;
+      const errorMessage = err.message;
+      if (errorCode === 'auth/popup-closed-by-user' || errorCode === 'auth/cancelled-popup-request') {
         toast({
           title: "Google Sign-In Cancelled",
-          description: "The Google Sign-In window was closed before completion. Please ensure popups are allowed and try again.",
+          description: "The Google Sign-In window was closed or cancelled before completion. Please ensure popups are allowed and try again if you wish to sign in with Google.",
           variant: "default",
-          duration: 5000,
+          duration: 7000,
         });
+        setError(null); // Don't show a red error for user cancellation
       } else {
-        setError(err.message || "Failed to login with Google. Please try again.");
-        toast({ title: "Google Sign-In Failed", description: err.message || "Please try again.", variant: "destructive" });
+        setError(errorMessage || "Failed to login with Google. Please try again.");
+        toast({ title: "Google Sign-In Failed", description: errorMessage || "Please try again.", variant: "destructive" });
       }
     } finally {
       setIsLoadingGoogle(false);
@@ -153,7 +154,7 @@ export default function LoginPage() {
       return;
     }
     if (!window.recaptchaVerifier) {
-        setError("reCAPTCHA verifier not initialized. Please refresh.");
+        setError("reCAPTCHA verifier not initialized. Please refresh the page and try again.");
         toast({ title: "Error", description: "Security check not ready. Please refresh.", variant: "destructive" });
         return;
     }
@@ -171,17 +172,25 @@ export default function LoginPage() {
       toast({ title: "Verification Code Sent", description: `Code sent to ${phoneNumber}.` });
     } catch (err: any) {
       console.error("Error sending verification code:", err);
-      setError(err.message || "Failed to send verification code. Ensure reCAPTCHA is configured and phone number is valid.");
-      toast({ title: "Code Send Failed", description: err.message || "Please try again.", variant: "destructive" });
-      // Reset reCAPTCHA if it exists, as it might be a one-time use or expired
+      let detailedErrorMsg = err.message || "Failed to send verification code. Ensure reCAPTCHA is configured and phone number is valid.";
+      if (err.code === 'auth/captcha-check-failed' || err.code === 'auth/missing-recaptcha-token') {
+        detailedErrorMsg = "reCAPTCHA verification failed. Please complete the security check and try again. If issues persist, check browser extensions or refresh the page.";
+      } else if (err.message && (err.message.includes("missing initial state") || err.message.includes("sessionStorage is inaccessible"))) {
+        detailedErrorMsg = "Authentication failed due to missing session data. This can be caused by browser privacy settings (like blocking third-party cookies or sessionStorage) or extensions. Please check your browser settings and try again. Using an incognito window might also help diagnose the issue.";
+      }
+      setError(detailedErrorMsg);
+      toast({ title: "Code Send Failed", description: detailedErrorMsg, variant: "destructive", duration: 10000 });
+      
       if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear(); // Clear the existing verifier
-        if (recaptchaContainerRef.current) { // Re-initialize if container exists
+        window.recaptchaVerifier.clear(); 
+        if (recaptchaContainerRef.current && auth) {
              try {
                 window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, { size: 'invisible' });
-                await window.recaptchaVerifier.render();
+                // Note: It's not always necessary or safe to call .render() again here immediately
+                // Firebase might handle re-rendering internally or on next attempt.
+                // Awaiting render here could also cause issues if the container isn't perfectly ready.
              } catch (renderErr) {
-                console.error("RecaptchaVerifier re-render error:", renderErr);
+                console.error("RecaptchaVerifier re-initialization error during error handling:", renderErr);
              }
         }
       }
@@ -193,7 +202,8 @@ export default function LoginPage() {
   const handleVerifyCode = async () => {
     if (!window.confirmationResult) {
       setError("No confirmation result found. Please request a new code.");
-      toast({ title: "Error", description: "Verification session expired.", variant: "destructive" });
+      toast({ title: "Error", description: "Verification session expired or was not initiated. Please send code again.", variant: "destructive" });
+      setIsCodeSent(false); // Reset to allow resending code
       return;
     }
     setIsLoadingPhone(true);
@@ -219,7 +229,7 @@ export default function LoginPage() {
   const switchLoginMethod = (method: 'email' | 'phone') => {
     setLoginMode(method);
     setError(null);
-    setIsCodeSent(false); // Reset phone auth flow
+    setIsCodeSent(false);
     setPhoneNumber('');
     setVerificationCode('');
   };
@@ -247,7 +257,7 @@ export default function LoginPage() {
                 Sign in with Google
               </Button>
               <p className="text-xs text-center text-muted-foreground -mt-2">
-                If Google Sign-In doesn't work, ensure popups are enabled.
+                If Google Sign-In doesn't work, ensure popups are enabled and try again.
               </p>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -352,20 +362,19 @@ export default function LoginPage() {
                     {isLoadingPhone ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-5 w-5" />}
                     Verify & Sign In
                   </Button>
-                   <Button variant="link" size="sm" onClick={() => setIsCodeSent(false)} disabled={isLoadingPhone}>
+                   <Button variant="link" size="sm" onClick={() => { setIsCodeSent(false); setError(null); }} disabled={isLoadingPhone}>
                      Entered wrong number or didn't get code?
                   </Button>
                 </>
               )}
-              {/* This div is used by RecaptchaVerifier. It can be hidden with CSS if desired. */}
-              <div ref={recaptchaContainerRef} id="recaptcha-container"></div>
+              <div ref={recaptchaContainerRef} id="recaptcha-container-login"></div>
             </div>
           )}
 
-          {error && <p className="text-xs text-destructive text-center">{error}</p>}
+          {error && <p className="text-xs text-destructive text-center pt-2">{error}</p>}
 
         </CardContent>
-        <CardFooter className="flex flex-col items-center space-y-2 text-sm">
+        <CardFooter className="flex flex-col items-center space-y-2 text-sm pt-4">
           {loginMode === 'email' && !isSignUpMode && (
             <Link href="#" className="font-medium text-primary hover:text-neon hover:underline">
               Forgot your password?
