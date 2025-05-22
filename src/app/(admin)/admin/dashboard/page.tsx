@@ -1,35 +1,30 @@
 
 "use client";
 
-import dynamic from 'next/dynamic';
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, ShieldAlert } from "lucide-react";
+// Comment out original content for diagnostics
+// import dynamic from 'next/dynamic';
+// import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+// import { Loader2, ShieldAlert } from "lucide-react";
 
-// Dynamically import AdminGate with SSR turned off
-const AdminGate = dynamic(() => import('@/components/admin/AdminGate'), {
-  ssr: false,
-  loading: () => (
-    <div className="flex justify-center items-center min-h-[calc(100vh-300px)]">
-      <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      <p className="ml-3 text-muted-foreground">Loading Admin Panel...</p>
-    </div>
-  ),
-});
+// const AdminGate = dynamic(() => import('@/components/admin/AdminGate'), {
+//   ssr: false,
+//   loading: () => (
+//     <div className="flex justify-center items-center min-h-[calc(100vh-300px)]">
+//       <Loader2 className="h-12 w-12 animate-spin text-primary" />
+//       <p className="ml-3 text-muted-foreground">Loading Admin Panel...</p>
+//     </div>
+//   ),
+// });
 
 export default function AdminDashboardPage() {
   return (
-    <div className="space-y-8 p-4 md:p-6">
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-3xl md:text-4xl font-bold text-neon mb-2 flex items-center">
-            <ShieldAlert className="mr-3 h-8 w-8" /> Admin Panel
-          </CardTitle>
-          <CardDescription className="text-lg text-muted-foreground">
-            Oversee users and manage application settings. Access is restricted.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-      <AdminGate />
+    <div className="p-6">
+      <h1 className="text-2xl font-bold text-neon">Admin Dashboard Test</h1>
+      <p className="text-muted-foreground">If you see this, the basic page route is working.</p>
+      <p className="text-muted-foreground mt-4">
+        The actual admin components (AdminGate and AdminDashboard) are temporarily commented out for debugging an Internal Server Error.
+        Please check your server terminal logs for more details if the error persists.
+      </p>
     </div>
   );
 }

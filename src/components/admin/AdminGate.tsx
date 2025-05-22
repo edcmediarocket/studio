@@ -3,30 +3,48 @@
 
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useEffect, useState } from 'react';
-import { auth, db } from '@/lib/firebase'; // Corrected import path
+import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import AdminDashboard from './AdminDashboard';
 import { Loader2, ShieldAlert } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+// Dynamically import AdminDashboard
+const AdminDashboard = dynamic(() => import('./AdminDashboard'), {
+  loading: () => (
+    <div className="flex justify-center items-center min-h-[200px]">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <p className="ml-2 text-muted-foreground">Loading Dashboard...</p>
+    </div>
+  ),
+  ssr: false, // Ensure AdminDashboard itself is also not SSR'd by this import
+});
 
 const AdminGate = () => {
   const [user, loadingAuth, errorAuth] = useAuthState(auth);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingRole, setLoadingRole] = useState(true);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    console.log("AdminGate: useEffect triggered. User:", user ? user.uid : null, "LoadingAuth:", loadingAuth, "AuthError:", errorAuth ? errorAuth.message : null);
+    setIsClient(true); // Set to true once component mounts on client
+  }, []);
+
+  useEffect(() => {
+    // console.log("AdminGate: useEffect triggered. User:", user ? user.uid : null, "LoadingAuth:", loadingAuth, "AuthError:", errorAuth ? errorAuth.message : null);
+    if (!isClient) return; // Don't run auth logic until client-side
+
     if (user) {
       const checkAdmin = async () => {
-        console.log("AdminGate: checkAdmin started for user:", user.uid);
+        // console.log("AdminGate: checkAdmin started for user:", user.uid);
         setLoadingRole(true);
         try {
           const userDocRef = doc(db, 'users', user.uid);
           const docSnap = await getDoc(userDocRef);
           if (docSnap.exists() && docSnap.data().role === 'admin') {
-            console.log("AdminGate: User is admin. Firestore data:", docSnap.data());
+            // console.log("AdminGate: User is admin. Firestore data:", docSnap.data());
             setIsAdmin(true);
           } else {
-            console.log("AdminGate: User is NOT admin or doc doesn't exist/no role field. Doc exists:", docSnap.exists(), "Data:", docSnap.exists() ? docSnap.data() : 'No doc');
+            // console.log("AdminGate: User is NOT admin or doc doesn't exist/no role field. Doc exists:", docSnap.exists(), "Data:", docSnap.exists() ? docSnap.data() : 'No doc');
             setIsAdmin(false);
           }
         } catch (error) {
@@ -34,20 +52,20 @@ const AdminGate = () => {
           setIsAdmin(false);
         } finally {
           setLoadingRole(false);
-          console.log("AdminGate: checkAdmin finished.");
+          // console.log("AdminGate: checkAdmin finished.");
         }
       };
       checkAdmin();
     } else if (!loadingAuth) {
-      console.log("AdminGate: No user and auth not loading. Setting isAdmin to false.");
+      // console.log("AdminGate: No user and auth not loading. Setting isAdmin to false.");
       setIsAdmin(false);
       setLoadingRole(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps 
-  }, [user, loadingAuth]); // db is stable, errorAuth can be added if its change should re-trigger
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, loadingAuth, isClient]); // db is stable
 
-  if (loadingAuth || loadingRole) {
-    console.log("AdminGate: Rendering loading state. LoadingAuth:", loadingAuth, "LoadingRole:", loadingRole);
+  if (!isClient || loadingAuth || loadingRole) {
+    // console.log("AdminGate: Rendering loading state. IsClient:", isClient, "LoadingAuth:", loadingAuth, "LoadingRole:", loadingRole);
     return (
       <div className="flex justify-center items-center min-h-[calc(100vh-200px)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -57,7 +75,7 @@ const AdminGate = () => {
   }
 
   if (errorAuth) {
-     console.error("AdminGate: Firebase auth error detected during render:", errorAuth);
+    //  console.error("AdminGate: Firebase auth error detected during render:", errorAuth);
      return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] text-center p-4">
         <ShieldAlert className="h-16 w-16 text-destructive mb-4" />
@@ -67,9 +85,9 @@ const AdminGate = () => {
       </div>
     );
   }
-  
+
   if (!user) {
-     console.log("AdminGate: Rendering 'Access Denied - Not Logged In' state because user object is null/undefined.");
+    //  console.log("AdminGate: Rendering 'Access Denied - Not Logged In' state because user object is null/undefined.");
      return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] text-center p-4">
         <ShieldAlert className="h-16 w-16 text-destructive mb-4" />
@@ -79,7 +97,7 @@ const AdminGate = () => {
     );
   }
 
-  console.log("AdminGate: Rendering main content. IsAdmin:", isAdmin);
+  // console.log("AdminGate: Rendering main content. IsAdmin:", isAdmin);
   return isAdmin ? <AdminDashboard /> : (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] text-center p-4">
       <ShieldAlert className="h-16 w-16 text-destructive mb-4" />
