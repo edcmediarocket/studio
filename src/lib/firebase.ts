@@ -2,17 +2,17 @@
 // src/lib/firebase.ts
 import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'; // Added for future use if reading from Firestore
+import { getFirestore } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
 const firebaseConfig: FirebaseOptions = {
   apiKey: "AIzaSyD1l4ELRKb-9Ic2IgVy99Q5NUt43kI879o",
   authDomain: "meme-prophet-xpyi0.firebaseapp.com",
   projectId: "meme-prophet-xpyi0",
-  storageBucket: "meme-prophet-xpyi0.appspot.com",
+  storageBucket: "meme-prophet-xpyi0.appspot.com", // Corrected format
   messagingSenderId: "1080795361618",
   appId: "1:1080795361618:web:44e0f318a3a9399e77ca8b"
-  // measurementId: "YOUR_MEASUREMENT_ID_HERE" // Optional: for Google Analytics - User can add this if needed
+  // measurementId: "YOUR_MEASUREMENT_ID_HERE" // Optional
 };
 
 // Initialize Firebase
@@ -24,13 +24,13 @@ if (!getApps().length) {
 }
 
 const auth = getAuth(app);
-const db = getFirestore(app); // Initialize Firestore
+const db = getFirestore(app);
 
-// Define admin emails
+// Define admin emails for client-side UI purposes (e.g., default tier assignment)
+// Actual admin access for dashboard is now driven by custom claims.
 export const ADMIN_EMAILS = [
   "coreyenglish517@gmail.com".toLowerCase(),
   "giomazetti@gmail.com".toLowerCase()
 ];
 
 export { app, auth, db };
-

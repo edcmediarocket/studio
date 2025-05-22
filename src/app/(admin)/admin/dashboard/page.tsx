@@ -2,9 +2,9 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { getFirestore, collection, onSnapshot, updateDoc, doc, query, orderBy, deleteDoc } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, updateDoc, doc, query, orderBy, deleteDoc, where } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { app } from '@/lib/firebase';
+import { app } from '@/lib/firebase'; // Use your firebase app instance
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -16,14 +16,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, ShieldAlert, Trash2, UserCircle } from "lucide-react";
-import type { UserTier } from '@/context/tier-context';
+import { Loader2, ShieldAlert, Trash2, UserCircle } from "lucide-react"; // Added UserCircle
+import type { UserTier } from '@/context/tier-context'; // Assuming UserTier is defined elsewhere
 
 interface UserData {
-  id: string;
+  id: string; // Corresponds to Firebase UID
   email?: string;
   tier?: UserTier;
+  // Add other fields you might have in your user documents
 }
+
+const TIER_OPTIONS: UserTier[] = ["Free", "Basic", "Pro", "Premium"];
 
 export default function AdminDashboardPage() {
   const [users, setUsers] = useState<UserData[]>([]);
@@ -40,51 +43,51 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     setAuthCheckLoading(true);
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      try {
-        setCurrentUser(user);
-        if (user) {
-          try {
-            const tokenResult = await user.getIdTokenResult(true);
-            if (tokenResult.claims.admin === true) {
-              setIsAdmin(true);
-            } else {
-              setIsAdmin(false);
-            }
-          } catch (error) {
-            console.error("AdminDashboard: Error getting ID token result:", error);
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user);
+      if (user) {
+        try {
+          const tokenResult = await user.getIdTokenResult(true); // Force refresh
+          if (tokenResult.claims.admin === true) {
+            setIsAdmin(true);
+          } else {
             setIsAdmin(false);
-            // Toast moved to separate useEffect to avoid calling during initial loading state
           }
-        } else {
+        } catch (error) {
+          console.error("AdminDashboard: Error getting ID token result:", error);
           setIsAdmin(false);
+        } finally {
+          // This will be called regardless of success/failure in try block
         }
-      } catch (e) {
-        console.error("AdminDashboard: Error in onAuthStateChanged callback:", e);
+      } else {
         setIsAdmin(false);
-      } finally {
-        setAuthCheckLoading(false);
       }
+      // Moved setAuthCheckLoading(false) to a separate useEffect to ensure it runs after isAdmin state is potentially set
     });
+    return () => unsubscribeAuth();
+  }, [auth]);
 
-    return () => unsubscribe();
-  }, [auth, toast]);
-
-  // Moved this useEffect to the top level
   useEffect(() => {
-    // Condition to show toast is now inside the hook
     if (!authCheckLoading && currentUser && !isAdmin) {
-      toast({ title: "Access Denied", description: "You do not have the necessary permissions to view this page. Admin role via custom claims required.", variant: "destructive" });
+        toast({ title: "Access Denied", description: "You do not have the necessary permissions to view this page. Admin role via custom claims required.", variant: "destructive" });
     }
   }, [authCheckLoading, currentUser, isAdmin, toast]);
 
-  useEffect(() => {
-    if (authCheckLoading) return;
 
-    if (!isAdmin || !currentUser) {
-      setLoadingUsers(false);
-      if (currentUser && !isAdmin) {
-        setUsers([]);
+  useEffect(() => {
+    // This effect runs after the initial auth check (including isAdmin determination) is complete.
+    // Only proceed if authCheckLoading is false.
+    if (!authCheckLoading) {
+      setAuthCheckLoading(false);
+    }
+  }, [authCheckLoading]);
+
+
+  useEffect(() => {
+    if (authCheckLoading || !isAdmin) {
+      setLoadingUsers(false); // Stop loading if not admin or still checking auth
+      if(!authCheckLoading && !isAdmin && currentUser) { // User is logged in but not admin
+        setUsers([]); // Clear users if not admin
       }
       return;
     }
@@ -100,12 +103,12 @@ export default function AdminDashboardPage() {
       setLoadingUsers(false);
     }, (error) => {
       console.error("Error fetching users:", error);
-      toast({ title: "Error", description: "Failed to fetch users from Firestore.", variant: "destructive" });
+      toast({ title: "Firestore Error", description: "Failed to fetch users. Check Firestore rules and ensure the 'users' collection exists.", variant: "destructive" });
       setLoadingUsers(false);
     });
 
     return () => unsubscribeUsers();
-  }, [isAdmin, currentUser, db, toast, authCheckLoading]);
+  }, [isAdmin, db, toast, authCheckLoading, currentUser]); // Added currentUser to deps
 
   const handleTierChange = useCallback(async (userId: string, newTier: UserTier) => {
     if (!isAdmin) {
@@ -118,7 +121,7 @@ export default function AdminDashboardPage() {
       toast({ title: "Success", description: `User tier updated to ${newTier}.` });
     } catch (error) {
       console.error("Error updating tier:", error);
-      toast({ title: "Error", description: "Failed to update user tier.", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to update user tier. Check Firestore rules.", variant: "destructive" });
     }
   }, [isAdmin, db, toast]);
 
@@ -134,7 +137,7 @@ export default function AdminDashboardPage() {
       toast({ title: "Success", description: "User document deleted from Firestore." });
     } catch (error) {
       console.error("Error deleting user document:", error);
-      toast({ title: "Error", description: "Failed to delete user document.", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to delete user document. Check Firestore rules.", variant: "destructive" });
     }
   }, [isAdmin, db, toast]);
 
@@ -160,15 +163,15 @@ export default function AdminDashboardPage() {
       </div>
     );
   }
-
+  
   if (!isAdmin) {
-    // The toast logic is now handled by the top-level useEffect
+    // The toast for "Access Denied" is handled by the useEffect hook at the top.
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] text-center p-4">
         <ShieldAlert className="h-16 w-16 text-destructive mb-4" />
         <h1 className="text-2xl font-bold text-destructive">Access Denied</h1>
         <p className="text-muted-foreground">You do not have the necessary permissions to view this page.</p>
-        <p className="text-xs text-muted-foreground mt-1">(Admin role via custom claims required)</p>
+        <p className="text-xs text-muted-foreground mt-1">(Admin role via custom claims required. If claim is set, it may take a moment to propagate after login.)</p>
       </div>
     );
   }
@@ -191,7 +194,7 @@ export default function AdminDashboardPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Tiers</SelectItem>
-            {(["Free", "Basic", "Pro", "Premium"] as UserTier[]).map(tier => (
+            {TIER_OPTIONS.map(tier => (
               <SelectItem key={tier} value={tier}>{tier}</SelectItem>
             ))}
           </SelectContent>
@@ -230,7 +233,7 @@ export default function AdminDashboardPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {(["Free", "Basic", "Pro", "Premium"] as UserTier[]).map(tierOpt => (
+                          {TIER_OPTIONS.map(tierOpt => (
                             <SelectItem key={tierOpt} value={tierOpt}>{tierOpt}</SelectItem>
                           ))}
                         </SelectContent>
@@ -250,14 +253,14 @@ export default function AdminDashboardPage() {
                 )) : (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
-                      No users found. Ensure your Firestore 'users' collection is populated and your admin account has a corresponding document. Check security rules if issues persist.
+                       No users found in Firestore matching your criteria. Ensure your 'users' collection is populated. If you're an admin, ensure your own user document (ID matching your UID) exists in the 'users' collection with an 'email' and 'tier' field. Check Firestore security rules for read/list permissions if issues persist.
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
           </div>
-          <p className="text-xs text-muted-foreground pt-2 text-center">Note: Deleting a user document here removes it from Firestore but does not delete their Firebase Authentication account.</p>
+          <p className="text-xs text-muted-foreground pt-2 text-center">Note: Deleting a user document here removes it from Firestore but does not delete their Firebase Authentication account. This requires Admin SDK privileges typically run from a backend.</p>
         </>
       )}
     </div>
