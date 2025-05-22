@@ -9,7 +9,7 @@ const firebaseConfig: FirebaseOptions = {
   apiKey: "AIzaSyD1l4ELRKb-9Ic2IgVy99Q5NUt43kI879o", // User-provided
   authDomain: "meme-prophet-xpyi0.firebaseapp.com", // User-provided
   projectId: "meme-prophet-xpyi0", // User-provided
-  storageBucket: "meme-prophet-xpyi0.appspot.com", // Corrected from user-provided firebasestorage.app
+  storageBucket: "meme-prophet-xpyi0.appspot.com", // Corrected from user-provided
   messagingSenderId: "1080795361618", // User-provided
   appId: "1:1080795361618:web:44e0f318a3a9399e77ca8b" // User-provided
   // measurementId: "YOUR_MEASUREMENT_ID_HERE" // Optional: for Google Analytics - User can add this if needed
@@ -30,3 +30,4 @@ const db = getFirestore(app); // Initialize Firestore
 export const ADMIN_EMAIL = "coreyenglish517@gmail.com"; 
 
 export { app, auth, db };
+
