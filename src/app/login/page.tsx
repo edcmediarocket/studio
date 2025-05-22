@@ -83,7 +83,7 @@ export default function LoginPage() {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loginMode]); 
+  }, [loginMode, toast]); 
 
 
   const handleEmailSubmit = async (event: React.FormEvent) => {
@@ -107,8 +107,16 @@ export default function LoginPage() {
       router.push('/');
     } catch (err: any) {
       console.error("Email/Password action error:", err);
-      setError(err.message || `Failed to ${isSignUpMode ? 'sign up' : 'login'}. Please check your credentials.`);
-      toast({ title: `${isSignUpMode ? 'Sign Up' : 'Login'} Failed`, description: err.message || "An error occurred.", variant: "destructive" });
+      let errorMessage = err.message || `Failed to ${isSignUpMode ? 'sign up' : 'login'}. Please check your credentials.`;
+      if (err.code === 'auth/user-not-found' && !isSignUpMode) {
+        errorMessage = "User not found with this email. Have you signed up yet? Or try signing in with Google.";
+      } else if (err.code === 'auth/wrong-password' && !isSignUpMode) {
+        errorMessage = "Incorrect password. Please try again or reset your password if needed.";
+      } else if (err.code === 'auth/email-already-in-use' && isSignUpMode) {
+        errorMessage = "This email is already in use. Please try logging in or use a different email.";
+      }
+      setError(errorMessage);
+      toast({ title: `${isSignUpMode ? 'Sign Up' : 'Login'} Failed`, description: errorMessage, variant: "destructive" });
     } finally {
       setIsLoadingEmail(false);
     }
@@ -130,7 +138,7 @@ export default function LoginPage() {
     } catch (err: any) {
       console.error("Google sign-in error:", err);
       const errorCode = err.code;
-      const errorMessage = err.message;
+      const errorMessageText = err.message;
       if (errorCode === 'auth/popup-closed-by-user' || errorCode === 'auth/cancelled-popup-request') {
         toast({
           title: "Google Sign-In Cancelled",
@@ -140,8 +148,8 @@ export default function LoginPage() {
         });
         setError(null); 
       } else {
-        setError(errorMessage || "Failed to login with Google. Please try again.");
-        toast({ title: "Google Sign-In Failed", description: errorMessage || "Please try again.", variant: "destructive" });
+        setError(errorMessageText || "Failed to login with Google. Please try again.");
+        toast({ title: "Google Sign-In Failed", description: errorMessageText || "Please try again.", variant: "destructive" });
       }
     } finally {
       setIsLoadingGoogle(false);
