@@ -53,28 +53,30 @@ export default function LoginPage() {
   const [verificationCode, setVerificationCode] = useState('');
   const [isLoadingPhone, setIsLoadingPhone] = useState(false);
   const [isCodeSent, setIsCodeSent] = useState(false);
-  const [loginMode, setLoginMode] = useState<'email' | 'phone'>('email'); 
+  const [loginMode, setLoginMode] = useState<'email' | 'phone'>('email');
 
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let verifier: RecaptchaVerifier | undefined;
     if (loginMode === 'phone' && !window.recaptchaVerifier && recaptchaContainerRef.current && auth) {
       try {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
+        verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
           'size': 'invisible',
           'callback': (response: any) => {
-            // console.log("reCAPTCHA verified");
+            // reCAPTCHA solved, allow signInWithPhoneNumber.
           },
           'expired-callback': () => {
             toast({ title: "reCAPTCHA Expired", description: "Please try sending the code again.", variant: "default" });
           }
         });
-        window.recaptchaVerifier.render().catch(err => {
+        verifier.render().catch(err => {
             console.error("RecaptchaVerifier render error:", err);
             const detailedErrorMsg = "Failed to initialize reCAPTCHA for phone sign-in. This might be due to browser settings (e.g., blocking cookies/sessionStorage, strict privacy extensions) or network issues. Please check your browser settings and try refreshing.";
             setError(detailedErrorMsg);
             toast({ title: "Phone Sign-In Security Check Failed", description: detailedErrorMsg, variant: "destructive", duration: 10000 });
         });
+        window.recaptchaVerifier = verifier;
       } catch (err) {
         console.error("Error initializing RecaptchaVerifier:", err);
         const detailedErrorMsg = "Failed to initialize phone sign-in security. Please check Firebase reCAPTCHA configuration and browser settings. If the issue persists, try refreshing the page.";
@@ -82,9 +84,27 @@ export default function LoginPage() {
         toast({ title: "Phone Sign-In Error", description: detailedErrorMsg, variant: "destructive", duration: 10000 });
       }
     }
+    // Cleanup function for the effect
+    return () => {
+      if (verifier) { // Use the locally scoped verifier for cleanup
+        try {
+          verifier.clear();
+        } catch (e) {
+          console.warn("Error clearing reCAPTCHA verifier on unmount:", e);
+        }
+      }
+      // Also attempt to clear global if it was set, as a fallback
+      if (window.recaptchaVerifier) {
+         try {
+          window.recaptchaVerifier.clear();
+        } catch (e) {
+          // console.warn("Error clearing global reCAPTCHA verifier on unmount:", e);
+        }
+        // window.recaptchaVerifier = undefined; // Optionally unset it
+      }
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loginMode, toast]); 
-
+  }, [loginMode, toast]); // auth object is stable
 
   const handleEmailSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -109,7 +129,7 @@ export default function LoginPage() {
       console.error("Email/Password action error:", err);
       let errorMessage = err.message || `Failed to ${isSignUpMode ? 'sign up' : 'login'}. Please check your credentials.`;
       if (err.code === 'auth/user-not-found' && !isSignUpMode) {
-        errorMessage = "User not found with this email. Have you signed up with email/password yet? Or try signing in with Google.";
+        errorMessage = "User not found with this email. Have you signed up with email/password for Rocket Meme yet, or was it with Google? Try signing in with Google or use the 'Sign Up' option.";
       } else if (err.code === 'auth/wrong-password' && !isSignUpMode) {
         errorMessage = "Incorrect password. Please try again or reset your password if needed.";
       } else if (err.code === 'auth/email-already-in-use' && isSignUpMode) {
@@ -145,11 +165,11 @@ export default function LoginPage() {
           variant: "default",
           duration: 7000,
         });
-        setError(null); 
+        setError(null);
       } else {
         console.error("Google sign-in error:", err);
         setError(errorMessageText || "Failed to login with Google. Please try again.");
-        toast({ title: "Google Sign-In Failed", description: errorMessageText || "Please try again.", variant: "destructive" });
+        toast({ title: "Google Sign-In Failed", description: errorMessageText || "Please try again. Ensure popups from this site are allowed in your browser settings and no extensions are blocking it.", variant: "destructive" });
       }
     } finally {
       setIsLoadingGoogle(false);
@@ -184,14 +204,14 @@ export default function LoginPage() {
       let detailedErrorMsg = err.message || "Failed to send verification code. Ensure reCAPTCHA is configured and phone number is valid.";
       if (err.code === 'auth/captcha-check-failed' || err.code === 'auth/missing-recaptcha-token') {
         detailedErrorMsg = "reCAPTCHA verification failed. Please complete the security check and try again. If issues persist, check browser extensions or refresh the page.";
-      } else if (err.message && (err.message.includes("missing initial state") || err.message.includes("sessionStorage is inaccessible"))) {
+      } else if (err.message && (err.message.toLowerCase().includes("missing initial state") || err.message.toLowerCase().includes("sessionstorage is inaccessible"))) {
         detailedErrorMsg = "Authentication failed due to missing session data. This can be caused by browser privacy settings (like blocking third-party cookies or sessionStorage) or extensions. Please check your browser settings and try again. Using an incognito window might also help diagnose the issue.";
       }
       setError(detailedErrorMsg);
       toast({ title: "Code Send Failed", description: detailedErrorMsg, variant: "destructive", duration: 10000 });
-      
+
       if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear(); 
+        window.recaptchaVerifier.clear();
         if (recaptchaContainerRef.current && auth) {
              try {
                 window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, { size: 'invisible' });
@@ -209,7 +229,7 @@ export default function LoginPage() {
     if (!window.confirmationResult) {
       setError("No confirmation result found. Please request a new code.");
       toast({ title: "Error", description: "Verification session expired or was not initiated. Please send code again.", variant: "destructive" });
-      setIsCodeSent(false); 
+      setIsCodeSent(false);
       return;
     }
     setIsLoadingPhone(true);
@@ -263,7 +283,7 @@ export default function LoginPage() {
                 Sign in with Google
               </Button>
               <p className="text-xs text-center text-muted-foreground -mt-2">
-                If Google Sign-In doesn't work, ensure popups are enabled and try again.
+                If Google Sign-In is cancelled, ensure popups are allowed and no extensions are blocking it.
               </p>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -399,7 +419,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    
-
-    
