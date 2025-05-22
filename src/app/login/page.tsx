@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/icons/logo";
-import { KeyRound, AtSign, Loader2, UserPlus, Smartphone, MessageSquare, Send } from "lucide-react"; // Added Send icon
+import { KeyRound, AtSign, Loader2, UserPlus, Smartphone, MessageSquare, Send } from "lucide-react";
 import { auth } from '@/lib/firebase';
 import {
   signInWithEmailAndPassword,
@@ -127,7 +127,8 @@ export default function LoginPage() {
       await signInWithPopup(auth, provider);
       toast({ title: "Google Sign-In Successful", description: "Welcome!" });
       router.push('/');
-    } catch (err: any)_LOG_Type.ERROR, "Auth", "signInWithPopup", err);
+    } catch (err: any) {
+      console.error("Google sign-in error:", err);
       const errorCode = err.code;
       const errorMessage = err.message;
       if (errorCode === 'auth/popup-closed-by-user' || errorCode === 'auth/cancelled-popup-request') {
@@ -137,7 +138,7 @@ export default function LoginPage() {
           variant: "default",
           duration: 7000,
         });
-        setError(null); // Don't show a red error for user cancellation
+        setError(null); 
       } else {
         setError(errorMessage || "Failed to login with Google. Please try again.");
         toast({ title: "Google Sign-In Failed", description: errorMessage || "Please try again.", variant: "destructive" });
@@ -186,9 +187,6 @@ export default function LoginPage() {
         if (recaptchaContainerRef.current && auth) {
              try {
                 window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, { size: 'invisible' });
-                // Note: It's not always necessary or safe to call .render() again here immediately
-                // Firebase might handle re-rendering internally or on next attempt.
-                // Awaiting render here could also cause issues if the container isn't perfectly ready.
              } catch (renderErr) {
                 console.error("RecaptchaVerifier re-initialization error during error handling:", renderErr);
              }
@@ -203,7 +201,7 @@ export default function LoginPage() {
     if (!window.confirmationResult) {
       setError("No confirmation result found. Please request a new code.");
       toast({ title: "Error", description: "Verification session expired or was not initiated. Please send code again.", variant: "destructive" });
-      setIsCodeSent(false); // Reset to allow resending code
+      setIsCodeSent(false); 
       return;
     }
     setIsLoadingPhone(true);
