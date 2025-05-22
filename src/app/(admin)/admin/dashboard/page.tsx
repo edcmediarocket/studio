@@ -29,7 +29,7 @@ const getTierBadgeClassName = (tier: UserTier) => {
     case 'Basic':
       return 'bg-blue-500/20 text-blue-400 border-blue-500/50';
     case 'Pro':
-      return 'bg-neon text-background border-neon/50';
+      return 'bg-neon text-background border-neon/50'; 
     case 'Premium':
       return 'bg-purple-500/20 text-purple-400 border-purple-500/50';
     default:
@@ -41,6 +41,7 @@ const getTierBadgeClassName = (tier: UserTier) => {
 export default function AdminDashboardPage() {
   const { isAdmin, user, loading: adminAuthLoading } = useAdminAuth();
 
+  // This loading state handles the async nature of checking auth.
   if (adminAuthLoading) {
     return (
       <div className="flex justify-center items-center min-h-[calc(100vh-200px)]">
@@ -70,7 +71,7 @@ export default function AdminDashboardPage() {
     );
   }
 
-  // If isAdmin is true
+  // If isAdmin is true, render the admin dashboard content
   return (
     <div className="p-4 md:p-6 space-y-6">
       <h1 className="text-3xl font-bold text-neon flex items-center">
