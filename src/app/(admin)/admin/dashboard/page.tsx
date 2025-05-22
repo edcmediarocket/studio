@@ -2,9 +2,9 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { getFirestore, collection, onSnapshot, updateDoc, doc, query, orderBy } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, updateDoc, doc, query, orderBy, deleteDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { app } from '@/lib/firebase'; // Use app from firebase config
+import { app } from '@/lib/firebase';
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -45,37 +45,33 @@ export default function AdminDashboardPage() {
         setCurrentUser(user);
         if (user) {
           try {
-            // Force refresh of the ID token to get latest custom claims
             const tokenResult = await user.getIdTokenResult(true); 
             if (tokenResult.claims.admin === true) {
               setIsAdmin(true);
             } else {
               setIsAdmin(false);
-              // Removed toast here as it might be too early if authCheckLoading is still true
             }
           } catch (error) {
             console.error("AdminDashboard: Error getting ID token result:", error);
             setIsAdmin(false);
-            // Removed toast here
+            toast({ title: "Error", description: "Failed to verify admin status.", variant: "destructive" });
           }
         } else {
-          setIsAdmin(false); // No user logged in
+          setIsAdmin(false); 
         }
       } catch (e) {
-        // Catch any unexpected errors within the onAuthStateChanged callback itself
         console.error("AdminDashboard: Error in onAuthStateChanged callback:", e);
         setIsAdmin(false);
       } finally {
-        // This will always run, ensuring the loading spinner stops
         setAuthCheckLoading(false);
       }
     });
 
     return () => unsubscribe();
-  }, [auth]); // Removed toast from dependencies as it's not directly used in this effect's core logic for setting state
+  }, [auth, toast]); 
 
   useEffect(() => {
-    if (authCheckLoading) return; // Wait for auth check to complete
+    if (authCheckLoading) return; 
 
     if (!isAdmin || !currentUser) {
       setLoadingUsers(false);
@@ -96,7 +92,7 @@ export default function AdminDashboardPage() {
       setLoadingUsers(false);
     }, (error) => {
       console.error("Error fetching users:", error);
-      toast({ title: "Error", description: "Failed to fetch users.", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to fetch users from Firestore.", variant: "destructive" });
       setLoadingUsers(false);
     });
 
@@ -158,7 +154,6 @@ export default function AdminDashboardPage() {
   }
 
   if (!isAdmin) {
-    // Show toast only once after loading is done and user is not admin
     useEffect(() => {
       if(!authCheckLoading && currentUser && !isAdmin) {
         toast({ title: "Access Denied", description: "You do not have the necessary permissions to view this page. Admin role via custom claims required.", variant: "destructive" });
@@ -221,7 +216,7 @@ export default function AdminDashboardPage() {
                 {filteredUsers.length > 0 ? filteredUsers.map((u) => (
                   <TableRow key={u.id}>
                     <TableCell className="px-3 py-2 sm:px-4 sm:py-3 text-xs truncate max-w-[100px] sm:max-w-[150px]" title={u.id}>{u.id}</TableCell>
-                    <TableCell className="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm truncate max-w-[150px] sm:max-w-xs" title={u.email}>{u.email}</TableCell>
+                    <TableCell className="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm truncate max-w-[150px] sm:max-w-xs" title={u.email}>{u.email || 'N/A'}</TableCell>
                     <TableCell className="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm capitalize">{u.tier || 'Free'}</TableCell>
                     <TableCell className="px-3 py-2 sm:px-4 sm:py-3">
                       <Select
@@ -252,7 +247,7 @@ export default function AdminDashboardPage() {
                 )) : (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
-                      No users found matching your criteria.
+                      No users found. Ensure your Firestore 'users' collection is populated and your admin account has a corresponding document. Check security rules if issues persist.
                     </TableCell>
                   </TableRow>
                 )}
