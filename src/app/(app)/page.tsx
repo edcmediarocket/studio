@@ -93,8 +93,10 @@ export default function DashboardPage() {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
            const errorMessage = errorData.error || `Failed to fetch market data: ${response.statusText}`;
-          if (errorMessage.toLowerCase().includes('failed to fetch')) {
-            throw new TypeError("Network error: Could not load market movers. Please check your internet connection and try again.");
+          if (errorMessage.toLowerCase().includes('failed to fetch') || errorMessage.toLowerCase().includes('networkerror')) {
+             setMoversError("Network error: Could not load market movers. Please check your internet connection and try again.");
+          } else {
+            setMoversError(errorMessage);
           }
           throw new Error(errorMessage);
         }
@@ -129,9 +131,9 @@ export default function DashboardPage() {
         console.error("Error fetching market movers:", err);
         if (err instanceof TypeError && err.message.toLowerCase().includes('failed to fetch')) {
           setMoversError("Network error: Could not load market movers. Please check your internet connection and try again.");
-        } else if (err instanceof Error) {
+        } else if (err instanceof Error && !moversError) { // Only set if not already set by network error
           setMoversError(err.message);
-        } else {
+        } else if (!moversError) { // Catch all for unknown errors
           setMoversError("An unknown error occurred while fetching market movers.");
         }
         setTopGainers([]);
@@ -142,6 +144,7 @@ export default function DashboardPage() {
     };
 
     fetchMarketMovers();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const renderMarketMoverCardContent = (items: MarketMoverItemProps[], type: 'gainer' | 'loser') => {
@@ -164,7 +167,7 @@ export default function DashboardPage() {
     if (items.length === 0 && !moversError) {
         return <p className="text-xs text-muted-foreground px-3 py-3 sm:px-4 sm:py-2">No significant {type}s found in the top 100 right now.</p>;
     }
-    if (moversError && items.length === 0) return null; // Don't show "no movers" if there's a general error and items is empty
+    if (moversError && items.length === 0) return null; 
 
 
     return items.map(coin => <MarketMoverItemCard key={coin.id} {...coin} />);
@@ -201,7 +204,7 @@ export default function DashboardPage() {
         <div className="relative w-full mb-6">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder="Search coins..."
+            placeholder="Search coins or tags (e.g., 'doge', 'trending', 'AI pick')"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full h-11 pl-10 pr-4 text-sm bg-muted border-primary/30 hover:border-primary/70 focus:border-primary focus:ring-1 focus:ring-primary/50 rounded-lg shadow-sm placeholder:text-muted-foreground/70"
@@ -252,4 +255,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
