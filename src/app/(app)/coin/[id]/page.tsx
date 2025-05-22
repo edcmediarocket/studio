@@ -10,19 +10,20 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon, Siren, Hourglass, TrendingUpIcon, TrendingDownIcon, BarChartBig, ActivityIcon, UsersIcon, FileTextIcon, Layers, Dna, MapPin } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon, Siren, Hourglass, TrendingUpIcon, TrendingDownIcon, BarChartBig, ActivityIcon, UsersIcon, FileTextIcon, Layers, Dna, MapPin, FileJson, KeyRound, ShieldQuestion as AuditIcon, UsersRound } from 'lucide-react';
 import { Table, TableBody, TableCell, TableRow, TableHead, TableHeader } from '@/components/ui/table';
 import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from '@/ai/flows/get-coin-trading-signal';
 import { getCoinRiskAssessment, type GetCoinRiskAssessmentOutput } from '@/ai/flows/get-coin-risk-assessment';
 import { getViralPrediction, type GetViralPredictionOutput } from '@/ai/flows/get-viral-prediction';
 import { getMemeCoinLifespanPrediction, type GetMemeCoinLifespanPredictionOutput } from '@/ai/flows/get-meme-coin-lifespan-prediction';
 import { getSimulatedSignalPerformance, type GetSimulatedSignalPerformanceOutput } from '@/ai/flows/get-simulated-signal-performance';
-import { getEntryZoneStatus, type GetEntryZoneStatusOutput } from '@/ai/flows/get-entry-zone-status'; // New Import
+import { getEntryZoneStatus, type GetEntryZoneStatusOutput } from '@/ai/flows/get-entry-zone-status.ts';
+import { getConceptualTokenomicsAnalysis, type GetConceptualTokenomicsAnalysisOutput } from '@/ai/flows/get-conceptual-tokenomics-analysis'; // New Import
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { StatItem } from '@/components/shared/stat-item';
-import { TokenDnaStrip } from '@/components/shared/token-dna-strip'; // New Import
+import { TokenDnaStrip } from '@/components/shared/token-dna-strip';
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Progress } from '@/components/ui/progress';
 
@@ -105,6 +106,18 @@ const SectionCardComponent: React.FC<SectionCardProps> = ({ title, icon, childre
                 {icon}
                 <span className={cn(icon && "ml-2")}>{title}</span>
               </CardTitle>
+               {infoPopoverContent && (
+                <Popover>
+                    <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 ml-auto mr-2 text-muted-foreground hover:text-foreground" onClick={(e) => e.stopPropagation()}>
+                        <Info className="h-4 w-4" />
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 text-sm">
+                    {infoPopoverContent}
+                    </PopoverContent>
+                </Popover>
+                )}
             </AccordionTrigger>
             <AccordionContent className={cn(noPadding ? "p-0" : "text-sm", noPadding && "px-4 pb-4")}>
               {children}
@@ -163,9 +176,13 @@ export default function CoinDetailPage() {
   const [performanceLoading, setPerformanceLoading] = useState(false);
   const [performanceError, setPerformanceError] = useState<string | null>(null);
 
-  const [entryZoneStatus, setEntryZoneStatus] = useState<GetEntryZoneStatusOutput | null>(null); // New State
-  const [entryZoneLoading, setEntryZoneLoading] = useState(false); // New State
-  const [entryZoneError, setEntryZoneError] = useState<string | null>(null); // New State
+  const [entryZoneStatus, setEntryZoneStatus] = useState<GetEntryZoneStatusOutput | null>(null);
+  const [entryZoneLoading, setEntryZoneLoading] = useState(false);
+  const [entryZoneError, setEntryZoneError] = useState<string | null>(null);
+
+  const [tokenomicsAnalysis, setTokenomicsAnalysis] = useState<GetConceptualTokenomicsAnalysisOutput | null>(null); // New state
+  const [tokenomicsLoading, setTokenomicsLoading] = useState(false); // New state
+  const [tokenomicsError, setTokenomicsError] = useState<string | null>(null); // New state
 
 
   useEffect(() => {
@@ -178,14 +195,16 @@ export default function CoinDetailPage() {
       setViralPredictionLoading(true);
       setLifespanLoading(true);
       setPerformanceLoading(true);
-      setEntryZoneLoading(true); // New
+      setEntryZoneLoading(true);
+      setTokenomicsLoading(true); // New
       setError(null);
       setSignalError(null);
       setRiskError(null);
       setViralPredictionError(null);
       setLifespanError(null);
       setPerformanceError(null);
-      setEntryZoneError(null); // New
+      setEntryZoneError(null);
+      setTokenomicsError(null); // New
 
       try {
         const detailResponse = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`);
@@ -227,7 +246,7 @@ export default function CoinDetailPage() {
             setSignalError("Current price data missing, cannot generate trading signal.");
           }
 
-          // Risk Assessment (includes DNA strip data)
+          // Risk Assessment
           try {
             const risk = await getCoinRiskAssessment({ coinName: detailData.name });
             setRiskAssessment(risk);
@@ -299,7 +318,7 @@ export default function CoinDetailPage() {
             setPerformanceLoading(false);
           }
           
-          // Entry Zone Status (New)
+          // Entry Zone Status
           try {
             const status = await getEntryZoneStatus({ 
               coinName: detailData.name,
@@ -321,6 +340,25 @@ export default function CoinDetailPage() {
             setEntryZoneLoading(false);
           }
 
+           // Conceptual Tokenomics Analysis (New)
+          try {
+            const tokenomics = await getConceptualTokenomicsAnalysis({ coinName: detailData.name });
+            setTokenomicsAnalysis(tokenomics);
+          } catch (err) {
+            console.error("Error fetching conceptual tokenomics analysis:", err);
+            const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+            if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
+              setTokenomicsError("Network error: Failed to fetch AI tokenomics insights. Please check connection.");
+            } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
+              setTokenomicsError("AI service for tokenomics insights is temporarily overloaded or unavailable. Please try again later.");
+            } else {
+              setTokenomicsError("Failed to fetch AI tokenomics insights. Please try again later.");
+            }
+          } finally {
+            setTokenomicsLoading(false);
+          }
+
+
         } else {
           const errorMsg = "Coin name missing from fetched data, cannot proceed with all AI analyses.";
           setSignalLoading(false); setSignalError(errorMsg);
@@ -328,7 +366,8 @@ export default function CoinDetailPage() {
           setViralPredictionLoading(false); setViralPredictionError(errorMsg);
           setLifespanLoading(false); setLifespanError(errorMsg);
           setPerformanceLoading(false); setPerformanceError(errorMsg);
-          setEntryZoneLoading(false); setEntryZoneError(errorMsg); // New
+          setEntryZoneLoading(false); setEntryZoneError(errorMsg);
+          setTokenomicsLoading(false); setTokenomicsError(errorMsg); // New
         }
 
       } catch (err) {
@@ -347,7 +386,8 @@ export default function CoinDetailPage() {
         setViralPredictionLoading(false);
         setLifespanLoading(false);
         setPerformanceLoading(false);
-        setEntryZoneLoading(false); // New
+        setEntryZoneLoading(false);
+        setTokenomicsLoading(false); // New
       }
     };
 
@@ -756,7 +796,7 @@ export default function CoinDetailPage() {
     return <p className="text-muted-foreground text-sm text-center">No AI virality prediction available for this coin.</p>;
   };
 
-  const aiViralityInfo = (
+   const aiViralityInfo = (
     <>
       <h4 className="font-semibold mb-2 text-base">About AI Time-to-Viral Predictor</h4>
       <p>
@@ -942,17 +982,44 @@ export default function CoinDetailPage() {
     <>
       <h4 className="font-semibold mb-2 text-base">About Tokenomics Blueprint</h4>
       <p>
-        This section provides an overview of the coin's supply metrics and conceptual information about its tokenomics, such as typical allocation models, vesting schedules, and the importance of audits.
+        This section provides an overview of the coin's supply metrics and AI-generated conceptual insights into its tokenomics, such as typical allocation models, vesting schedules, and audit considerations for a coin like this.
       </p>
       <ul className="list-disc list-inside mt-2 space-y-1 text-xs">
         <li><strong>Supply Metrics:</strong> Circulating, total, and max supply from API.</li>
-        <li><strong>Conceptual Info:</strong> General explanations of token allocation, vesting, audits, and developer wallet considerations. These are illustrative as detailed data isn't always available via basic APIs.</li>
+        <li><strong>AI Conceptual Insights:</strong> AI-generated text on allocation, vesting, audits, and dev wallets based on general patterns for this type of coin.</li>
       </ul>
       <p className="mt-2 text-xs">
-        Always refer to official project documentation for detailed and verified tokenomics.
+        Always refer to official project documentation for detailed and verified tokenomics. AI insights here are conceptual.
       </p>
     </>
   );
+
+  const renderConceptualTokenomicsContent = () => {
+    if (tokenomicsLoading) {
+      return (
+        <div className="p-4 space-y-2">
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+        </div>
+      );
+    }
+    if (tokenomicsError) {
+      return <Alert variant="destructive" className="m-4"><AlertDescription>{tokenomicsError}</AlertDescription></Alert>;
+    }
+    if (tokenomicsAnalysis) {
+      return (
+        <div className="p-4 space-y-3 text-xs text-muted-foreground">
+          <p><strong className="text-primary/90">Allocation (Conceptual):</strong> {tokenomicsAnalysis.conceptualAllocationSummary}</p>
+          <p><strong className="text-primary/90">Vesting (Conceptual):</strong> {tokenomicsAnalysis.conceptualVestingInsights}</p>
+          <p><strong className="text-primary/90">Audit Considerations:</strong> {tokenomicsAnalysis.simulatedAuditConcerns}</p>
+          <p><strong className="text-primary/90">Developer Wallets (Conceptual):</strong> {tokenomicsAnalysis.devWalletObservations}</p>
+          <p className="text-xs italic mt-2">{tokenomicsAnalysis.disclaimer}</p>
+        </div>
+      );
+    }
+    return <p className="p-4 text-xs text-muted-foreground">Loading AI tokenomics insights...</p>;
+  };
 
 
   return (
@@ -1029,57 +1096,59 @@ export default function CoinDetailPage() {
               infoPopoverContent={tokenomicsBlueprintInfo}
               defaultOpenAccordion={false}
             >
-              <div className="p-4 space-y-3">
-                <Accordion type="single" collapsible className="w-full">
+                <Accordion type="single" collapsible className="w-full" defaultValue="supply">
                   <AccordionItem value="supply">
-                    <AccordionTrigger>Supply Metrics</AccordionTrigger>
-                    <AccordionContent className="!pt-0 !pb-0"> {/* Remove accordion content padding */}
+                    <AccordionTrigger className="px-4 py-3 text-base hover:no-underline text-primary/90 flex items-center">
+                        <FileJson className="mr-2 h-4 w-4" />Supply Metrics (Live Data)
+                    </AccordionTrigger>
+                    <AccordionContent className="!pt-0 !pb-0">
                       <StatItem label="Circulating Supply" value={market_data.circulating_supply} unit={symbol.toUpperCase()} />
                       <StatItem label="Total Supply" value={market_data.total_supply} unit={symbol.toUpperCase()} />
                       <StatItem label="Max Supply" value={market_data.max_supply} unit={symbol.toUpperCase()} />
                     </AccordionContent>
                   </AccordionItem>
-                  <AccordionItem value="allocation">
-                    <AccordionTrigger>Token Allocation (Conceptual)</AccordionTrigger>
-                    <AccordionContent>
-                      <p className="text-xs text-muted-foreground">
-                        Actual token allocations vary greatly. A common pattern for meme coins might involve:
-                        <ul className="list-disc pl-5 mt-1">
-                          <li>Community/Airdrop: 40-70%</li>
-                          <li>Liquidity Pool: 20-40%</li>
-                          <li>Team/Development: 5-15% (often with vesting)</li>
-                          <li>Marketing/Treasury: 5-10%</li>
-                        </ul>
-                        Always verify specific allocations from official project sources. This is illustrative.
-                      </p>
+                  <AccordionItem value="conceptual-allocation">
+                     <AccordionTrigger className="px-4 py-3 text-base hover:no-underline text-primary/90 flex items-center">
+                        <UsersRound className="mr-2 h-4 w-4" />AI Conceptual Allocation
+                    </AccordionTrigger>
+                    <AccordionContent className="text-xs text-muted-foreground px-4 py-2">
+                        {tokenomicsLoading && <Skeleton className="h-12 w-full" />}
+                        {tokenomicsError && <Alert variant="destructive" className="text-xs py-1 px-2"><AlertDescription>{tokenomicsError}</AlertDescription></Alert>}
+                        {tokenomicsAnalysis && <p className="whitespace-pre-wrap">{tokenomicsAnalysis.conceptualAllocationSummary}</p>}
                     </AccordionContent>
                   </AccordionItem>
-                  <AccordionItem value="vesting">
-                    <AccordionTrigger>Vesting Information (Conceptual)</AccordionTrigger>
-                    <AccordionContent>
-                      <p className="text-xs text-muted-foreground">
-                        Vesting schedules lock up tokens for team members, advisors, or early investors for a period to prevent immediate sell-offs. Typical vesting for team tokens might be 6-12 months cliff, followed by linear release over 1-3 years. Check official documentation for actual vesting schedules.
-                      </p>
+                   <AccordionItem value="conceptual-vesting">
+                     <AccordionTrigger className="px-4 py-3 text-base hover:no-underline text-primary/90 flex items-center">
+                        <KeyRound className="mr-2 h-4 w-4" />AI Conceptual Vesting
+                    </AccordionTrigger>
+                    <AccordionContent className="text-xs text-muted-foreground px-4 py-2">
+                        {tokenomicsLoading && <Skeleton className="h-12 w-full" />}
+                        {tokenomicsError && <Alert variant="destructive" className="text-xs py-1 px-2"><AlertDescription>{tokenomicsError}</AlertDescription></Alert>}
+                        {tokenomicsAnalysis && <p className="whitespace-pre-wrap">{tokenomicsAnalysis.conceptualVestingInsights}</p>}
                     </AccordionContent>
                   </AccordionItem>
-                   <AccordionItem value="audit">
-                    <AccordionTrigger>Audit Status (Conceptual)</AccordionTrigger>
-                    <AccordionContent>
-                      <p className="text-xs text-muted-foreground">
-                        Smart contract audits by reputable firms (e.g., Certik, PeckShield, Hacken) are crucial for identifying vulnerabilities. Always look for publicly available audit reports. Lack of a recent or thorough audit can be a significant risk factor.
-                      </p>
+                   <AccordionItem value="simulated-audit">
+                     <AccordionTrigger className="px-4 py-3 text-base hover:no-underline text-primary/90 flex items-center">
+                        <AuditIcon className="mr-2 h-4 w-4" />AI Simulated Audit Concerns
+                    </AccordionTrigger>
+                    <AccordionContent className="text-xs text-muted-foreground px-4 py-2">
+                        {tokenomicsLoading && <Skeleton className="h-12 w-full" />}
+                        {tokenomicsError && <Alert variant="destructive" className="text-xs py-1 px-2"><AlertDescription>{tokenomicsError}</AlertDescription></Alert>}
+                        {tokenomicsAnalysis && <p className="whitespace-pre-wrap">{tokenomicsAnalysis.simulatedAuditConcerns}</p>}
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="dev-wallets" className="border-b-0">
-                    <AccordionTrigger>Developer Wallet Insights (Conceptual)</AccordionTrigger>
-                    <AccordionContent>
-                      <p className="text-xs text-muted-foreground">
-                        Analyzing developer and top holder wallets can reveal token distribution and potential sell pressure. High concentration in a few wallets, especially if unvested and belonging to the team, is a risk. This requires on-chain analysis tools like Etherscan or Solscan.
-                      </p>
+                    <AccordionTrigger className="px-4 py-3 text-base hover:no-underline text-primary/90 flex items-center">
+                        <Briefcase className="mr-2 h-4 w-4" />AI Dev Wallet Observations
+                    </AccordionTrigger>
+                     <AccordionContent className="text-xs text-muted-foreground px-4 py-2">
+                        {tokenomicsLoading && <Skeleton className="h-12 w-full" />}
+                        {tokenomicsError && <Alert variant="destructive" className="text-xs py-1 px-2"><AlertDescription>{tokenomicsError}</AlertDescription></Alert>}
+                        {tokenomicsAnalysis && <p className="whitespace-pre-wrap">{tokenomicsAnalysis.devWalletObservations}</p>}
+                         {tokenomicsAnalysis?.disclaimer && <p className="text-xs italic mt-3 opacity-80">{tokenomicsAnalysis.disclaimer}</p>}
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
-              </div>
             </SectionCard>
 
 
