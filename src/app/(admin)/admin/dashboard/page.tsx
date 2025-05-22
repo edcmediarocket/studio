@@ -1,9 +1,20 @@
 
 "use client";
 
-import AdminGate from "@/components/admin/AdminGate"; // Corrected path
+import dynamic from 'next/dynamic';
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ShieldAlert } from "lucide-react";
+import { Loader2, ShieldAlert } from "lucide-react";
+
+// Dynamically import AdminGate with SSR turned off
+const AdminGate = dynamic(() => import('@/components/admin/AdminGate'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex justify-center items-center min-h-[calc(100vh-300px)]">
+      <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      <p className="ml-3 text-muted-foreground">Loading Admin Panel...</p>
+    </div>
+  ),
+});
 
 export default function AdminDashboardPage() {
   return (
