@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react'; // Added useCallback
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Star, LineChart } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from '../ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -119,7 +119,7 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
   }, []);
 
   useEffect(() => {
-    if(!loading) { // Only save if not initial loading phase
+    if(!loading) { 
         try {
             localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(Array.from(favoritedCoins)));
         } catch (e) {
@@ -160,13 +160,13 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
         }
       } catch (err) {
         console.error(err);
+        let specificError = "An unknown error occurred while fetching coin data.";
         if (err instanceof TypeError && err.message.toLowerCase().includes('failed to fetch')) {
-          setError("Network error: Could not fetch coin data. Please check your internet connection and try refreshing.");
+          specificError = "Network error: Could not fetch coin data. Please check your internet connection and try refreshing.";
         } else if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("An unknown error occurred while fetching coin data.");
+          specificError = err.message;
         }
+        setError(specificError);
         setCoins([]);
       } finally {
         setLoading(false);
@@ -189,37 +189,66 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
   }, []);
 
   const sortedCoins = useMemo(() => {
-    let sortableItems = [...coins];
+    let itemsToDisplay = [...coins];
+    const lowerSearchTerm = searchTerm.toLowerCase().trim();
+
+    if (lowerSearchTerm === 'trending') {
+      itemsToDisplay = coins
+        .filter(coin => coin.price_change_percentage_24h !== null && coin.price_change_percentage_24h > 0)
+        .sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h)
+        .slice(0, 10); // Show top 10 trending
+      // For "trending", we directly return these sorted by trendiness, overriding column sort
+      return itemsToDisplay;
+    } else if (lowerSearchTerm === 'ai picks') {
+      const aiPickIds = ['bitcoin', 'ethereum', 'dogecoin', 'pepe', 'shiba-inu', 'bonk', 'dogwifhat']; // Example IDs
+      itemsToDisplay = coins.filter(coin => aiPickIds.includes(coin.id));
+      // Let the normal sortConfig apply to these AI picks
+    } else if (lowerSearchTerm) {
+      itemsToDisplay = coins.filter(coin =>
+        (coin.name && coin.name.toLowerCase().includes(lowerSearchTerm)) ||
+        (coin.symbol && coin.symbol.toLowerCase().includes(lowerSearchTerm))
+      );
+    }
+    // Else, if no specific tag or search term, itemsToDisplay remains all coins (or whatever was filtered by a non-tag search)
+
+    // Apply user-defined column sorting if not a "trending" search or if it's "ai picks" / normal search
     if (sortConfig.key !== null) {
-      sortableItems.sort((a, b) => {
+      itemsToDisplay.sort((a, b) => {
         const valA = a[sortConfig.key!];
         const valB = b[sortConfig.key!];
 
-        if (valA === null || valA === undefined) return 1; // Push nulls/undefined to the end
+        if (valA === null || valA === undefined) return 1;
         if (valB === null || valB === undefined) return -1;
 
         if (typeof valA === 'number' && typeof valB === 'number') {
-            return sortConfig.direction === 'ascending' ? valA - valB : valB - valA;
+          return sortConfig.direction === 'ascending' ? valA - valB : valB - valA;
         }
-        if (String(valA) < String(valB)) {
+        if (String(valA).toLowerCase() < String(valB).toLowerCase()) {
           return sortConfig.direction === 'ascending' ? -1 : 1;
         }
-        if (String(valA) > String(valB)) {
+        if (String(valA).toLowerCase() > String(valB).toLowerCase()) {
           return sortConfig.direction === 'ascending' ? 1 : -1;
         }
         return 0;
       });
+    } else if (!lowerSearchTerm || lowerSearchTerm === 'ai picks') { 
+      // Default sort by market cap if no search term, or if it's "ai picks" and no sort selected
+      itemsToDisplay.sort((a, b) => (b.market_cap || 0) - (a.market_cap || 0));
     }
-    return sortableItems.filter(coin =>
-      coin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      coin.symbol.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+
+    return itemsToDisplay;
   }, [coins, searchTerm, sortConfig]);
 
   const requestSort = (key: keyof CoinData) => {
     let direction: 'ascending' | 'descending' = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
       direction = 'descending';
+    } else if (sortConfig.key === key && sortConfig.direction === 'descending') {
+      // Optional: Third click on a header could reset to default sort (e.g., market cap)
+      // For now, it will just toggle between ascending/descending for the same key
+      // Or, to reset sort:
+      // setSortConfig({ key: 'market_cap', direction: 'descending' }); 
+      // return;
     }
     setSortConfig({ key, direction });
   };
@@ -242,9 +271,9 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />
                 </div>
-                <Skeleton className="h-4 w-1/4" />
-                <Skeleton className="h-4 w-1/6 hidden md:block" />
-                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-4 w-1/4 md:block hidden" /> {/* Market Cap Skeleton */}
+                <Skeleton className="h-4 w-1/6" /> {/* Price or % Change Skeleton */}
+                <Skeleton className="h-8 w-16" /> {/* Actions Skeleton */}
             </div>
             ))}
         </div>
@@ -266,20 +295,20 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[40px] sm:w-[50px] pr-0"></TableHead>
-          <TableHead onClick={() => requestSort('name')} className="cursor-pointer text-xs sm:text-sm px-2 sm:px-4">
+          <TableHead className="w-[40px] sm:w-[50px] pr-0 py-3 px-2 sm:px-4"></TableHead>
+          <TableHead onClick={() => requestSort('name')} className="cursor-pointer text-xs sm:text-sm px-2 sm:px-4 py-3">
             Name{getSortIndicator('name')}
           </TableHead>
-          <TableHead onClick={() => requestSort('current_price')} className="text-right cursor-pointer text-xs sm:text-sm px-2 sm:px-4">
+          <TableHead onClick={() => requestSort('current_price')} className="text-right cursor-pointer text-xs sm:text-sm px-2 sm:px-4 py-3">
             Price{getSortIndicator('current_price')}
           </TableHead>
-          <TableHead onClick={() => requestSort('price_change_percentage_24h')} className="text-right cursor-pointer text-xs sm:text-sm px-2 sm:px-4">
+          <TableHead onClick={() => requestSort('price_change_percentage_24h')} className="text-right cursor-pointer text-xs sm:text-sm px-2 sm:px-4 py-3">
             24h %{getSortIndicator('price_change_percentage_24h')}
           </TableHead>
-          <TableHead onClick={() => requestSort('market_cap')} className="text-right hidden md:table-cell cursor-pointer text-xs sm:text-sm px-2 sm:px-4">
+          <TableHead onClick={() => requestSort('market_cap')} className="text-right hidden md:table-cell cursor-pointer text-xs sm:text-sm px-2 sm:px-4 py-3">
             Market Cap{getSortIndicator('market_cap')}
           </TableHead>
-          <TableHead className="text-center text-xs sm:text-sm px-2 sm:px-4">Actions</TableHead>
+          <TableHead className="text-center text-xs sm:text-sm px-2 sm:px-4 py-3">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -301,4 +330,3 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
     </Table>
   );
 }
-
