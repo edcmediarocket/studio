@@ -79,21 +79,17 @@ const SectionCardComponent: React.FC<SectionCardProps> = ({ title, icon, childre
         <Accordion type="single" collapsible className="w-full" defaultValue={defaultOpenAccordion ? "item-1" : undefined}>
           <AccordionItem value="item-1" className="border-b-0">
             <AccordionPrimitive.Header className={cn("flex items-center justify-between", noPadding ? "px-4" : "px-4")}>
-              {/* ShadCN AccordionTrigger - this is a button */}
               <AccordionTrigger className={cn(noPadding ? "py-3" : "py-4", "hover:no-underline flex-grow p-0")}>
                 <CardTitle className={cn("flex items-center text-xl text-primary", titleClassName)}>
                   {icon}
                   <span className={cn(icon && "ml-2")}>{title}</span>
                 </CardTitle>
-                {/* Chevron is automatically added by shadcn/ui AccordionTrigger */}
               </AccordionTrigger>
 
-              {/* Popover is now a sibling to AccordionTrigger, within the AccordionPrimitive.Header */}
               {infoPopoverContent && (
-                <div className="ml-2 flex-shrink-0"> {/* Wrapper for Popover */}
+                <div className="ml-2 flex-shrink-0">
                   <Popover>
                       <PopoverTrigger asChild>
-                      {/* This Button is the trigger for the Popover */}
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={(e) => e.stopPropagation()}>
                           <Info className="h-4 w-4" />
                       </Button>
@@ -114,7 +110,6 @@ const SectionCardComponent: React.FC<SectionCardProps> = ({ title, icon, childre
     );
   }
 
-  // Default card rendering
   return (
     <Card className={cn("shadow-lg", className)}>
       <CardHeader className={cn(noPadding ? "pb-2 pt-4 px-4" : "pb-3", "flex flex-row justify-between items-center")}>
@@ -210,12 +205,25 @@ export default function CoinDetailPage() {
       setPerformanceError(null);
       setEntryZoneError(null);
       setTokenomicsError(null);
+      setCoinDetail(null); // Clear previous coin detail
 
       try {
         const detailResponse = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`);
         if (!detailResponse.ok) {
           const errorData = await detailResponse.json().catch(() => ({ error: "Failed to parse error response" }));
-          throw new Error(errorData.error || `Failed to fetch coin data: ${detailResponse.statusText}`);
+          const errorMessage = errorData.error || `Failed to fetch coin data: ${detailResponse.statusText}. Please check the coin ID.`;
+          console.warn(`CoinGecko API error for ${coinId}:`, errorMessage);
+          setError(errorMessage);
+          setLoading(false); // Stop main loading
+          // Stop all AI loading states as well
+          setSignalLoading(false);
+          setRiskLoading(false);
+          setViralPredictionLoading(false);
+          setLifespanLoading(false);
+          setPerformanceLoading(false);
+          setEntryZoneLoading(false);
+          setTokenomicsLoading(false);
+          return; // Exit early if coin detail fails
         }
         const detailData = await detailResponse.json();
         setCoinDetail(detailData);
@@ -376,7 +384,7 @@ export default function CoinDetailPage() {
         }
 
       } catch (err) {
-        console.error("Error in fetchAllCoinData:", err);
+        console.error("Error in fetchAllCoinData catch block:", err);
         let specificError = "An unknown error occurred while fetching coin data.";
         if (err instanceof Error) {
            specificError = err.message;
@@ -450,7 +458,7 @@ export default function CoinDetailPage() {
          <Button variant="outline" asChild className="mb-4">
           <Link href="/"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard</Link>
         </Button>
-        <p className="text-center text-muted-foreground">Coin data not found.</p>
+        <p className="text-center text-muted-foreground">Coin data not found for ID: {coinId}. It might be an invalid ID.</p>
       </div>
     );
   }
