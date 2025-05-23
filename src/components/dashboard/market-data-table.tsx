@@ -188,30 +188,30 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
     });
   }, []);
 
-  const sortedCoins = useMemo(() => {
+  const filteredAndSortedCoins = useMemo(() => {
     let itemsToDisplay = [...coins];
     const lowerSearchTerm = searchTerm.toLowerCase().trim();
 
     if (lowerSearchTerm === 'trending') {
-      itemsToDisplay = coins
+      itemsToDisplay = itemsToDisplay
         .filter(coin => coin.price_change_percentage_24h !== null && coin.price_change_percentage_24h > 0)
         .sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h)
         .slice(0, 10); // Show top 10 trending
-      // For "trending", we directly return these sorted by trendiness, overriding column sort
+      // For "trending", results are already sorted by trendiness
       return itemsToDisplay;
     } else if (lowerSearchTerm === 'ai picks') {
       const aiPickIds = ['bitcoin', 'ethereum', 'dogecoin', 'pepe', 'shiba-inu', 'bonk', 'dogwifhat']; // Example IDs
-      itemsToDisplay = coins.filter(coin => aiPickIds.includes(coin.id));
-      // Let the normal sortConfig apply to these AI picks
+      itemsToDisplay = itemsToDisplay.filter(coin => aiPickIds.includes(coin.id));
+      // For "ai picks", allow subsequent sorting by sortConfig or default market cap sort
     } else if (lowerSearchTerm) {
-      itemsToDisplay = coins.filter(coin =>
+      itemsToDisplay = itemsToDisplay.filter(coin =>
         (coin.name && coin.name.toLowerCase().includes(lowerSearchTerm)) ||
         (coin.symbol && coin.symbol.toLowerCase().includes(lowerSearchTerm))
       );
     }
-    // Else, if no specific tag or search term, itemsToDisplay remains all coins (or whatever was filtered by a non-tag search)
+    // If lowerSearchTerm is empty and not a specific tag, itemsToDisplay remains all coins
 
-    // Apply user-defined column sorting if not a "trending" search or if it's "ai picks" / normal search
+    // Apply user-defined column sorting if not a "trending" search
     if (sortConfig.key !== null) {
       itemsToDisplay.sort((a, b) => {
         const valA = a[sortConfig.key!];
@@ -231,8 +231,8 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
         }
         return 0;
       });
-    } else if (!lowerSearchTerm || lowerSearchTerm === 'ai picks') { 
-      // Default sort by market cap if no search term, or if it's "ai picks" and no sort selected
+    } else { 
+      // Default sort by market cap if no specific sort chosen and not "trending"
       itemsToDisplay.sort((a, b) => (b.market_cap || 0) - (a.market_cap || 0));
     }
 
@@ -243,12 +243,6 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
     let direction: 'ascending' | 'descending' = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
       direction = 'descending';
-    } else if (sortConfig.key === key && sortConfig.direction === 'descending') {
-      // Optional: Third click on a header could reset to default sort (e.g., market cap)
-      // For now, it will just toggle between ascending/descending for the same key
-      // Or, to reset sort:
-      // setSortConfig({ key: 'market_cap', direction: 'descending' }); 
-      // return;
     }
     setSortConfig({ key, direction });
   };
@@ -271,9 +265,9 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />
                 </div>
-                <Skeleton className="h-4 w-1/4 md:block hidden" /> {/* Market Cap Skeleton */}
-                <Skeleton className="h-4 w-1/6" /> {/* Price or % Change Skeleton */}
-                <Skeleton className="h-8 w-16" /> {/* Actions Skeleton */}
+                <Skeleton className="h-4 w-1/4 hidden md:table-cell" />
+                <Skeleton className="h-4 w-1/6" /> 
+                <Skeleton className="h-8 w-16" /> 
             </div>
             ))}
         </div>
@@ -290,6 +284,20 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
       </Alert>
     );
   }
+
+  const renderNoResultsMessage = () => {
+    const lowerSearchTerm = searchTerm.toLowerCase().trim();
+    if (lowerSearchTerm === 'trending') {
+      return "No actively trending coins found in the top 100 right now.";
+    }
+    if (lowerSearchTerm === 'ai picks') {
+      return "None of the current 'AI Picks' are in the top 100 market data, or data is still loading.";
+    }
+    if (searchTerm) {
+      return "No coins found matching your search criteria.";
+    }
+    return "No coins available to display. Data might be loading or an error occurred.";
+  };
 
   return (
     <Table>
@@ -312,7 +320,7 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {sortedCoins.length > 0 ? sortedCoins.map((coin) => (
+        {filteredAndSortedCoins.length > 0 ? filteredAndSortedCoins.map((coin) => (
           <MarketDataRow
             key={coin.id}
             coin={coin}
@@ -322,7 +330,7 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
         )) : (
           <TableRow>
             <TableCell colSpan={6} className="text-center text-muted-foreground h-24">
-              No coins found matching your search criteria.
+              {renderNoResultsMessage()}
             </TableCell>
           </TableRow>
         )}
@@ -330,3 +338,4 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
     </Table>
   );
 }
+
