@@ -23,10 +23,18 @@ export function PreLaunchRadarDisplay() {
     setError(null);
     try {
       const result = await getPreLaunchGems();
-      setRadarData(result);
-    } catch (err) {
-      console.error("Error fetching pre-launch gems:", err);
-      setError("Failed to fetch AI Pre-Launch Gems. The AI might be scanning the deep web, please try again later.");
+      if (result && 'error' in result && result.error) { // Check for our custom error object
+        setError(result.error);
+        setRadarData(null);
+      } else if (result) { // Result is GetPreLaunchGemsOutput
+        setRadarData(result as GetPreLaunchGemsOutput);
+      } else { // Should ideally be caught by the error object check
+        setError("Received an unexpected null or undefined response from the AI service.");
+        setRadarData(null);
+      }
+    } catch (err: any) { // This catch is for network errors before hitting the server action, or if the server action itself throws in an unexpected way
+      console.error("Error fetching pre-launch gems in component:", err);
+      setError(err.message || "Failed to fetch AI Pre-Launch Gems. Network error or server issue.");
       setRadarData(null);
     } finally {
       setIsLoading(false);

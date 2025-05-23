@@ -4,7 +4,8 @@
  * @fileOverview An AI agent that simulates scanning for pre-launch or early-stage "gem" coins.
  *
  * - getPreLaunchGems - A function that returns a list of potential pre-launch gems.
- * - GetPreLaunchGemsOutput - The return type for the function.
+ * - GetPreLaunchGemsInput - The input type.
+ * - GetPreLaunchGemsOutput - The return type.
  */
 
 import {ai} from '@/ai/genkit';
@@ -34,8 +35,25 @@ const GetPreLaunchGemsOutputSchema = z.object({
 });
 export type GetPreLaunchGemsOutput = z.infer<typeof GetPreLaunchGemsOutputSchema>;
 
-export async function getPreLaunchGems(input?: GetPreLaunchGemsInput): Promise<GetPreLaunchGemsOutput> {
-  return getPreLaunchGemsFlow(input || {});
+const defaultDisclaimer = "Pre-launch gem hunting is EXTREMELY HIGH RISK. These AI-generated insights are highly speculative and based on simulated data. Most pre-launch projects fail, are scams, or have no value. DYOR extensively. Not financial advice. Invest only what you can afford to lose completely.";
+
+// Exported wrapper function for client-side invocation (Server Action)
+export async function getPreLaunchGems(input?: GetPreLaunchGemsInput): Promise<GetPreLaunchGemsOutput | { error: string }> {
+  try {
+    const result = await getPreLaunchGemsFlow(input || {});
+    // Ensure lastScanned and disclaimer are set, even if the flow itself might have missed them
+    // although the flow's internal logic should handle this.
+    // This is more of a safeguard for the Server Action boundary.
+    if (result && !('error' in result)) {
+        const now = new Date();
+        result.lastScanned = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')} ${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')} UTC`;
+        result.disclaimer = result.disclaimer || defaultDisclaimer;
+    }
+    return result;
+  } catch (err: any) {
+    console.error("Error in getPreLaunchGems server action wrapper:", err);
+    return { error: err.message || "An unexpected error occurred while fetching pre-launch gems." };
+  }
 }
 
 const prompt = ai.definePrompt({
@@ -57,28 +75,37 @@ For each identified "gem", provide:
 - 'chain' (optional): The blockchain it's on.
 
 Generate 3-5 such gems.
-The 'lastScanned' timestamp will be set programmatically.
-Include the critical 'disclaimer'. Ensure it emphasizes the EXTREME RISK.
-Focus on creating plausible, diverse, and interesting-sounding early-stage projects.
+The 'lastScanned' timestamp and 'disclaimer' should be provided according to the output schema.
 `,
 });
 
+// Internal Genkit flow
 const getPreLaunchGemsFlow = ai.defineFlow(
   {
     name: 'getPreLaunchGemsFlow',
     inputSchema: GetPreLaunchGemsInputSchema,
-    outputSchema: GetPreLaunchGemsOutputSchema,
+    outputSchema: GetPreLaunchGemsOutputSchema, // This ensures the flow expects GetPreLaunchGemsOutput
   },
-  async (input) => {
-    const {output} = await prompt(input);
-    if (output) {
-      const now = new Date();
-      output.lastScanned = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')} ${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')} UTC`;
-      if (!output.disclaimer) {
-        output.disclaimer = "Pre-launch gem hunting is EXTREMELY HIGH RISK. These AI-generated insights are highly speculative and based on simulated data. Most pre-launch projects fail, are scams, or have no value. DYOR extensively. Not financial advice. Invest only what you can afford to lose completely.";
+  async (input): Promise<GetPreLaunchGemsOutput> => { // Explicitly type the promise
+    try {
+      const {output} = await prompt(input);
+
+      if (!output || !Array.isArray(output.gems)) { // Validate essential part of the output
+        console.error('getPreLaunchGemsFlow: AI prompt returned null or malformed output. Gems array missing.');
+        throw new Error("AI failed to generate valid pre-launch gem data. Output structure incorrect.");
       }
+      
+      // Ensure lastScanned and disclaimer are set by the prompt as per its instructions
+      // If not, we set them here as a fallback, though the prompt should handle it.
+      const now = new Date();
+      output.lastScanned = output.lastScanned || `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-${String(now.getUTCDate()).padStart(2, '0')} ${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')} UTC`;
+      output.disclaimer = output.disclaimer || defaultDisclaimer;
+      
+      return output; // output should be GetPreLaunchGemsOutput
+    } catch (flowError: any) {
+      console.error('Error within getPreLaunchGemsFlow execution:', flowError);
+      // Re-throw the error to be caught by the Server Action wrapper
+      throw new Error(flowError.message || 'An error occurred within the AI gem prediction flow.');
     }
-    return output!;
   }
 );
-
