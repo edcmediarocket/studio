@@ -157,56 +157,59 @@ export function WeeklyForecastCarousel() {
       <CardContent className="p-0">
         <ScrollArea className="w-full whitespace-nowrap">
           <div className="flex space-x-4 p-4">
-            {forecastData.forecasts.map((forecast, index) => (
-              <Card key={`${forecast.symbol}-${index}-${forecast.analysisDate}`} className="w-72 sm:w-80 shrink-0 bg-muted/30 hover:shadow-primary/20 hover:shadow-md transition-shadow flex flex-col">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <Image 
-                        src={forecast.coinImage} 
-                        alt={forecast.coinName} 
-                        width={32} 
-                        height={32} 
-                        className="rounded-full border border-border"
-                        data-ai-hint="coin logo crypto"
-                    />
-                    <div>
-                        <CardTitle className="text-base text-foreground">{forecast.coinName}</CardTitle>
-                        <CardDescription className="text-xs text-muted-foreground">{forecast.symbol.toUpperCase()} - {forecast.forecastPeriod}</CardDescription>
-                    </div>
-                  </div>
-                   <div className="flex items-center justify-between">
-                     <div className="flex items-center text-sm font-semibold">
-                        {getTrendIcon(forecast.trendPrediction)}
-                        <span className="ml-1.5">{forecast.trendPrediction}</span>
-                    </div>
-                    <Badge className={cn("text-xs", getConfidenceBadgeColor(forecast.confidenceLevel))}>{forecast.confidenceLevel} Confidence</Badge>
-                   </div>
-                </CardHeader>
-                <CardContent className="text-xs space-y-1.5 pt-1 flex-grow">
-                  <div className="mb-2">
-                    <span className="font-semibold text-foreground/80">Factors: </span> 
-                    <span className="text-muted-foreground leading-relaxed break-words whitespace-normal">
-                      {forecast.keyFactors.join(', ') || 'General market conditions.'}
-                    </span>
-                  </div>
-                  {forecast.targetPriceRange && (
-                    <p className="text-muted-foreground">
-                      <span className="font-semibold text-foreground/80">Target Range: </span>{forecast.targetPriceRange}
-                    </p>
-                  )}
-                  <p className="text-muted-foreground/70 pt-1">
-                    <span className="font-semibold">Date: </span>{forecast.analysisDate}
-                  </p>
-                </CardContent>
-                <CardFooter className="pt-2 pb-3">
-                  <Button asChild variant="link" size="sm" className="p-0 h-auto text-neon hover:text-neon/80 text-xs">
-                     <Link href={`/coin/${forecast.coinName.toLowerCase().replace(/\s+/g, '-')}`}>
-                        View {forecast.symbol.toUpperCase()} Details
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
+            {forecastData.forecasts.map((forecast, index) => {
+              const coinId = forecast.coinName.toLowerCase().replace(/\s+/g, '-');
+              return (
+                <Link href={`/coin/${coinId}`} key={`${forecast.symbol}-${index}-${forecast.analysisDate}`} className="block">
+                  <Card className="w-72 sm:w-80 shrink-0 bg-muted/30 hover:shadow-primary/20 hover:shadow-md transition-shadow flex flex-col h-full">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <Image 
+                            src={forecast.coinImage} 
+                            alt={forecast.coinName} 
+                            width={32} 
+                            height={32} 
+                            className="rounded-full border border-border"
+                            data-ai-hint="coin logo crypto"
+                        />
+                        <div>
+                            <CardTitle className="text-base text-foreground">{forecast.coinName}</CardTitle>
+                            <CardDescription className="text-xs text-muted-foreground">{forecast.symbol.toUpperCase()} - {forecast.forecastPeriod}</CardDescription>
+                        </div>
+                      </div>
+                       <div className="flex items-center justify-between">
+                         <div className="flex items-center text-sm font-semibold">
+                            {getTrendIcon(forecast.trendPrediction)}
+                            <span className="ml-1.5">{forecast.trendPrediction}</span>
+                        </div>
+                        <Badge className={cn("text-xs", getConfidenceBadgeColor(forecast.confidenceLevel))}>{forecast.confidenceLevel} Confidence</Badge>
+                       </div>
+                    </CardHeader>
+                    <CardContent className="text-xs space-y-1.5 pt-1 flex-grow">
+                      <div className="mb-2">
+                        <span className="font-semibold text-foreground/80">Factors: </span> 
+                        <span className="text-muted-foreground leading-relaxed break-words whitespace-normal">
+                          {forecast.keyFactors.join(', ') || 'General market conditions.'}
+                        </span>
+                      </div>
+                      {forecast.targetPriceRange && (
+                        <p className="text-muted-foreground">
+                          <span className="font-semibold text-foreground/80">Target Range: </span>{forecast.targetPriceRange}
+                        </p>
+                      )}
+                      <p className="text-muted-foreground/70 pt-1">
+                        <span className="font-semibold">Date: </span>{forecast.analysisDate}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="pt-2 pb-3 mt-auto">
+                      <Button variant="link" size="sm" className="p-0 h-auto text-neon hover:text-neon/80 text-xs as-div-button">
+                            View {forecast.symbol.toUpperCase()} Details
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
@@ -217,4 +220,11 @@ export function WeeklyForecastCarousel() {
     </Card>
   );
 }
+
+// This is a helper class to make the button inside the Link look like a div for styling, but remain semantic.
+// We can't directly put a Button inside a Link if the Button itself might render an <a>.
+// Using a span with button-like styling is a common workaround.
+const asDivButton = {
+    className: "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-auto p-0 text-neon hover:text-neon/80 text-xs"
+};
 
