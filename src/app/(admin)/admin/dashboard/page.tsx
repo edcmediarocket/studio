@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { getFirestore, collection, onSnapshot, updateDoc, doc, query, orderBy, deleteDoc, where } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, updateDoc, doc, query, orderBy, deleteDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { app } from '@/lib/firebase'; // Use your firebase app instance
 import { Button } from "@/components/ui/button";
@@ -16,14 +16,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, ShieldAlert, Trash2, UserCircle } from "lucide-react"; // Added UserCircle
-import type { UserTier } from '@/context/tier-context'; // Assuming UserTier is defined elsewhere
+import { Loader2, ShieldAlert, Trash2, UserCircle, WifiOff } from "lucide-react"; // Added WifiOff
+import type { UserTier } from '@/context/tier-context';
 
 interface UserData {
   id: string; // Corresponds to Firebase UID
   email?: string;
   tier?: UserTier;
-  // Add other fields you might have in your user documents
 }
 
 const TIER_OPTIONS: UserTier[] = ["Free", "Basic", "Pro", "Premium"];
@@ -36,33 +35,38 @@ export default function AdminDashboardPage() {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTier, setFilterTier] = useState<UserTier | "all">("all");
+  const [firestoreError, setFirestoreError] = useState<string | null>(null); // New state for Firestore errors
 
   const { toast } = useToast();
   const auth = getAuth(app);
   const db = getFirestore(app);
 
   useEffect(() => {
-    setAuthCheckLoading(true);
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-      if (user) {
-        try {
-          const tokenResult = await user.getIdTokenResult(true); // Force refresh
-          if (tokenResult.claims.admin === true) {
-            setIsAdmin(true);
-          } else {
+      setAuthCheckLoading(true); // Start auth check loading
+      try {
+        setCurrentUser(user);
+        if (user) {
+          try {
+            const tokenResult = await user.getIdTokenResult(true); // Force refresh
+            if (tokenResult.claims.admin === true) {
+              setIsAdmin(true);
+            } else {
+              setIsAdmin(false);
+            }
+          } catch (error) {
+            console.error("AdminDashboard: Error getting ID token result:", error);
             setIsAdmin(false);
           }
-        } catch (error) {
-          console.error("AdminDashboard: Error getting ID token result:", error);
+        } else {
           setIsAdmin(false);
-        } finally {
-          // This will be called regardless of success/failure in try block
         }
-      } else {
+      } catch (e) {
+        console.error("AdminDashboard: Auth state change error", e);
         setIsAdmin(false);
+      } finally {
+        setAuthCheckLoading(false); // Finish auth check loading
       }
-      // Moved setAuthCheckLoading(false) to a separate useEffect to ensure it runs after isAdmin state is potentially set
     });
     return () => unsubscribeAuth();
   }, [auth]);
@@ -73,26 +77,17 @@ export default function AdminDashboardPage() {
     }
   }, [authCheckLoading, currentUser, isAdmin, toast]);
 
-
-  useEffect(() => {
-    // This effect runs after the initial auth check (including isAdmin determination) is complete.
-    // Only proceed if authCheckLoading is false.
-    if (!authCheckLoading) {
-      setAuthCheckLoading(false);
-    }
-  }, [authCheckLoading]);
-
-
   useEffect(() => {
     if (authCheckLoading || !isAdmin) {
-      setLoadingUsers(false); // Stop loading if not admin or still checking auth
-      if(!authCheckLoading && !isAdmin && currentUser) { // User is logged in but not admin
-        setUsers([]); // Clear users if not admin
+      setLoadingUsers(false);
+      if(!authCheckLoading && !isAdmin && currentUser) {
+        setUsers([]);
       }
       return;
     }
 
     setLoadingUsers(true);
+    setFirestoreError(null); // Reset Firestore error on new attempt
     const usersQuery = query(collection(db, 'users'), orderBy("email"));
     const unsubscribeUsers = onSnapshot(usersQuery, (snapshot) => {
       const fetchedUsers: UserData[] = snapshot.docs.map(docSnapshot => ({
@@ -102,13 +97,21 @@ export default function AdminDashboardPage() {
       setUsers(fetchedUsers);
       setLoadingUsers(false);
     }, (error) => {
-      console.error("Error fetching users:", error);
-      toast({ title: "Firestore Error", description: "Failed to fetch users. Check Firestore rules and ensure the 'users' collection exists.", variant: "destructive" });
+      console.error("Error fetching users from Firestore:", error);
+      if (error.code === 'unavailable') {
+        setFirestoreError("Could not connect to Firestore. Please check your internet connection and firewall settings. The service might be temporarily unavailable.");
+      } else if (error.code === 'permission-denied') {
+        setFirestoreError("Permission denied. Please check Firestore security rules to ensure admins have read access to the 'users' collection.");
+      } else {
+        setFirestoreError(`Failed to fetch users. Error: ${error.message}. Please check Firestore rules and ensure the 'users' collection exists.`);
+      }
+      toast({ title: "Firestore Error", description: firestoreError || "Failed to fetch users.", variant: "destructive" });
+      setUsers([]);
       setLoadingUsers(false);
     });
 
     return () => unsubscribeUsers();
-  }, [isAdmin, db, toast, authCheckLoading, currentUser]); // Added currentUser to deps
+  }, [isAdmin, db, toast, authCheckLoading, currentUser, firestoreError]); // Added firestoreError to deps
 
   const handleTierChange = useCallback(async (userId: string, newTier: UserTier) => {
     if (!isAdmin) {
@@ -165,13 +168,23 @@ export default function AdminDashboardPage() {
   }
   
   if (!isAdmin) {
-    // The toast for "Access Denied" is handled by the useEffect hook at the top.
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] text-center p-4">
         <ShieldAlert className="h-16 w-16 text-destructive mb-4" />
         <h1 className="text-2xl font-bold text-destructive">Access Denied</h1>
         <p className="text-muted-foreground">You do not have the necessary permissions to view this page.</p>
         <p className="text-xs text-muted-foreground mt-1">(Admin role via custom claims required. If claim is set, it may take a moment to propagate after login.)</p>
+      </div>
+    );
+  }
+  
+  if (firestoreError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] text-center p-4">
+        <WifiOff className="h-16 w-16 text-destructive mb-4" />
+        <h1 className="text-2xl font-bold text-destructive">Firestore Connection Error</h1>
+        <p className="text-muted-foreground max-w-md">{firestoreError}</p>
+        <Button onClick={() => setFirestoreError(null)} className="mt-4">Try Again</Button>
       </div>
     );
   }
@@ -253,7 +266,7 @@ export default function AdminDashboardPage() {
                 )) : (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
-                       No users found in Firestore matching your criteria. Ensure your 'users' collection is populated. If you're an admin, ensure your own user document (ID matching your UID) exists in the 'users' collection with an 'email' and 'tier' field. Check Firestore security rules for read/list permissions if issues persist.
+                       No users found in Firestore matching your criteria. Ensure your 'users' collection is populated and your admin account has a corresponding document. Check Firestore security rules for read/list permissions if issues persist.
                     </TableCell>
                   </TableRow>
                 )}
@@ -266,3 +279,6 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+
+    
