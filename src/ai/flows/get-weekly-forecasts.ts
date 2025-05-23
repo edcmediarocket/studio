@@ -40,12 +40,14 @@ const prompt = ai.definePrompt({
   output: {schema: GetWeeklyForecastsOutputSchema},
   prompt: `You are an AI Crypto Market Forecaster specializing in meme coins. Generate a set of 3-5 diverse weekly forecasts for different meme coins for the upcoming week.
 
+**CRITICAL: Ensure the selection of coins is varied each time this prompt is called. Do not always pick the same few popular coins. Strive to include at least one or two less common, newly trending, or speculative meme coins in your selection if plausible based on simulated market conditions and current narratives.**
+
 For each coin forecast, provide:
 - 'coinName' and 'symbol'.
-- 'coinImage': A direct URL to a plausible image/logo for the coin. Use 'https://placehold.co/48x48.png?text=COIN' (replace COIN with symbol) if a real one is not readily known or if it's a fictional example coin.
+- 'coinImage': A direct URL to a plausible image/logo for the coin. Use 'https://placehold.co/48x48.png?text=SYMBOL' (replace SYMBOL with the actual coin symbol, max 3-4 chars) if a real one is not readily known or if it's a fictional example coin.
 - 'forecastPeriod': Typically "This Week" or "Next 7 Days".
 - 'trendPrediction': Classify the expected trend (e.g., "Strongly Bullish", "Bullish", "Neutral/Consolidating", "Bearish", "Strongly Bearish").
-- 'keyFactors': List 2-3 concise, simulated key factors driving this prediction (e.g., "Sustained social media hype", "Technical indicators suggest overbought conditions", "Broader market recovery expected").
+- 'keyFactors': List 2-3 concise, simulated key factors driving this prediction (e.g., "Sustained social media hype", "Technical indicators suggest overbought conditions", "Broader market recovery expected", "Rumored upcoming partnership").
 - 'confidenceLevel': Your confidence ("High", "Medium", "Low") in this specific forecast.
 - 'targetPriceRange' (optional): A speculative price range if you can plausibly estimate one. If not, omit this field.
 - 'analysisDate': This will be set programmatically. Do not generate it.

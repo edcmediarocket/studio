@@ -13,13 +13,17 @@ import { Loader2, AlertTriangle, TrendingUp, TrendingDown, MinusCircle, Calendar
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 
+const AUTO_REFRESH_INTERVAL = 60000; // 60 seconds
+
 export function WeeklyForecastCarousel() {
   const [forecastData, setForecastData] = useState<GetWeeklyForecastsOutput | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchForecasts = useCallback(async () => {
-    setIsLoading(true);
+  const fetchForecasts = useCallback(async (isAutoRefresh = false) => {
+    if (!isAutoRefresh) { // Only set loading for manual refresh or initial load
+      setIsLoading(true);
+    }
     setError(null);
     try {
       const data = await getWeeklyForecasts();
@@ -35,12 +39,16 @@ export function WeeklyForecastCarousel() {
         setError("Failed to fetch AI Weekly Forecasts. Please try refreshing.");
       }
     } finally {
-      setIsLoading(false);
+      if (!isAutoRefresh) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    fetchForecasts();
+    fetchForecasts(); // Initial fetch
+    const intervalId = setInterval(() => fetchForecasts(true), AUTO_REFRESH_INTERVAL);
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
   }, [fetchForecasts]);
 
   const getTrendIcon = (trend: WeeklyForecast['trendPrediction']) => {
@@ -89,7 +97,7 @@ export function WeeklyForecastCarousel() {
     );
   }
 
-  if (error) {
+  if (error && !forecastData) { // Only show full error if no data is available
     return (
       <Card className="shadow-lg border-destructive">
         <CardHeader>
@@ -99,14 +107,14 @@ export function WeeklyForecastCarousel() {
         </CardHeader>
         <CardContent>
           <p className="text-destructive-foreground">{error}</p>
-          <Button onClick={fetchForecasts} variant="destructive" size="sm" className="mt-3">
+          <Button onClick={() => fetchForecasts()} variant="destructive" size="sm" className="mt-3">
             <RefreshCw className="mr-2 h-4 w-4" /> Try Again
           </Button>
         </CardContent>
       </Card>
     );
   }
-
+  
   if (!forecastData || forecastData.forecasts.length === 0) {
     return (
       <Card className="shadow-lg">
@@ -117,13 +125,14 @@ export function WeeklyForecastCarousel() {
         </CardHeader>
         <CardContent className="text-center py-8">
           <p className="text-muted-foreground">No AI weekly forecasts available at the moment.</p>
-           <Button onClick={fetchForecasts} variant="outline" size="sm" className="mt-3">
+           <Button onClick={() => fetchForecasts()} variant="outline" size="sm" className="mt-3">
             <RefreshCw className="mr-2 h-4 w-4" /> Refresh
           </Button>
         </CardContent>
       </Card>
     );
   }
+
 
   return (
     <Card className="shadow-lg">
@@ -132,18 +141,24 @@ export function WeeklyForecastCarousel() {
             <CardTitle className="text-lg flex items-center text-primary">
                 <Zap className="mr-2 h-5 w-5 text-neon" /> AI Weekly Forecasts
             </CardTitle>
-            <Button onClick={fetchForecasts} variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-neon" disabled={isLoading}>
+            <Button onClick={() => fetchForecasts()} variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-neon" disabled={isLoading}>
                 {isLoading ? <Loader2 className="mr-1.5 h-3 w-3 animate-spin"/> : <RefreshCw className="mr-1.5 h-3 w-3" />}
-                {isLoading ? "Refreshing..." : `Updated ${formatDistanceToNow(new Date(forecastData.generatedAt), { addSuffix: true })}`}
+                {isLoading ? "Refreshing..." : forecastData.generatedAt ? `Updated ${formatDistanceToNow(new Date(forecastData.generatedAt), { addSuffix: true })}` : "Refresh"}
             </Button>
         </div>
-        <CardDescription>AI-driven speculative outlooks for the week ahead.</CardDescription>
+        <CardDescription>AI-driven speculative outlooks for the week ahead. Auto-refreshes periodically.</CardDescription>
+        {error && ( // Display a less intrusive error if data already exists
+          <Alert variant="destructive" className="mt-2 text-xs py-1.5 px-2.5">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            <AlertDescription>Update failed: {error}</AlertDescription>
+          </Alert>
+        )}
       </CardHeader>
       <CardContent className="p-0">
         <ScrollArea className="w-full whitespace-nowrap">
           <div className="flex space-x-4 p-4">
             {forecastData.forecasts.map((forecast, index) => (
-              <Card key={`${forecast.symbol}-${index}`} className="w-72 sm:w-80 shrink-0 bg-muted/30 hover:shadow-primary/20 hover:shadow-md transition-shadow flex flex-col">
+              <Card key={`${forecast.symbol}-${index}-${forecast.analysisDate}`} className="w-72 sm:w-80 shrink-0 bg-muted/30 hover:shadow-primary/20 hover:shadow-md transition-shadow flex flex-col">
                 <CardHeader className="pb-2">
                   <div className="flex items-center space-x-3 mb-2">
                     <Image 
