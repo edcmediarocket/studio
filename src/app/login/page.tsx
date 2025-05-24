@@ -17,7 +17,6 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   RecaptchaVerifier,
-  signInWithPhoneNumber,
   type ConfirmationResult
 } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -84,13 +83,14 @@ export default function LoginPage() {
         toast({ title: "Phone Sign-In Error", description: detailedErrorMsg, variant: "destructive", duration: 10000 });
       }
     }
-    // Cleanup function for the effect
+    
     return () => {
-      if (verifier) { // Use the locally scoped verifier for cleanup
+      // Cleanup function for the effect
+      if (verifier) { 
         try {
           verifier.clear();
         } catch (e) {
-          console.warn("Error clearing reCAPTCHA verifier on unmount:", e);
+          console.warn("Error clearing reCAPTCHA verifier on unmount (scoped):", e);
         }
       }
       // Also attempt to clear global if it was set, as a fallback
@@ -98,13 +98,12 @@ export default function LoginPage() {
          try {
           window.recaptchaVerifier.clear();
         } catch (e) {
-          // console.warn("Error clearing global reCAPTCHA verifier on unmount:", e);
+           console.warn("Error clearing global reCAPTCHA verifier on unmount:", e);
         }
-        // window.recaptchaVerifier = undefined; // Optionally unset it
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loginMode, toast]); // auth object is stable
+  }, [loginMode, toast]); 
 
   const handleEmailSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -129,7 +128,7 @@ export default function LoginPage() {
       console.error("Email/Password action error:", err);
       let errorMessage = err.message || `Failed to ${isSignUpMode ? 'sign up' : 'login'}. Please check your credentials.`;
       if (err.code === 'auth/user-not-found' && !isSignUpMode) {
-        errorMessage = "User not found with this email. Have you signed up with email/password for Rocket Meme yet, or was it with Google? Try signing in with Google or use the 'Sign Up' option.";
+        errorMessage = "User not found. If you signed up with Google, please use the Google Sign-In button. Otherwise, ensure your email is correct or Sign Up.";
       } else if (err.code === 'auth/wrong-password' && !isSignUpMode) {
         errorMessage = "Incorrect password. Please try again or reset your password if needed.";
       } else if (err.code === 'auth/email-already-in-use' && isSignUpMode) {
@@ -161,15 +160,24 @@ export default function LoginPage() {
       if (errorCode === 'auth/popup-closed-by-user' || errorCode === 'auth/cancelled-popup-request') {
         toast({
           title: "Google Sign-In Cancelled",
-          description: "The Google Sign-In window was closed or cancelled before completion. Please ensure popups are allowed and try again if you wish to sign in with Google.",
+          description: "The Google Sign-In window was closed or cancelled. Please ensure popups are allowed and no extensions are blocking it, then try again.",
           variant: "default",
           duration: 7000,
         });
         setError(null);
+      } else if (errorCode === 'auth/account-exists-with-different-credential') {
+         setError("An account already exists with the same email address but different sign-in credentials. Sign in using a provider associated with this email address.");
+         toast({ title: "Account Conflict", description: "This email is already linked to a different sign-in method (e.g., email/password). Try that method.", variant: "destructive", duration: 10000});
       } else {
         console.error("Google sign-in error:", err);
-        setError(errorMessageText || "Failed to login with Google. Please try again.");
-        toast({ title: "Google Sign-In Failed", description: errorMessageText || "Please try again. Ensure popups from this site are allowed in your browser settings and no extensions are blocking it.", variant: "destructive" });
+        // Check if the error message implies an invalid action on Firebase's side
+        if (errorMessageText && errorMessageText.toLowerCase().includes("action is invalid")) {
+          setError("Google Sign-In failed: The authentication action was invalid. This might be due to a configuration issue with Firebase or Google Cloud. Please check your project settings (Authorized Domains, OAuth Redirect URIs).");
+          toast({ title: "Google Sign-In Failed", description: "Configuration issue suspected. Please check Firebase/Google Cloud project settings.", variant: "destructive", duration: 10000 });
+        } else {
+          setError(errorMessageText || "Failed to login with Google. Please try again.");
+          toast({ title: "Google Sign-In Failed", description: errorMessageText || "Please try again. Ensure popups from this site are allowed and no extensions are blocking it.", variant: "destructive", duration: 8000 });
+        }
       }
     } finally {
       setIsLoadingGoogle(false);
@@ -211,7 +219,8 @@ export default function LoginPage() {
       toast({ title: "Code Send Failed", description: detailedErrorMsg, variant: "destructive", duration: 10000 });
 
       if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier.clear(); // Attempt to clear the verifier
+        // Re-initialize (optional, if you want to allow immediate retry without page refresh)
         if (recaptchaContainerRef.current && auth) {
              try {
                 window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, { size: 'invisible' });
@@ -283,7 +292,7 @@ export default function LoginPage() {
                 Sign in with Google
               </Button>
               <p className="text-xs text-center text-muted-foreground -mt-2">
-                If Google Sign-In is cancelled, ensure popups are allowed and no extensions are blocking it.
+                If Google Sign-In fails or popup is cancelled, ensure popups are allowed and no extensions are blocking it.
               </p>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
