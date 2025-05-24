@@ -42,9 +42,9 @@ export default function RootLayout({
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="theme-color" content="#000000" />
 
-        <link rel="apple-touch-icon" href="https://placehold.co/192x192.png" data-ai-hint="app icon" />
-        <link rel="icon" type="image/png" sizes="192x192" href="https://placehold.co/192x192.png" data-ai-hint="app icon" />
-        <link rel="icon" type="image/png" sizes="512x512" href="https://placehold.co/512x512.png" data-ai-hint="app icon large" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
       {/* Ensure body can grow and is a flex container for full-height child layouts */}
