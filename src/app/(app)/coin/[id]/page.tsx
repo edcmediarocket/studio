@@ -205,7 +205,7 @@ export default function CoinDetailPage() {
       setPerformanceError(null);
       setEntryZoneError(null);
       setTokenomicsError(null);
-      setCoinDetail(null); // Clear previous coin detail
+      setCoinDetail(null); 
 
       try {
         const detailResponse = await fetch(`https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`);
@@ -213,9 +213,8 @@ export default function CoinDetailPage() {
           const errorData = await detailResponse.json().catch(() => ({ error: "Failed to parse error response" }));
           const errorMessage = errorData.error || `Failed to fetch coin data: ${detailResponse.statusText}. Please check the coin ID.`;
           console.warn(`CoinGecko API error for ${coinId}:`, errorMessage);
-          setError(errorMessage);
-          setLoading(false); // Stop main loading
-          // Stop all AI loading states as well
+          setError(errorMessage); 
+          setLoading(false); 
           setSignalLoading(false);
           setRiskLoading(false);
           setViralPredictionLoading(false);
@@ -223,7 +222,7 @@ export default function CoinDetailPage() {
           setPerformanceLoading(false);
           setEntryZoneLoading(false);
           setTokenomicsLoading(false);
-          return; // Exit early if coin detail fails
+          return;
         }
         const detailData = await detailResponse.json();
         setCoinDetail(detailData);
@@ -249,7 +248,7 @@ export default function CoinDetailPage() {
               } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
                 setSignalError("AI service for trading signals is temporarily overloaded or unavailable. Please try again later.");
               } else {
-                setSignalError("Failed to fetch AI trading signal. Please try again later.");
+                setSignalError(`Failed to fetch AI trading signal for ${detailData.name}. Please try again later.`);
               }
             } finally {
               setSignalLoading(false);
@@ -271,7 +270,7 @@ export default function CoinDetailPage() {
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
                 setRiskError("AI service for risk assessment is temporarily overloaded or unavailable. Please try again later.");
             } else {
-              setRiskError("Failed to fetch AI risk assessment. Please try again later.");
+              setRiskError(`Failed to fetch AI risk assessment for ${detailData.name}. Please try again later.`);
             }
           } finally {
             setRiskLoading(false);
@@ -289,7 +288,7 @@ export default function CoinDetailPage() {
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
               setViralPredictionError("AI service for virality prediction is temporarily overloaded or unavailable. Please try again later.");
             } else {
-              setViralPredictionError("Failed to fetch AI virality prediction. Please try again later.");
+              setViralPredictionError(`Failed to fetch AI virality prediction for ${detailData.name}. Please try again later.`);
             }
           } finally {
             setViralPredictionLoading(false);
@@ -301,13 +300,13 @@ export default function CoinDetailPage() {
             setLifespanPrediction(lifespan);
           } catch (err) {
             console.error("Error fetching lifespan prediction:", err);
-             const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+            const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
             if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
               setLifespanError("Network error: Failed to fetch AI lifespan prediction. Please check your connection.");
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
               setLifespanError("AI service for lifespan prediction is temporarily overloaded or unavailable. Please try again later.");
             } else {
-              setLifespanError("Failed to fetch AI lifespan prediction. Please try again later.");
+              setLifespanError(`Failed to fetch AI lifespan prediction for ${detailData.name}. Please try again later.`);
             }
           } finally {
             setLifespanLoading(false);
@@ -325,7 +324,7 @@ export default function CoinDetailPage() {
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
               setPerformanceError("AI service for signal performance is temporarily overloaded or unavailable. Please try again later.");
             } else {
-              setPerformanceError("Failed to fetch AI signal performance. The AI might be backtesting its own decisions, please try again.");
+              setPerformanceError(`Failed to fetch AI signal performance for ${detailData.name}. The AI might be backtesting its own decisions, please try again.`);
             }
           } finally {
             setPerformanceLoading(false);
@@ -347,7 +346,7 @@ export default function CoinDetailPage() {
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
               setEntryZoneError("AI service for Entry Zone Status is temporarily overloaded or unavailable. Please try again later.");
             } else {
-              setEntryZoneError("Failed to fetch AI Entry Zone Status. Please try again later.");
+              setEntryZoneError(`Failed to fetch AI Entry Zone Status for ${detailData.name}. Please try again later.`);
             }
           } finally {
             setEntryZoneLoading(false);
@@ -365,7 +364,7 @@ export default function CoinDetailPage() {
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
               setTokenomicsError("AI service for tokenomics insights is temporarily overloaded or unavailable. Please try again later.");
             } else {
-              setTokenomicsError("Failed to fetch AI tokenomics insights. Please try again later.");
+              setTokenomicsError(`Failed to fetch AI tokenomics insights for ${detailData.name}. Please try again later.`);
             }
           } finally {
             setTokenomicsLoading(false);
@@ -1090,7 +1089,7 @@ export default function CoinDetailPage() {
                         </CardTitle>
                       </AccordionTrigger>
                     </AccordionPrimitive.Header>
-                    <AccordionContent className="!pt-0 !pb-0">
+                    <AccordionContent className="text-xs text-muted-foreground px-4 py-2 !pt-0 !pb-0">
                       <StatItem label="Circulating Supply" value={market_data.circulating_supply} unit={symbol.toUpperCase()} />
                       <StatItem label="Total Supply" value={market_data.total_supply} unit={symbol.toUpperCase()} />
                       <StatItem label="Max Supply" value={market_data.max_supply} unit={symbol.toUpperCase()} />
@@ -1259,3 +1258,5 @@ export default function CoinDetailPage() {
   );
 }
 
+
+    
