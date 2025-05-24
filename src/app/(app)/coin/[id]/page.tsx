@@ -78,7 +78,7 @@ const SectionCardComponent: React.FC<SectionCardProps> = ({ title, icon, childre
       <Card className={cn("shadow-lg", className)}>
         <Accordion type="single" collapsible className="w-full" defaultValue={defaultOpenAccordion ? "item-1" : undefined}>
           <AccordionItem value="item-1" className="border-b-0">
-            <AccordionPrimitive.Header className={cn("flex items-center justify-between", noPadding ? "px-4" : "px-4")}>
+            <AccordionPrimitive.Header className={cn("flex items-center justify-between", noPadding ? "p-0" : "px-4")}>
               <AccordionTrigger className={cn(noPadding ? "py-3" : "py-4", "hover:no-underline flex-grow p-0")}>
                 <CardTitle className={cn("flex items-center text-xl text-primary", titleClassName)}>
                   {icon}
@@ -215,6 +215,7 @@ export default function CoinDetailPage() {
           console.warn(`CoinGecko API error for ${coinId}:`, errorMessage);
           setError(errorMessage); 
           setLoading(false); 
+          // Set all other loading states to false as well
           setSignalLoading(false);
           setRiskLoading(false);
           setViralPredictionLoading(false);
@@ -1082,9 +1083,9 @@ export default function CoinDetailPage() {
             >
                 <Accordion type="single" collapsible className="w-full" defaultValue="supply">
                   <AccordionItem value="supply">
-                    <AccordionPrimitive.Header className={cn("flex items-center justify-between", noPadding ? "px-4" : "px-4")}>
-                       <AccordionTrigger className={cn(noPadding ? "py-3" : "py-4", "hover:no-underline flex-grow p-0")}>
-                        <CardTitle className={cn("flex items-center text-xl text-primary/90", titleClassName)}>
+                    <AccordionPrimitive.Header className="flex items-center justify-between px-4">
+                       <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0">
+                        <CardTitle className="flex items-center text-lg text-primary/90"> 
                             <FileJson className="mr-2 h-4 w-4" />Supply Metrics (Live Data)
                         </CardTitle>
                       </AccordionTrigger>
@@ -1096,9 +1097,9 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="conceptual-allocation">
-                    <AccordionPrimitive.Header className={cn("flex items-center justify-between", noPadding ? "px-4" : "px-4")}>
-                     <AccordionTrigger className={cn(noPadding ? "py-3" : "py-4", "hover:no-underline flex-grow p-0")}>
-                        <CardTitle className={cn("flex items-center text-xl text-primary/90", titleClassName)}>
+                    <AccordionPrimitive.Header className="flex items-center justify-between px-4">
+                     <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0">
+                        <CardTitle className="flex items-center text-lg text-primary/90"> 
                             <UsersRound className="mr-2 h-4 w-4" />AI Conceptual Allocation
                         </CardTitle>
                     </AccordionTrigger>
@@ -1110,9 +1111,9 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                    <AccordionItem value="conceptual-vesting">
-                    <AccordionPrimitive.Header className={cn("flex items-center justify-between", noPadding ? "px-4" : "px-4")}>
-                     <AccordionTrigger className={cn(noPadding ? "py-3" : "py-4", "hover:no-underline flex-grow p-0")}>
-                        <CardTitle className={cn("flex items-center text-xl text-primary/90", titleClassName)}>
+                    <AccordionPrimitive.Header className="flex items-center justify-between px-4">
+                     <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0">
+                        <CardTitle className="flex items-center text-lg text-primary/90"> 
                             <KeyRound className="mr-2 h-4 w-4" />AI Conceptual Vesting
                         </CardTitle>
                     </AccordionTrigger>
@@ -1124,9 +1125,9 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                    <AccordionItem value="simulated-audit">
-                     <AccordionPrimitive.Header className={cn("flex items-center justify-between", noPadding ? "px-4" : "px-4")}>
-                        <AccordionTrigger className={cn(noPadding ? "py-3" : "py-4", "hover:no-underline flex-grow p-0")}>
-                            <CardTitle className={cn("flex items-center text-xl text-primary/90", titleClassName)}>
+                     <AccordionPrimitive.Header className="flex items-center justify-between px-4">
+                        <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0">
+                            <CardTitle className="flex items-center text-lg text-primary/90"> 
                                 <AuditIcon className="mr-2 h-4 w-4" />AI Simulated Audit Concerns
                             </CardTitle>
                         </AccordionTrigger>
@@ -1138,9 +1139,9 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="dev-wallets" className="border-b-0">
-                    <AccordionPrimitive.Header className={cn("flex items-center justify-between", noPadding ? "px-4" : "px-4")}>
-                        <AccordionTrigger className={cn(noPadding ? "py-3" : "py-4", "hover:no-underline flex-grow p-0")}>
-                            <CardTitle className={cn("flex items-center text-xl text-primary/90", titleClassName)}>
+                    <AccordionPrimitive.Header className="flex items-center justify-between px-4">
+                        <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0">
+                            <CardTitle className="flex items-center text-lg text-primary/90"> 
                                 <Briefcase className="mr-2 h-4 w-4" />AI Dev Wallet Observations
                             </CardTitle>
                         </AccordionTrigger>
@@ -1257,6 +1258,6 @@ export default function CoinDetailPage() {
     </div>
   );
 }
-
+    
 
     
