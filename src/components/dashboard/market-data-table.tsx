@@ -30,7 +30,7 @@ interface CoinData {
   price_change_percentage_24h: number;
 }
 
-const FAVORITES_STORAGE_KEY = "rocketMemeWatchlistFavorites";
+const FAVORITES_STORAGE_KEY = "rocketMemeWatchlistFavorites_v1"; // Added a version to avoid conflicts
 
 interface MarketDataTableProps {
   searchTerm: string;
@@ -106,7 +106,9 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
   const [error, setError] = useState<string | null>(null);
   const [coins, setCoins] = useState<CoinData[]>([]);
   const [favoritedCoins, setFavoritedCoins] = useState(new Set<string>());
+  const [initialFavoritesLoaded, setInitialFavoritesLoaded] = useState(false);
 
+  // Load favorites from localStorage on mount
   useEffect(() => {
     try {
       const storedFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY);
@@ -116,17 +118,19 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
     } catch (e) {
       console.error("Failed to load favorites from localStorage", e);
     }
-  }, []);
+    setInitialFavoritesLoaded(true); // Mark initial load as complete
+  }, []); // Empty dependency array: runs once on mount
 
+  // Save favorites to localStorage whenever favoritedCoins changes, AFTER initial load
   useEffect(() => {
-    if(!loading) { 
-        try {
-            localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(Array.from(favoritedCoins)));
-        } catch (e) {
-            console.error("Failed to save favorites to localStorage", e);
-        }
+    if (initialFavoritesLoaded) { // Only save after initial load from localStorage
+      try {
+        localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(Array.from(favoritedCoins)));
+      } catch (e) {
+        console.error("Failed to save favorites to localStorage", e);
+      }
     }
-  }, [favoritedCoins, loading]);
+  }, [favoritedCoins, initialFavoritesLoaded]); // Depend on favoritedCoins and the loaded flag
 
 
   useEffect(() => {
@@ -137,9 +141,11 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
         const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false');
         if (!response.ok) {
            const errorData = await response.json().catch(() => ({}));
-           const errorMessage = errorData.error || `Failed to fetch coin data: ${response.statusText}`;
-           if (errorMessage.toLowerCase().includes('failed to fetch') || errorMessage.toLowerCase().includes('networkerror')) {
-             throw new TypeError("Network error: Could not fetch coin data. Please check your internet connection and try refreshing.");
+           let errorMessage = errorData.error || `Failed to fetch coin data: ${response.statusText}`;
+           if (response.status === 429) {
+             errorMessage = "API rate limit exceeded. Please wait a moment and try again.";
+           } else if (!navigator.onLine || errorMessage.toLowerCase().includes('failed to fetch')) {
+             errorMessage = "Network error: Could not fetch coin data. Please check your internet connection and try refreshing.";
            }
            throw new Error(errorMessage);
         }
@@ -196,22 +202,19 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
       itemsToDisplay = itemsToDisplay
         .filter(coin => coin.price_change_percentage_24h !== null && coin.price_change_percentage_24h > 0)
         .sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h)
-        .slice(0, 10); // Show top 10 trending
-      // For "trending", results are already sorted by trendiness
+        .slice(0, 10); 
       return itemsToDisplay;
     } else if (lowerSearchTerm === 'ai picks') {
-      const aiPickIds = ['bitcoin', 'ethereum', 'dogecoin', 'pepe', 'shiba-inu', 'bonk', 'dogwifhat']; // Example IDs
+      const aiPickIds = ['bitcoin', 'ethereum', 'dogecoin', 'pepe', 'shiba-inu', 'bonk', 'dogwifhat'];
       itemsToDisplay = itemsToDisplay.filter(coin => aiPickIds.includes(coin.id));
-      // For "ai picks", allow subsequent sorting by sortConfig or default market cap sort
     } else if (lowerSearchTerm) {
       itemsToDisplay = itemsToDisplay.filter(coin =>
         (coin.name && coin.name.toLowerCase().includes(lowerSearchTerm)) ||
         (coin.symbol && coin.symbol.toLowerCase().includes(lowerSearchTerm))
       );
     }
-    // If lowerSearchTerm is empty and not a specific tag, itemsToDisplay remains all coins
+    
 
-    // Apply user-defined column sorting if not a "trending" search
     if (sortConfig.key !== null) {
       itemsToDisplay.sort((a, b) => {
         const valA = a[sortConfig.key!];
@@ -232,7 +235,6 @@ export function MarketDataTable({ searchTerm }: MarketDataTableProps) {
         return 0;
       });
     } else { 
-      // Default sort by market cap if no specific sort chosen and not "trending"
       itemsToDisplay.sort((a, b) => (b.market_cap || 0) - (a.market_cap || 0));
     }
 

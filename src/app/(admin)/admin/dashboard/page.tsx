@@ -2,9 +2,10 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
 import { getFirestore, collection, onSnapshot, updateDoc, doc, query, orderBy, deleteDoc } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { app } from '@/lib/firebase'; // Use your firebase app instance
+import { app } from '@/lib/firebase'; 
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -16,11 +17,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, ShieldAlert, Trash2, UserCircle, WifiOff } from "lucide-react"; // Added WifiOff
+import { Loader2, ShieldAlert, Trash2, UserCircle, WifiOff, ArrowLeft } from "lucide-react"; 
 import type { UserTier } from '@/context/tier-context';
 
 interface UserData {
-  id: string; // Corresponds to Firebase UID
+  id: string; 
   email?: string;
   tier?: UserTier;
 }
@@ -35,7 +36,7 @@ export default function AdminDashboardPage() {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTier, setFilterTier] = useState<UserTier | "all">("all");
-  const [firestoreError, setFirestoreError] = useState<string | null>(null); // New state for Firestore errors
+  const [firestoreError, setFirestoreError] = useState<string | null>(null);
 
   const { toast } = useToast();
   const auth = getAuth(app);
@@ -43,12 +44,12 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
-      setAuthCheckLoading(true); // Start auth check loading
+      setAuthCheckLoading(true); 
       try {
         setCurrentUser(user);
         if (user) {
           try {
-            const tokenResult = await user.getIdTokenResult(true); // Force refresh
+            const tokenResult = await user.getIdTokenResult(true); 
             if (tokenResult.claims.admin === true) {
               setIsAdmin(true);
             } else {
@@ -65,7 +66,7 @@ export default function AdminDashboardPage() {
         console.error("AdminDashboard: Auth state change error", e);
         setIsAdmin(false);
       } finally {
-        setAuthCheckLoading(false); // Finish auth check loading
+        setAuthCheckLoading(false); 
       }
     });
     return () => unsubscribeAuth();
@@ -87,7 +88,7 @@ export default function AdminDashboardPage() {
     }
 
     setLoadingUsers(true);
-    setFirestoreError(null); // Reset Firestore error on new attempt
+    setFirestoreError(null); 
     const usersQuery = query(collection(db, 'users'), orderBy("email"));
     const unsubscribeUsers = onSnapshot(usersQuery, (snapshot) => {
       const fetchedUsers: UserData[] = snapshot.docs.map(docSnapshot => ({
@@ -98,20 +99,20 @@ export default function AdminDashboardPage() {
       setLoadingUsers(false);
     }, (error) => {
       console.error("Error fetching users from Firestore:", error);
+      let errorMsg = `Failed to fetch users. Error: ${error.message}. Please check Firestore rules and ensure the 'users' collection exists.`;
       if (error.code === 'unavailable') {
-        setFirestoreError("Could not connect to Firestore. Please check your internet connection and firewall settings. The service might be temporarily unavailable.");
+        errorMsg = "Could not connect to Firestore. Please check your internet connection and firewall settings. The service might be temporarily unavailable.";
       } else if (error.code === 'permission-denied') {
-        setFirestoreError("Permission denied. Please check Firestore security rules to ensure admins have read access to the 'users' collection.");
-      } else {
-        setFirestoreError(`Failed to fetch users. Error: ${error.message}. Please check Firestore rules and ensure the 'users' collection exists.`);
+        errorMsg = "Permission denied. Please check Firestore security rules to ensure admins have read access to the 'users' collection.";
       }
-      toast({ title: "Firestore Error", description: firestoreError || "Failed to fetch users.", variant: "destructive" });
+      setFirestoreError(errorMsg);
+      toast({ title: "Firestore Error", description: errorMsg, variant: "destructive" });
       setUsers([]);
       setLoadingUsers(false);
     });
 
     return () => unsubscribeUsers();
-  }, [isAdmin, db, toast, authCheckLoading, currentUser, firestoreError]); // Added firestoreError to deps
+  }, [isAdmin, db, toast, authCheckLoading, currentUser]);
 
   const handleTierChange = useCallback(async (userId: string, newTier: UserTier) => {
     if (!isAdmin) {
@@ -191,9 +192,16 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <h1 className="text-3xl font-bold text-neon flex items-center">
-        <UserCircle className="mr-3 h-8 w-8" /> Admin Dashboard
-      </h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-neon flex items-center">
+          <UserCircle className="mr-3 h-8 w-8" /> Admin Dashboard
+        </h1>
+        <Button variant="outline" asChild>
+          <Link href="/">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to App
+          </Link>
+        </Button>
+      </div>
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <Input
           placeholder="Search by email..."
@@ -279,6 +287,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-
-
-    
