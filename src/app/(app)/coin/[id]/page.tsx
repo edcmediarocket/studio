@@ -80,7 +80,7 @@ const SectionCardComponent: React.FC<SectionCardProps> = ({ title, icon, childre
           <AccordionItem value="item-1" className="border-b-0">
             <AccordionPrimitive.Header className={cn("flex items-center justify-between", noPadding ? "p-0" : "px-4")}>
               <AccordionTrigger className={cn(noPadding ? "py-3" : "py-4", "hover:no-underline flex-grow p-0")}>
-                <div className={cn("flex items-center text-xl text-primary font-semibold", titleClassName)}> {/* Changed from CardTitle */}
+                <div className={cn("flex items-center text-xl text-primary font-semibold", titleClassName)}>
                   {icon}
                   <span className={cn(icon && "ml-2")}>{title}</span>
                 </div>
@@ -620,7 +620,7 @@ export default function CoinDetailPage() {
             </Badge>
             <p className="text-sm text-muted-foreground mt-1">Overall Risk Score: {riskAssessment.riskScore}/100</p>
             <Progress value={riskAssessment.riskScore} className="h-2 mt-1 max-w-xs mx-auto [&>div]:bg-primary" />
-             <p className="text-xs text-muted-foreground mt-1">Assessed on: {new Date(riskAssessment.assessmentDate).toLocaleDateString()}</p>
+             <div className="text-xs text-muted-foreground mt-1">Assessed on: {new Date(riskAssessment.assessmentDate).toLocaleDateString()}</div>
           </div>
 
           {riskAssessment.isHighRugRisk && (
@@ -780,7 +780,7 @@ export default function CoinDetailPage() {
             <Badge variant="outline" className="text-lg px-4 py-1.5 font-semibold border-neon text-neon">
               {viralPrediction.timeToTrendEstimate}
             </Badge>
-            <div className="text-sm text-muted-foreground mt-1">
+            <div className="text-sm text-muted-foreground mt-1"> {/* Changed from p to div */}
               AI Confidence:
               <Badge className={cn("ml-1.5 text-xs", getConfidenceBadgeColor(viralPrediction.confidence))}>
                 {viralPrediction.confidence}
@@ -858,7 +858,7 @@ export default function CoinDetailPage() {
             <Badge variant="outline" className="text-lg px-4 py-1.5 font-semibold border-orange-500 text-orange-500">
               {lifespanPrediction.lifespanEstimate}
             </Badge>
-             <div className="text-sm text-muted-foreground mt-1">
+             <div className="text-sm text-muted-foreground mt-1"> {/* Changed from p to div */}
               AI Confidence:
               <Badge className={cn("ml-1.5 text-xs", getConfidenceBadgeColor(lifespanPrediction.confidence))}>
                 {lifespanPrediction.confidence}
@@ -1025,7 +1025,7 @@ export default function CoinDetailPage() {
                         {name} <Badge variant="secondary" className="ml-2 text-base sm:text-lg">{symbol.toUpperCase()}</Badge>
                         {entryZoneStatus && <span className="ml-2">{renderEntryZoneStatus()}</span>}
                     </h1>
-                    {market_cap_rank && <p className="text-sm text-muted-foreground">Market Cap Rank: #{market_cap_rank}</p>}
+                    {market_cap_rank && <div className="text-sm text-muted-foreground">Market Cap Rank: #{market_cap_rank}</div>}
                     
                     {riskAssessment && (
                         <div className="mt-2">
@@ -1046,10 +1046,10 @@ export default function CoinDetailPage() {
 
                 </div>
                 <div className="text-center sm:text-right">
-                <p className="text-2xl sm:text-3xl font-bold text-foreground">${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: currentPrice > 0.01 ? 2 : 8 })}</p>
-                <p className={cn("text-base font-semibold", priceChange24h >= 0 ? 'text-green-400' : 'text-red-400')}>
+                <div className="text-2xl sm:text-3xl font-bold text-foreground">${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: currentPrice > 0.01 ? 2 : 8 })}</div>
+                <div className={cn("text-base font-semibold", priceChange24h >= 0 ? 'text-green-400' : 'text-red-400')}>
                     {priceChange24h.toFixed(2)}% (24h)
-                </p>
+                </div>
                 </div>
             </div>
         </CardHeader>
@@ -1084,13 +1084,11 @@ export default function CoinDetailPage() {
             >
                 <Accordion type="single" collapsible className="w-full" defaultValue="supply">
                   <AccordionItem value="supply">
-                    <AccordionPrimitive.Header className="flex items-center justify-between px-4">
-                       <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0">
-                        <div className="flex items-center text-lg text-primary/90 font-semibold"> {/* Changed from CardTitle */}
+                    <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0 px-4 justify-between">
+                        <div className="flex items-center text-lg text-primary/90 font-semibold">
                             <FileJson className="mr-2 h-4 w-4" />Supply Metrics (Live Data)
                         </div>
-                      </AccordionTrigger>
-                    </AccordionPrimitive.Header>
+                    </AccordionTrigger>
                     <AccordionContent className="text-xs text-muted-foreground px-4 py-2 !pt-0 !pb-0">
                       <StatItem label="Circulating Supply" value={market_data.circulating_supply} unit={symbol.toUpperCase()} />
                       <StatItem label="Total Supply" value={market_data.total_supply} unit={symbol.toUpperCase()} />
@@ -1098,13 +1096,11 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="conceptual-allocation">
-                    <AccordionPrimitive.Header className="flex items-center justify-between px-4">
-                     <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0">
-                        <div className="flex items-center text-lg text-primary/90 font-semibold">  {/* Changed from CardTitle */}
+                     <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0 px-4 justify-between">
+                        <div className="flex items-center text-lg text-primary/90 font-semibold">
                             <UsersRound className="mr-2 h-4 w-4" />AI Conceptual Allocation
                         </div>
                     </AccordionTrigger>
-                    </AccordionPrimitive.Header>
                     <AccordionContent className="text-xs text-muted-foreground px-4 py-2">
                         {tokenomicsLoading && <Skeleton className="h-12 w-full" />}
                         {tokenomicsError && <Alert variant="destructive" className="text-xs py-1 px-2"><AlertDescription>{tokenomicsError}</AlertDescription></Alert>}
@@ -1112,13 +1108,11 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                    <AccordionItem value="conceptual-vesting">
-                    <AccordionPrimitive.Header className="flex items-center justify-between px-4">
-                     <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0">
-                        <div className="flex items-center text-lg text-primary/90 font-semibold">  {/* Changed from CardTitle */}
+                     <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0 px-4 justify-between">
+                        <div className="flex items-center text-lg text-primary/90 font-semibold">
                             <KeyRound className="mr-2 h-4 w-4" />AI Conceptual Vesting
                         </div>
                     </AccordionTrigger>
-                    </AccordionPrimitive.Header>
                     <AccordionContent className="text-xs text-muted-foreground px-4 py-2">
                         {tokenomicsLoading && <Skeleton className="h-12 w-full" />}
                         {tokenomicsError && <Alert variant="destructive" className="text-xs py-1 px-2"><AlertDescription>{tokenomicsError}</AlertDescription></Alert>}
@@ -1126,13 +1120,11 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                    <AccordionItem value="simulated-audit">
-                     <AccordionPrimitive.Header className="flex items-center justify-between px-4">
-                        <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0">
-                            <div className="flex items-center text-lg text-primary/90 font-semibold">  {/* Changed from CardTitle */}
+                        <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0 px-4 justify-between">
+                            <div className="flex items-center text-lg text-primary/90 font-semibold">
                                 <AuditIcon className="mr-2 h-4 w-4" />AI Simulated Audit Concerns
                             </div>
                         </AccordionTrigger>
-                     </AccordionPrimitive.Header>
                     <AccordionContent className="text-xs text-muted-foreground px-4 py-2">
                         {tokenomicsLoading && <Skeleton className="h-12 w-full" />}
                         {tokenomicsError && <Alert variant="destructive" className="text-xs py-1 px-2"><AlertDescription>{tokenomicsError}</AlertDescription></Alert>}
@@ -1140,13 +1132,11 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="dev-wallets" className="border-b-0">
-                    <AccordionPrimitive.Header className="flex items-center justify-between px-4">
-                        <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0">
-                            <div className="flex items-center text-lg text-primary/90 font-semibold">  {/* Changed from CardTitle */}
+                        <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0 px-4 justify-between">
+                            <div className="flex items-center text-lg text-primary/90 font-semibold">
                                 <Briefcase className="mr-2 h-4 w-4" />AI Dev Wallet Observations
                             </div>
                         </AccordionTrigger>
-                    </AccordionPrimitive.Header>
                      <AccordionContent className="text-xs text-muted-foreground px-4 py-2">
                         {tokenomicsLoading && <Skeleton className="h-12 w-full" />}
                         {tokenomicsError && <Alert variant="destructive" className="text-xs py-1 px-2"><AlertDescription>{tokenomicsError}</AlertDescription></Alert>}
@@ -1262,3 +1252,4 @@ export default function CoinDetailPage() {
     
 
     
+
