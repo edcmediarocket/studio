@@ -1,18 +1,17 @@
-
 // src/lib/firebase.ts
 import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging'; // Added isSupported
+import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 
 // Your web app's Firebase configuration
 const firebaseConfig: FirebaseOptions = {
-  apiKey: "AIzaSyD1l4ELRKb-9Ic2IgVy99Q5NUt43kI879o", // From previous user input
-  authDomain: "meme-prophet-xpyi0.firebaseapp.com", // From previous user input
-  projectId: "meme-prophet-xpyi0", // From previous user input
-  storageBucket: "meme-prophet-xpyi0.appspot.com", // Corrected format
-  messagingSenderId: "1080795361618", // From previous user input
-  appId: "1:1080795361618:web:44e0f318a3a9399e77ca8b" // From previous user input
+  apiKey: "AIzaSyD1l4ELRKb-9Ic2IgVy99Q5NUt43kI879o", // From previous user input, matches example except last char
+  authDomain: "meme-prophet-xpyi0.firebaseapp.com",
+  projectId: "meme-prophet-xpyi0",
+  storageBucket: "meme-prophet-xpyio.appspot.com", // Corrected to match user's App.js example
+  messagingSenderId: "1080795361618",
+  appId: "1:1080795361618:web:44e0f318a3a9399e77ca8b"
   // measurementId: "YOUR_MEASUREMENT_ID_HERE" // Optional
 };
 
@@ -36,6 +35,8 @@ if (typeof window !== 'undefined') {
     } else {
       console.log("Firebase Messaging is not supported in this browser.");
     }
+  }).catch(err => {
+    console.error("Error checking FCM support:", err);
   });
 }
 
@@ -49,10 +50,11 @@ export const requestPermission = async () => {
     if (permission === 'granted') {
       console.log('Notification permission granted.');
       const token = await getToken(messagingInstance, {
-        vapidKey: 'YOUR_VAPID_KEY_REPLACE_THIS', // IMPORTANT: Replace with your actual VAPID key
+        vapidKey: 'BDsu4ZwCLkC-kLMQXZap-cyDs1Uq-5oDDKmH6ow0gWuagzVHmgLO-ta8vdXsjylg3yMyUjFDS6NE4nsH7X_DItg', // VAPID key from user's example
       });
       console.log('FCM Token:', token);
-      // TODO: Send this token to your server to store it (e.g., in Firestore)
+      // In a real app, you would send this token to your backend server to store it.
+      // Example: await sendTokenToBackend(token, auth.currentUser?.uid);
       return token;
     } else {
       console.log('Notification permission denied.');
@@ -65,18 +67,23 @@ export const requestPermission = async () => {
 };
 
 export const onMessageListener = () =>
-  new Promise((resolve) => {
+  new Promise((resolve, reject) => { // Added reject for error handling
     if (!messagingInstance) {
-      console.log("Firebase Messaging not initialized or not supported for onMessageListener.");
-      return; // Or reject the promise
+      const errorMsg = "Firebase Messaging not initialized or not supported for onMessageListener.";
+      console.log(errorMsg);
+      reject(new Error(errorMsg));
+      return;
     }
     onMessage(messagingInstance, (payload) => {
-      console.log('Message received. ', payload);
+      console.log('Foreground message received. ', payload);
       resolve(payload);
+    }, (error) => { // Added error callback for onMessage
+      console.error('Error receiving foreground message: ', error);
+      reject(error);
     });
   });
 
-
+// Updated ADMIN_EMAILS to be an array to support multiple admins
 export const ADMIN_EMAILS = [
   "coreyenglish517@gmail.com".toLowerCase(),
   "giomazetti@gmail.com".toLowerCase()
