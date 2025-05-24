@@ -39,24 +39,32 @@ export default function AccountPage() {
   // Form state for editing
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
-  const [editAvatar, setEditAvatar] = useState("");
+  const [editAvatar, setEditAvatar] = useState(placeholderAvatars[0]); // Initialize editAvatar
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
       setFirebaseUser(user);
       if (user) {
-        setUserName(user.displayName || user.email?.split('@')[0] || "User");
-        setUserEmail(user.email || "user@example.com");
-        setUserAvatar(user.photoURL || placeholderAvatars[0]);
+        const currentDisplayName = user.displayName || user.email?.split('@')[0] || "User";
+        const currentEmail = user.email || "user@example.com";
+        const currentAvatar = user.photoURL || placeholderAvatars[0];
+
+        setUserName(currentDisplayName);
+        setUserEmail(currentEmail);
+        setUserAvatar(currentAvatar);
+
         // Initialize edit fields when user data loads
-        setEditName(user.displayName || user.email?.split('@')[0] || "User");
-        setEditEmail(user.email || "user@example.com");
-        setEditAvatar(user.photoURL || placeholderAvatars[0]);
+        setEditName(currentDisplayName);
+        setEditEmail(currentEmail);
+        setEditAvatar(currentAvatar);
       } else {
         // Reset if user logs out
         setUserName("User");
         setUserEmail("user@example.com");
         setUserAvatar(placeholderAvatars[0]);
+        setEditName("User");
+        setEditEmail("user@example.com");
+        setEditAvatar(placeholderAvatars[0]);
       }
       setAuthLoading(false);
     });
@@ -75,8 +83,12 @@ export default function AccountPage() {
 
   const handleSimulateAvatarChange = () => {
     const currentIndex = placeholderAvatars.indexOf(editAvatar);
-    const nextIndex = (currentIndex + 1) % placeholderAvatars.length;
-    setEditAvatar(placeholderAvatars[nextIndex]);
+    let nextIndex = (currentIndex + 1) % placeholderAvatars.length;
+    // Ensure it doesn't pick the same if current one is not in the list or list is short
+    if (placeholderAvatars[nextIndex] === editAvatar && placeholderAvatars.length > 1) {
+      nextIndex = (nextIndex + 1) % placeholderAvatars.length;
+    }
+    setEditAvatar(placeholderAvatars[nextIndex] || placeholderAvatars[0]);
   };
 
   const handleProfileUpdate = async (event: React.FormEvent) => {
@@ -89,7 +101,7 @@ export default function AccountPage() {
     try {
       await updateProfile(firebaseUser, {
         displayName: editName,
-        photoURL: editAvatar, // This will update photoURL in Firebase Auth
+        photoURL: editAvatar, 
       });
       // Update local state to reflect changes immediately
       setUserName(editName);
@@ -193,4 +205,3 @@ export default function AccountPage() {
     </div>
   );
 }
-
