@@ -78,14 +78,13 @@ const SectionCardComponent: React.FC<SectionCardProps> = ({ title, icon, childre
       <Card className={cn("shadow-lg", className)}>
         <Accordion type="single" collapsible className="w-full" defaultValue={defaultOpenAccordion ? "item-1" : undefined}>
           <AccordionItem value="item-1" className="border-b-0">
-            <AccordionPrimitive.Header className={cn("flex items-center justify-between", noPadding ? "p-0" : "px-4")}>
+             <AccordionPrimitive.Header className={cn("flex items-center justify-between", noPadding ? "p-0" : "px-4")}>
               <AccordionTrigger className={cn(noPadding ? "py-3" : "py-4", "hover:no-underline flex-grow p-0")}>
                 <div className={cn("flex items-center text-xl text-primary font-semibold", titleClassName)}>
                   {icon}
                   <span className={cn(icon && "ml-2")}>{title}</span>
                 </div>
               </AccordionTrigger>
-
               {infoPopoverContent && (
                 <div className="ml-2 flex-shrink-0">
                   <Popover>
@@ -145,6 +144,22 @@ const RocketScoreDisplay: React.FC<{ score: number }> = ({ score }) => (
         className={cn("h-5 w-5", i < score ? "text-neon fill-neon" : "text-muted-foreground/50")}
       />
     ))}
+  </div>
+);
+
+const TradingTargetLabel: React.FC<{ label: string; tooltip: string }> = ({ label, tooltip }) => (
+  <div className="flex items-center">
+    <span>{label}</span>
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-5 w-5 ml-1.5 text-muted-foreground hover:text-foreground">
+          <HelpCircle className="h-3.5 w-3.5" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 text-xs p-2">
+        {tooltip}
+      </PopoverContent>
+    </Popover>
   </div>
 );
 
@@ -244,14 +259,15 @@ export default function CoinDetailPage() {
               setTradingSignal(signal);
             } catch (err) {
               console.error("Error fetching trading signal:", err);
-              const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+              let errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
               if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
-                setSignalError("Network error: Failed to fetch AI trading signal. Please check your connection.");
+                errorMsg = "Network error: Failed to fetch AI trading signal. Please check your connection.";
               } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
-                setSignalError("AI service for trading signals is temporarily overloaded or unavailable. Please try again later.");
+                errorMsg = "AI service for trading signals is temporarily overloaded or unavailable. Please try again later.";
               } else {
-                setSignalError(`Failed to fetch AI trading signal for ${detailData.name}. Please try again later.`);
+                errorMsg = `Failed to fetch AI trading signal for ${detailData.name}. Please try again later.`;
               }
+              setSignalError(errorMsg);
             } finally {
               setSignalLoading(false);
             }
@@ -266,14 +282,15 @@ export default function CoinDetailPage() {
             setRiskAssessment(risk);
           } catch (err) {
             console.error("Error fetching risk assessment:", err);
-            const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+            let errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
             if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
-              setRiskError("Network error: Failed to fetch AI risk assessment. Please check your connection.");
+              errorMsg = "Network error: Failed to fetch AI risk assessment. Please check your connection.";
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
-                setRiskError("AI service for risk assessment is temporarily overloaded or unavailable. Please try again later.");
+                errorMsg = "AI service for risk assessment is temporarily overloaded or unavailable. Please try again later.";
             } else {
-              setRiskError(`Failed to fetch AI risk assessment for ${detailData.name}. Please try again later.`);
+              errorMsg = `Failed to fetch AI risk assessment for ${detailData.name}. Please try again later.`;
             }
+            setRiskError(errorMsg);
           } finally {
             setRiskLoading(false);
           }
@@ -284,14 +301,15 @@ export default function CoinDetailPage() {
             setViralPrediction(prediction);
           } catch (err) {
             console.error("Error fetching viral prediction:", err);
-            const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+            let errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
             if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
-              setViralPredictionError("Network error: Failed to fetch AI virality prediction. Please check your connection.");
+              errorMsg = "Network error: Failed to fetch AI virality prediction. Please check your connection.";
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
-              setViralPredictionError("AI service for virality prediction is temporarily overloaded or unavailable. Please try again later.");
+              errorMsg = "AI service for virality prediction is temporarily overloaded or unavailable. Please try again later.";
             } else {
-              setViralPredictionError(`Failed to fetch AI virality prediction for ${detailData.name}. Please try again later.`);
+              errorMsg = `Failed to fetch AI virality prediction for ${detailData.name}. Please try again later.`;
             }
+            setViralPredictionError(errorMsg);
           } finally {
             setViralPredictionLoading(false);
           }
@@ -302,14 +320,15 @@ export default function CoinDetailPage() {
             setLifespanPrediction(lifespan);
           } catch (err) {
             console.error("Error fetching lifespan prediction:", err);
-            const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+            let errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
             if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
-              setLifespanError("Network error: Failed to fetch AI lifespan prediction. Please check your connection.");
+              errorMsg = "Network error: Failed to fetch AI lifespan prediction. Please check your connection.";
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
-              setLifespanError("AI service for lifespan prediction is temporarily overloaded or unavailable. Please try again later.");
+              errorMsg = "AI service for lifespan prediction is temporarily overloaded or unavailable. Please try again later.";
             } else {
-              setLifespanError(`Failed to fetch AI lifespan prediction for ${detailData.name}. Please try again later.`);
+              errorMsg = `Failed to fetch AI lifespan prediction for ${detailData.name}. Please try again later.`;
             }
+            setLifespanError(errorMsg);
           } finally {
             setLifespanLoading(false);
           }
@@ -320,14 +339,15 @@ export default function CoinDetailPage() {
             setSignalPerformance(performance);
           } catch (err) {
             console.error("Error fetching signal performance:", err);
-            const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+            let errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
             if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
-              setPerformanceError("Network error: Failed to fetch AI signal performance. Please check your connection and try again.");
+              errorMsg = "Network error: Failed to fetch AI signal performance. Please check your connection and try again.";
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
-              setPerformanceError("AI service for signal performance is temporarily overloaded or unavailable. Please try again later.");
+              errorMsg = "AI service for signal performance is temporarily overloaded or unavailable. Please try again later.";
             } else {
-              setPerformanceError(`Failed to fetch AI signal performance for ${detailData.name}. The AI might be backtesting its own decisions, please try again.`);
+              errorMsg = `Failed to fetch AI signal performance for ${detailData.name}. The AI might be backtesting its own decisions, please try again.`;
             }
+            setPerformanceError(errorMsg);
           } finally {
             setPerformanceLoading(false);
           }
@@ -342,14 +362,15 @@ export default function CoinDetailPage() {
             setEntryZoneStatus(status);
           } catch (err) {
             console.error("Error fetching entry zone status:", err);
-            const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+            let errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
             if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
-              setEntryZoneError("Network error: Failed to fetch AI Entry Zone Status. Please check your connection.");
+              errorMsg = "Network error: Failed to fetch AI Entry Zone Status. Please check your connection.";
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
-              setEntryZoneError("AI service for Entry Zone Status is temporarily overloaded or unavailable. Please try again later.");
+              errorMsg = "AI service for Entry Zone Status is temporarily overloaded or unavailable. Please try again later.";
             } else {
-              setEntryZoneError(`Failed to fetch AI Entry Zone Status for ${detailData.name}. Please try again later.`);
+              errorMsg = `Failed to fetch AI Entry Zone Status for ${detailData.name}. Please try again later.`;
             }
+            setEntryZoneError(errorMsg);
           } finally {
             setEntryZoneLoading(false);
           }
@@ -360,14 +381,15 @@ export default function CoinDetailPage() {
             setTokenomicsAnalysis(tokenomics);
           } catch (err) {
             console.error("Error fetching conceptual tokenomics analysis:", err);
-            const errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+            let errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
             if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
-              setTokenomicsError("Network error: Failed to fetch AI tokenomics insights. Please check connection.");
+              errorMsg = "Network error: Failed to fetch AI tokenomics insights. Please check connection.";
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
-              setTokenomicsError("AI service for tokenomics insights is temporarily overloaded or unavailable. Please try again later.");
+              errorMsg = "AI service for tokenomics insights is temporarily overloaded or unavailable. Please try again later.";
             } else {
-              setTokenomicsError(`Failed to fetch AI tokenomics insights for ${detailData.name}. Please try again later.`);
+              errorMsg = `Failed to fetch AI tokenomics insights for ${detailData.name}. Please try again later.`;
             }
+            setTokenomicsError(errorMsg);
           } finally {
             setTokenomicsLoading(false);
           }
@@ -528,11 +550,11 @@ export default function CoinDetailPage() {
             </div>
              <div className="space-y-1">
                 <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><ShieldCheck className="mr-2 h-5 w-5"/>Trading Targets</h4>
-                <StatItem label="Entry Point" value={tradingSignal.tradingTargets?.entryPoint} className="px-3 py-1.5 bg-muted/30 rounded-t-md border-b-0" labelClassName="text-xs" valueClassName="text-sm"/>
-                <StatItem label="Stop-Loss" value={tradingSignal.tradingTargets.stopLoss} className="px-3 py-1.5 bg-muted/30" labelClassName="text-xs" valueClassName="text-sm"/>
-                <StatItem label="Take Profit 1" value={tradingSignal.tradingTargets.takeProfit1} className="px-3 py-1.5 bg-muted/30" labelClassName="text-xs" valueClassName="text-sm"/>
-                {tradingSignal.tradingTargets.takeProfit2 && <StatItem label="Take Profit 2" value={tradingSignal.tradingTargets.takeProfit2} className="px-3 py-1.5 bg-muted/30" labelClassName="text-xs" valueClassName="text-sm"/>}
-                {tradingSignal.tradingTargets.takeProfit3 && <StatItem label="Take Profit 3" value={tradingSignal.tradingTargets.takeProfit3} className="px-3 py-1.5 bg-muted/30 rounded-b-md" labelClassName="text-xs" valueClassName="text-sm"/>}
+                <StatItem label={<TradingTargetLabel label="Entry Point" tooltip="The suggested price or price range at which to consider buying the coin." />} value={tradingSignal.tradingTargets?.entryPoint} className="px-3 py-1.5 bg-muted/30 rounded-t-md border-b-0" labelClassName="text-xs" valueClassName="text-sm"/>
+                <StatItem label={<TradingTargetLabel label="Stop-Loss" tooltip="A pre-set price at which to sell the coin to limit potential losses if the price moves unfavorably." />} value={tradingSignal.tradingTargets.stopLoss} className="px-3 py-1.5 bg-muted/30" labelClassName="text-xs" valueClassName="text-sm"/>
+                <StatItem label={<TradingTargetLabel label="Take Profit 1" tooltip="First suggested price level at which to consider selling a portion of your holdings to secure profits." />} value={tradingSignal.tradingTargets.takeProfit1} className="px-3 py-1.5 bg-muted/30" labelClassName="text-xs" valueClassName="text-sm"/>
+                {tradingSignal.tradingTargets.takeProfit2 && <StatItem label={<TradingTargetLabel label="Take Profit 2" tooltip="Second suggested price level for securing further profits." />} value={tradingSignal.tradingTargets.takeProfit2} className="px-3 py-1.5 bg-muted/30" labelClassName="text-xs" valueClassName="text-sm"/>}
+                {tradingSignal.tradingTargets.takeProfit3 && <StatItem label={<TradingTargetLabel label="Take Profit 3" tooltip="Third suggested price level for securing additional profits." />} value={tradingSignal.tradingTargets.takeProfit3} className="px-3 py-1.5 bg-muted/30 rounded-b-md" labelClassName="text-xs" valueClassName="text-sm"/>}
             </div>
           </div>
 
@@ -780,7 +802,7 @@ export default function CoinDetailPage() {
             <Badge variant="outline" className="text-lg px-4 py-1.5 font-semibold border-neon text-neon">
               {viralPrediction.timeToTrendEstimate}
             </Badge>
-            <div className="text-sm text-muted-foreground mt-1"> {/* Changed from p to div */}
+            <div className="text-sm text-muted-foreground mt-1">
               AI Confidence:
               <Badge className={cn("ml-1.5 text-xs", getConfidenceBadgeColor(viralPrediction.confidence))}>
                 {viralPrediction.confidence}
@@ -858,7 +880,7 @@ export default function CoinDetailPage() {
             <Badge variant="outline" className="text-lg px-4 py-1.5 font-semibold border-orange-500 text-orange-500">
               {lifespanPrediction.lifespanEstimate}
             </Badge>
-             <div className="text-sm text-muted-foreground mt-1"> {/* Changed from p to div */}
+             <div className="text-sm text-muted-foreground mt-1">
               AI Confidence:
               <Badge className={cn("ml-1.5 text-xs", getConfidenceBadgeColor(lifespanPrediction.confidence))}>
                 {lifespanPrediction.confidence}
@@ -1084,19 +1106,19 @@ export default function CoinDetailPage() {
             >
                 <Accordion type="single" collapsible className="w-full" defaultValue="supply">
                   <AccordionItem value="supply">
-                    <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0 px-4 justify-between">
+                    <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between">
                         <div className="flex items-center text-lg text-primary/90 font-semibold">
                             <FileJson className="mr-2 h-4 w-4" />Supply Metrics (Live Data)
                         </div>
                     </AccordionTrigger>
-                    <AccordionContent className="text-xs text-muted-foreground px-4 py-2 !pt-0 !pb-0">
-                      <StatItem label="Circulating Supply" value={market_data.circulating_supply} unit={symbol.toUpperCase()} />
-                      <StatItem label="Total Supply" value={market_data.total_supply} unit={symbol.toUpperCase()} />
-                      <StatItem label="Max Supply" value={market_data.max_supply} unit={symbol.toUpperCase()} />
+                    <AccordionContent className="text-xs text-muted-foreground !pt-0 !pb-0">
+                      <StatItem label="Circulating Supply" value={market_data.circulating_supply} unit={symbol.toUpperCase()} className="!pt-0 !pb-0" />
+                      <StatItem label="Total Supply" value={market_data.total_supply} unit={symbol.toUpperCase()} className="!pt-0 !pb-0" />
+                      <StatItem label="Max Supply" value={market_data.max_supply} unit={symbol.toUpperCase()} className="!pt-0 !pb-0" />
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="conceptual-allocation">
-                     <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0 px-4 justify-between">
+                     <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between">
                         <div className="flex items-center text-lg text-primary/90 font-semibold">
                             <UsersRound className="mr-2 h-4 w-4" />AI Conceptual Allocation
                         </div>
@@ -1108,7 +1130,7 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                    <AccordionItem value="conceptual-vesting">
-                     <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0 px-4 justify-between">
+                     <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between">
                         <div className="flex items-center text-lg text-primary/90 font-semibold">
                             <KeyRound className="mr-2 h-4 w-4" />AI Conceptual Vesting
                         </div>
@@ -1120,7 +1142,7 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                    <AccordionItem value="simulated-audit">
-                        <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0 px-4 justify-between">
+                        <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between">
                             <div className="flex items-center text-lg text-primary/90 font-semibold">
                                 <AuditIcon className="mr-2 h-4 w-4" />AI Simulated Audit Concerns
                             </div>
@@ -1132,7 +1154,7 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="dev-wallets" className="border-b-0">
-                        <AccordionTrigger className="py-3 hover:no-underline flex-grow p-0 px-4 justify-between">
+                        <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between">
                             <div className="flex items-center text-lg text-primary/90 font-semibold">
                                 <Briefcase className="mr-2 h-4 w-4" />AI Dev Wallet Observations
                             </div>
@@ -1252,4 +1274,5 @@ export default function CoinDetailPage() {
     
 
     
+
 
