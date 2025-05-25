@@ -17,6 +17,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   RecaptchaVerifier,
+  signInWithPhoneNumber, // Added signInWithPhoneNumber
   type ConfirmationResult
 } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -71,29 +72,20 @@ export default function LoginPage() {
         });
         verifier.render().catch(err => {
             console.error("RecaptchaVerifier render error:", err);
-            const detailedErrorMsg = "Failed to initialize reCAPTCHA for phone sign-in. This might be due to browser settings (e.g., blocking cookies/sessionStorage, strict privacy extensions) or network issues. Please check your browser settings and try refreshing.";
+            const detailedErrorMsg = "Failed to initialize reCAPTCHA. Check browser settings (cookies/sessionStorage, privacy extensions) or network. Refresh if issues persist.";
             setError(detailedErrorMsg);
-            toast({ title: "Phone Sign-In Security Check Failed", description: detailedErrorMsg, variant: "destructive", duration: 10000 });
+            toast({ title: "reCAPTCHA Error", description: detailedErrorMsg, variant: "destructive", duration: 10000 });
         });
         window.recaptchaVerifier = verifier;
       } catch (err) {
         console.error("Error initializing RecaptchaVerifier:", err);
-        const detailedErrorMsg = "Failed to initialize phone sign-in security. Please check Firebase reCAPTCHA configuration and browser settings. If the issue persists, try refreshing the page.";
+        const detailedErrorMsg = "Failed to initialize phone sign-in security. Check Firebase reCAPTCHA config & browser settings. Refresh if issues persist.";
         setError(detailedErrorMsg);
-        toast({ title: "Phone Sign-In Error", description: detailedErrorMsg, variant: "destructive", duration: 10000 });
+        toast({ title: "Phone Sign-In Init Error", description: detailedErrorMsg, variant: "destructive", duration: 10000 });
       }
     }
     
     return () => {
-      // Cleanup function for the effect
-      if (verifier) { 
-        try {
-          verifier.clear();
-        } catch (e) {
-          console.warn("Error clearing reCAPTCHA verifier on unmount (scoped):", e);
-        }
-      }
-      // Also attempt to clear global if it was set, as a fallback
       if (window.recaptchaVerifier) {
          try {
           window.recaptchaVerifier.clear();
@@ -102,7 +94,6 @@ export default function LoginPage() {
         }
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loginMode, toast]); 
 
   const handleEmailSubmit = async (event: React.FormEvent) => {
@@ -128,11 +119,13 @@ export default function LoginPage() {
       console.error("Email/Password action error:", err);
       let errorMessage = err.message || `Failed to ${isSignUpMode ? 'sign up' : 'login'}. Please check your credentials.`;
       if (err.code === 'auth/user-not-found' && !isSignUpMode) {
-        errorMessage = "User not found. If you signed up with Google, please use the Google Sign-In button. Otherwise, ensure your email is correct or Sign Up.";
+        errorMessage = "User not found. Have you signed up? Or try Google Sign-In.";
       } else if (err.code === 'auth/wrong-password' && !isSignUpMode) {
-        errorMessage = "Incorrect password. Please try again or reset your password if needed.";
+        errorMessage = "Incorrect password. Please try again.";
       } else if (err.code === 'auth/email-already-in-use' && isSignUpMode) {
-        errorMessage = "This email is already in use. Please try logging in or use a different email.";
+        errorMessage = "This email is already in use. Please try logging in.";
+      } else if (err.code === 'auth/api-key-not-valid') {
+        errorMessage = "Firebase API Key is invalid. Please check the Firebase configuration.";
       }
       setError(errorMessage);
       toast({ title: `${isSignUpMode ? 'Sign Up' : 'Login'} Failed`, description: errorMessage, variant: "destructive" });
@@ -160,24 +153,24 @@ export default function LoginPage() {
       if (errorCode === 'auth/popup-closed-by-user' || errorCode === 'auth/cancelled-popup-request') {
         toast({
           title: "Google Sign-In Cancelled",
-          description: "The Google Sign-In window was closed or cancelled. Please ensure popups are allowed and no extensions are blocking it, then try again.",
+          description: "Popup closed or request cancelled. Ensure popups are allowed and no extensions are blocking it.",
           variant: "default",
           duration: 7000,
         });
         setError(null);
       } else if (errorCode === 'auth/account-exists-with-different-credential') {
-         setError("An account already exists with the same email address but different sign-in credentials. Sign in using a provider associated with this email address.");
-         toast({ title: "Account Conflict", description: "This email is already linked to a different sign-in method (e.g., email/password). Try that method.", variant: "destructive", duration: 10000});
+         setError("An account already exists with this email using a different sign-in method (e.g., email/password). Try that method.");
+         toast({ title: "Account Conflict", description: "This email is linked to a different sign-in method. Try that method.", variant: "destructive", duration: 10000});
+      } else if (errorCode === 'auth/api-key-not-valid') {
+        setError("Firebase API Key is invalid for Google Sign-In. Please check Firebase configuration.");
+        toast({ title: "Google Sign-In Failed", description: "Firebase API Key invalid. Check configuration.", variant: "destructive", duration: 10000 });
+      } else if (errorMessageText && errorMessageText.toLowerCase().includes("action is invalid")) {
+          setError("Google Sign-In failed: Invalid authentication action. Check Firebase/Google Cloud project settings (Authorized Domains, OAuth Redirect URIs).");
+          toast({ title: "Google Sign-In Failed", description: "Configuration issue suspected. Check Firebase/Google Cloud settings.", variant: "destructive", duration: 10000 });
       } else {
         console.error("Google sign-in error:", err);
-        // Check if the error message implies an invalid action on Firebase's side
-        if (errorMessageText && errorMessageText.toLowerCase().includes("action is invalid")) {
-          setError("Google Sign-In failed: The authentication action was invalid. This might be due to a configuration issue with Firebase or Google Cloud. Please check your project settings (Authorized Domains, OAuth Redirect URIs).");
-          toast({ title: "Google Sign-In Failed", description: "Configuration issue suspected. Please check Firebase/Google Cloud project settings.", variant: "destructive", duration: 10000 });
-        } else {
-          setError(errorMessageText || "Failed to login with Google. Please try again.");
-          toast({ title: "Google Sign-In Failed", description: errorMessageText || "Please try again. Ensure popups from this site are allowed and no extensions are blocking it.", variant: "destructive", duration: 8000 });
-        }
+        setError(errorMessageText || "Failed to login with Google. Ensure popups are allowed and no extensions block them.");
+        toast({ title: "Google Sign-In Failed", description: errorMessageText || "Please try again. Ensure popups are allowed.", variant: "destructive", duration: 8000 });
       }
     } finally {
       setIsLoadingGoogle(false);
@@ -209,18 +202,19 @@ export default function LoginPage() {
       toast({ title: "Verification Code Sent", description: `Code sent to ${phoneNumber}.` });
     } catch (err: any) {
       console.error("Error sending verification code:", err);
-      let detailedErrorMsg = err.message || "Failed to send verification code. Ensure reCAPTCHA is configured and phone number is valid.";
+      let detailedErrorMsg = err.message || "Failed to send code. Check reCAPTCHA config & phone number.";
       if (err.code === 'auth/captcha-check-failed' || err.code === 'auth/missing-recaptcha-token') {
-        detailedErrorMsg = "reCAPTCHA verification failed. Please complete the security check and try again. If issues persist, check browser extensions or refresh the page.";
+        detailedErrorMsg = "reCAPTCHA verification failed. Complete the security check or refresh. Check browser extensions.";
       } else if (err.message && (err.message.toLowerCase().includes("missing initial state") || err.message.toLowerCase().includes("sessionstorage is inaccessible"))) {
-        detailedErrorMsg = "Authentication failed due to missing session data. This can be caused by browser privacy settings (like blocking third-party cookies or sessionStorage) or extensions. Please check your browser settings and try again. Using an incognito window might also help diagnose the issue.";
+        detailedErrorMsg = "Auth failed due to missing session data. Check browser privacy settings (cookies/sessionStorage) or extensions.";
+      } else if (err.code === 'auth/api-key-not-valid') {
+        detailedErrorMsg = "Firebase API Key is invalid for phone sign-in. Please check Firebase configuration.";
       }
       setError(detailedErrorMsg);
       toast({ title: "Code Send Failed", description: detailedErrorMsg, variant: "destructive", duration: 10000 });
 
       if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear(); // Attempt to clear the verifier
-        // Re-initialize (optional, if you want to allow immediate retry without page refresh)
+        window.recaptchaVerifier.clear(); 
         if (recaptchaContainerRef.current && auth) {
              try {
                 window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, { size: 'invisible' });
@@ -236,8 +230,8 @@ export default function LoginPage() {
 
   const handleVerifyCode = async () => {
     if (!window.confirmationResult) {
-      setError("No confirmation result found. Please request a new code.");
-      toast({ title: "Error", description: "Verification session expired or was not initiated. Please send code again.", variant: "destructive" });
+      setError("No confirmation result. Please request a new code.");
+      toast({ title: "Error", description: "Verification session expired/not initiated. Send code again.", variant: "destructive" });
       setIsCodeSent(false);
       return;
     }
@@ -249,8 +243,12 @@ export default function LoginPage() {
       router.push('/');
     } catch (err: any) {
       console.error("Error verifying code:", err);
-      setError(err.message || "Failed to verify code. It might be incorrect or expired.");
-      toast({ title: "Verification Failed", description: err.message || "Code incorrect or expired.", variant: "destructive" });
+      let detailedErrorMsg = err.message || "Failed to verify code. Incorrect or expired.";
+      if (err.code === 'auth/api-key-not-valid') {
+        detailedErrorMsg = "Firebase API Key is invalid during code verification. Check Firebase configuration.";
+      }
+      setError(detailedErrorMsg);
+      toast({ title: "Verification Failed", description: detailedErrorMsg, variant: "destructive" });
     } finally {
       setIsLoadingPhone(false);
     }
@@ -428,3 +426,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
