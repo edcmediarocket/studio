@@ -68,7 +68,7 @@ export function HotCoinsTicker() {
             setError("Trending coins data from API is currently in an unexpected format.");
           } else {
             // API returned no coins or valid structure but empty
-            setError(null); // Or "No trending coins found" - for now, null to show "No trending coins" message
+            setError(null); 
           }
         }
       } else {
@@ -82,8 +82,7 @@ export function HotCoinsTicker() {
       } else {
         setError("An unknown error occurred while fetching trending coins.");
       }
-      // Keep existing coins if fetch fails, to avoid empty ticker unless it's the first load or persistent error
-      if (trendingCoins.length === 0) { // Only clear to empty if it's the initial load and it fails
+      if (trendingCoins.length === 0) { 
         setTrendingCoins([]);
       }
     } finally {
@@ -92,12 +91,12 @@ export function HotCoinsTicker() {
   };
 
   useEffect(() => {
-    fetchTrendingCoins(); // Fetch on initial mount
-    const intervalId = setInterval(fetchTrendingCoins, 30000); // Refetch every 30 seconds
+    fetchTrendingCoins(); 
+    const intervalId = setInterval(fetchTrendingCoins, 30000); 
 
-    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+    return () => clearInterval(intervalId); 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // trendingCoins is not needed in deps here as we manage its update inside fetchTrendingCoins
+  }, []); 
 
   if (loading && trendingCoins.length === 0) {
     return (
@@ -107,7 +106,7 @@ export function HotCoinsTicker() {
     );
   }
 
-  if (error && trendingCoins.length === 0) { // Show error only if there are no coins to display from a previous successful fetch
+  if (error && trendingCoins.length === 0) { 
     return (
       <div className="h-16 flex items-center justify-center bg-destructive/20 border-y border-destructive text-destructive-foreground px-4 text-center">
         <AlertTriangle className="mr-2 h-5 w-5 shrink-0" /> 
@@ -116,7 +115,7 @@ export function HotCoinsTicker() {
     );
   }
 
-  if (trendingCoins.length === 0 && !loading && !error) { // Added !error condition here
+  if (trendingCoins.length === 0 && !loading && !error) { 
      return (
        <div className="h-16 flex items-center justify-center bg-card border-y border-primary/50 text-muted-foreground">
         No trending coins to display at the moment.
@@ -124,20 +123,18 @@ export function HotCoinsTicker() {
     );
   }
   
-  // Duplicate coins for seamless scrolling effect, only if there are coins
   const duplicatedCoins = trendingCoins.length > 0 ? [...trendingCoins, ...trendingCoins] : [];
 
-  if (duplicatedCoins.length === 0) { // Handles case where error exists but we still have old coins to show
-    if (error) { // If there's an error and we decided not to show the main error message (because old coins are present)
+  if (duplicatedCoins.length === 0) { 
+    if (error) { 
          return (
           <div className="h-16 flex items-center justify-center bg-card border-y border-primary/50 text-muted-foreground px-4 text-center">
             <AlertTriangle className="mr-2 h-5 w-5 text-yellow-500 shrink-0" />
             <p className="text-sm">Trending coins update failed: {error}. Displaying last known data.</p>
-            {/* Fallback to render nothing or a static message if this case implies no display */}
           </div>
         );
     }
-    return ( // Should be caught by earlier "No trending coins" if error is null
+    return ( 
        <div className="h-16 flex items-center justify-center bg-card border-y border-primary/50 text-muted-foreground">
         Preparing ticker...
       </div>
@@ -150,7 +147,7 @@ export function HotCoinsTicker() {
       <div className="absolute inset-0 flex items-center">
         <div className="animate-scroll-horizontal group-hover:pause-animation flex">
           {duplicatedCoins.map((coin, index) => (
-            <Link href={`/coin/${coin.id}`} key={`${coin.id}-${index}-${Math.random()}`} className="flex items-center mx-4 p-2 rounded-lg hover:bg-primary/10 transition-colors shrink-0 w-64">
+            <Link href={`/coin/${coin.id}`} key={`${coin.id}-${index}`} className="flex items-center mx-4 p-2 rounded-lg hover:bg-primary/10 transition-colors shrink-0 w-64">
               <Image 
                 src={coin.thumb} 
                 alt={coin.name} 

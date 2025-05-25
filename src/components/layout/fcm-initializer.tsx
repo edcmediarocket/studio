@@ -2,14 +2,14 @@
 "use client";
 
 import { useEffect } from 'react';
-import { requestPermission, onMessageListener } from '@/lib/firebase'; // Assuming messaging is initialized here
+import { requestPermission, onMessageListener, auth } from '@/lib/firebase'; // Assuming messaging is initialized here
 import { useToast } from '@/hooks/use-toast';
-import { auth } from '@/lib/firebase'; // Import auth for user UID
+// import { auth } from '@/lib/firebase'; // Already imported from lib/firebase
 
 // Example function to simulate sending token to backend
 // In a real app, this would be an API call to your server
 async function sendTokenToServer(uid: string | undefined, token: string) {
-  console.log("Attempting to send FCM token to server (simulated):", { uid, token });
+  console.log("Attempting to send FCM token to server:", { uid, token });
   
   if (!uid) {
     console.warn("No user UID available to send FCM token.");
@@ -37,13 +37,20 @@ async function sendTokenToServer(uid: string | undefined, token: string) {
 
     if (response.ok) {
       console.log("FCM token successfully sent to backend.");
+      // toast({ title: "FCM Token Synced", description: "Notification preferences updated."}); // Optional success toast
     } else {
       console.error("Failed to send FCM token to backend. Status:", response.status);
       const errorData = await response.text().catch(() => "Could not parse error response.");
       console.error("Backend error details:", errorData);
+      // Using toast from useToast() which needs to be called from the component body.
+      // This function is outside the component, so direct toast call here isn't ideal.
+      // Better to return a status or throw an error to be handled by the caller.
+      // For now, we'll log and rely on a generic message if needed from the caller.
+      throw new Error(`Failed to sync token. Server responded with ${response.status}`);
     }
   } catch (error) {
-    console.error("Error sending FCM token to backend:", error);
+    console.error("Error sending FCM token to backend (network or other):", error);
+    throw error; // Re-throw to be caught by the caller
   }
 }
 
@@ -64,22 +71,33 @@ export function FcmInitializer() {
         if (token) {
           console.log("FCM Token received in FcmInitializer:", token);
           const currentUser = auth.currentUser;
-          await sendTokenToServer(currentUser?.uid, token);
-
-          // Check if the setup toast has already been shown
-          const toastShown = localStorage.getItem(FCM_SETUP_TOAST_SHOWN_KEY);
-          if (toastShown !== 'true') {
-            toast({
-              title: "Push Notifications Enabled",
-              description: "You're all set to receive important alerts from Rocket Meme!",
-              duration: 7000,
-            });
-            localStorage.setItem(FCM_SETUP_TOAST_SHOWN_KEY, 'true');
+          if (currentUser?.uid) {
+            try {
+              await sendTokenToServer(currentUser.uid, token);
+              const toastShown = localStorage.getItem(FCM_SETUP_TOAST_SHOWN_KEY);
+              if (toastShown !== 'true') {
+                toast({
+                  title: "Push Notifications Enabled",
+                  description: "You're all set to receive important alerts from Rocket Meme!",
+                  duration: 7000,
+                });
+                localStorage.setItem(FCM_SETUP_TOAST_SHOWN_KEY, 'true');
+              }
+            } catch (sendError) {
+              console.error("FcmInitializer: Error sending token to server", sendError);
+              toast({
+                title: "Notification Sync Issue",
+                description: "Could not sync notification preferences with the server. Some alerts might not be received.",
+                variant: "default",
+                duration: 7000,
+              });
+            }
+          } else {
+            console.warn("FcmInitializer: User not logged in, cannot send FCM token to server.");
           }
         }
       } catch (error) {
         console.error("Error during FCM permission request in FcmInitializer:", error);
-        // Toast for error is handled within requestPermission usually or if it's a general setup error
       }
 
       try {
@@ -97,8 +115,6 @@ export function FcmInitializer() {
       }
     };
 
-    // Delay setup slightly to ensure Firebase auth state is potentially available
-    // This is a pragmatic approach if currentUser is needed early in sendTokenToServer
     const timer = setTimeout(() => {
         setupFCM();
     }, 1000); 
