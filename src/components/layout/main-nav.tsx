@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, BarChart2, Eye, UserCircle, BotMessageSquare, Signal, Calculator, GitCompareArrows, Activity, SlidersHorizontal, Newspaper, Rocket, Siren, Lightbulb, DatabaseZap, ShieldQuestion, ShieldAlert, Flame, SearchCode, BellPlus } from "lucide-react";
+import { LayoutDashboard, BarChart2, Eye, UserCircle, BotMessageSquare, Signal, Calculator, GitCompareArrows, Activity, SlidersHorizontal, Newspaper, Rocket, Siren, Lightbulb, DatabaseZap, ShieldQuestion, ShieldAlert, Flame, SearchCode, BellPlus, GraduationCap } from "lucide-react";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
 import { useTier } from "@/context/tier-context";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
@@ -24,6 +24,7 @@ const baseNavItems: NavItem[] = [
   { href: "/alpha-feed", label: "Alpha Feed", icon: Flame, isPremiumFeature: true },
   { href: "/custom-signals", label: "Custom Signals", icon: SlidersHorizontal, isProFeature: true },
   { href: "/ai-advisor", label: "AI Advisor", icon: BotMessageSquare, isProFeature: true }, 
+  { href: "/ai-coach", label: "AI Coach", icon: GraduationCap, isPremiumFeature: true },
   { href: "/analysis", label: "AI Analysis", icon: BarChart2 },
   { href: "/news-buzz", label: "News & Buzz", icon: Newspaper },
   { href: "/narrative-engine", label: "Narrative Engine", icon: Lightbulb, isPremiumFeature: true },
@@ -72,7 +73,6 @@ export function MainNav() {
         let featureRequiresPro = item.isProFeature && !item.isPremiumFeature;
         let featureRequiresPremium = item.isPremiumFeature;
         
-        // User access: Premium has access to Pro and Premium features. Pro has access to Pro features.
         let userHasAccess = false;
         if (featureRequiresPremium) {
           userHasAccess = currentTier === 'Premium';
@@ -81,13 +81,12 @@ export function MainNav() {
           userHasAccess = currentTier === 'Pro' || currentTier === 'Premium';
           if (!userHasAccess) tooltipText = `${item.label} (Upgrade to Pro/Premium)`;
         } else {
-          userHasAccess = true; // Feature is not specifically Pro or Premium, so all tiers have access
+          userHasAccess = true; 
         }
         
-        // Admin link is a special case, not tier-locked in the same way
         if (item.href === "/admin/dashboard") {
-          userHasAccess = true; // Visibility is handled by getNavItems based on isAdmin
-          tooltipText = item.label; // Reset tooltip for admin if it was modified
+          userHasAccess = true; 
+          tooltipText = item.label; 
         }
 
         return (
@@ -101,9 +100,8 @@ export function MainNav() {
               }}
               className={cn(
                 "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                // No blur/opacity here; page content will be blurred if locked
               )}
-              aria-disabled={false} // Always allow navigation, page will handle content lock
+              aria-disabled={false} 
             >
               <Link href={item.href} onClick={handleLinkClick}>
                 <item.icon />

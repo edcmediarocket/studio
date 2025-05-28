@@ -29,3 +29,4 @@ import '@/ai/flows/get-simulated-signal-performance.ts'; // Added new flow
 import '@/ai/flows/get-entry-zone-status.ts'; // Added for Entry Timer Overlay
 import '@/ai/flows/optimize-performance.ts'; // Added new flow for performance optimization advice
 import '@/ai/flows/get-conceptual-tokenomics-analysis.ts'; // Added new flow for Tokenomics Deep Dive
+// AI Coach feature uses getCoinTradingSignal, so no new flow import needed for it.
