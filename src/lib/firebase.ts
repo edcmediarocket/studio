@@ -1,19 +1,21 @@
 
 // src/lib/firebase.ts
 import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
-import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth'; // Added onAuthStateChanged and FirebaseUser
-import { getFirestore, doc, getDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore'; // Added Firestore imports
-import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
+import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+import { getFirestore, doc, getDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
+import { getMessaging, getToken, onMessage, isSupported, type Messaging } from 'firebase/messaging';
 import { getStorage } from "firebase/storage";
+import { getAnalytics, type Analytics } from "firebase/analytics";
 
-// Your web app's Firebase configuration - Ensure this is correct
+// Your web app's Firebase configuration
 const firebaseConfig: FirebaseOptions = {
-  apiKey: "AIzaSyD1Z4ELRKb-9Ic2IgVy99Q5NUt43kI879o", // Last provided API key
+  apiKey: "AIzaSyD1l4ELRKb-9Ic2IgVy99Q5NUt43kI879o",
   authDomain: "meme-prophet-xpyi0.firebaseapp.com",
   projectId: "meme-prophet-xpyi0",
-  storageBucket: "meme-prophet-xpyio.appspot.com", // Corrected from previous xpyi0.firebasestorage.app
+  storageBucket: "meme-prophet-xpyi0.appspot.com",
   messagingSenderId: "1080795361618",
-  appId: "1:1080795361618:web:44e0f318a3a9399e77ca8b"
+  appId: "1:1080795361618:web:44e0f318a3a9399e77ca8b",
+  measurementId: "G-27NL1D4JLQ"
 };
 
 // Initialize Firebase
@@ -27,9 +29,12 @@ if (!getApps().length) {
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
-let messagingInstance: ReturnType<typeof getMessaging> | null = null;
+
+let analytics: Analytics | null = null;
+let messagingInstance: Messaging | null = null;
 
 if (typeof window !== 'undefined') {
+  analytics = getAnalytics(app);
   isSupported().then(supported => {
     if (supported) {
       messagingInstance = getMessaging(app);
@@ -52,13 +57,11 @@ export const requestPermission = async () => {
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
       console.log('Notification permission granted.');
-      // YOU WILL NEED TO REPLACE 'YOUR_VAPID_KEY_REPLACE_THIS' WITH YOUR ACTUAL VAPID KEY
       const token = await getToken(messagingInstance, {
         vapidKey: 'BDsu4ZwCLkC-kLMQXZap-cyDs1Uq-5oDDKmH6ow0gWuagzVHmgLO-ta8vdXsjylg3yMyUjFDS6NE4nsH7X_DItg',
       });
       console.log('FCM Token retrieved in requestPermission:', token);
       // Placeholder for sending token to backend.
-      // If a user is logged in, you'd typically send their UID along with the token.
       // Example: await sendTokenToBackend(auth.currentUser?.uid, token);
       return token;
     } else {
@@ -67,24 +70,24 @@ export const requestPermission = async () => {
     }
   } catch (error) {
     console.error('Error retrieving FCM token or requesting permission:', error);
-    return null; // Explicitly return null on error
+    return null;
   }
 };
 
 
 // Handle foreground messages
 export const onMessageListener = () =>
-  new Promise((resolve, reject) => { // Added reject for better error propagation
+  new Promise((resolve, reject) => {
     if (!messagingInstance) {
       const errorMsg = "Firebase Messaging not initialized or not supported for onMessageListener.";
       console.warn(errorMsg);
-      reject(new Error(errorMsg)); // Reject the promise
+      reject(new Error(errorMsg));
       return;
     }
     onMessage(messagingInstance, (payload) => {
       console.log('Foreground message received. ', payload);
       resolve(payload);
-    }, (error) => { // Added error callback for onMessage
+    }, (error) => {
       console.error('Error receiving foreground message: ', error);
       reject(error);
     });
@@ -95,4 +98,4 @@ export const ADMIN_EMAILS = [
   "giomazetti@gmail.com".toLowerCase()
 ];
 
-export { app, auth, db, storage, messagingInstance as messaging, onAuthStateChanged, type FirebaseUser, doc, getDoc, onSnapshot, type Unsubscribe };
+export { app, auth, db, storage, analytics, messagingInstance as messaging, onAuthStateChanged, type FirebaseUser, doc, getDoc, onSnapshot, type Unsubscribe };
