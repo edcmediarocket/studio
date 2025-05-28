@@ -23,15 +23,15 @@ const GetCoinTradingSignalOutputSchema = z.object({
   rocketScore: z.number().min(1).max(5).int().describe('A score from 1 to 5 rockets, indicating bullish potential or strength of the signal. 5 is highest. This also reflects the AI\'s confidence.'),
   detailedAnalysis: z.string().describe('In-depth analysis of the factors influencing the signal. This should be a comprehensive summary reflecting analysis of market sentiment, technical indicators (including RSI, MACD, EMA trends, price breakouts, volume spikes), on-chain data, whale activity, and tokenomics, as if derived from a sophisticated AI model trained on extensive crypto datasets. If currentPriceUSD was provided, this analysis MUST reference it.'),
   futurePriceOutlook: z.object({
-    shortTermTarget: z.string().optional().describe('Speculative short-term price target (e.g., "$0.05 in 1 week", "0.1234 USD"). This should be relative to the current price. Include indicative predictions for timeframes like 1h, 6h, or 24h if possible.'),
-    midTermTarget: z.string().optional().describe('Speculative mid-term price target (e.g., "$0.10 in 1-3 months", "1.50 USD"). This should be relative to the current price. Include an indicative prediction for a timeframe like 7d if possible.')
+    shortTermTarget: z.string().optional().describe('Speculative short-term price target (e.g., "$0.05 in 1 week", "0.1234 USD"). This MUST be a plausible value derived directly from currentPriceUSD if provided. Include indicative predictions for timeframes like 1h, 6h, or 24h if possible.'),
+    midTermTarget: z.string().optional().describe('Speculative mid-term price target (e.g., "$0.10 in 1-3 months", "1.50 USD"). This MUST be a plausible value derived directly from currentPriceUSD if provided. Include an indicative prediction for a timeframe like 7d if possible.')
   }).describe('Speculative future price targets based on current analysis. If currentPriceUSD was provided, these targets MUST be scaled realistically from that price.'),
   tradingTargets: z.object({
-    entryPoint: z.string().optional().describe('Suggested entry price range (e.g., "$0.040-$0.042", "0.038 USD"), if applicable for a "Buy" signal. MUST be relative to currentPriceUSD if provided.'),
-    stopLoss: z.string().describe('Suggested stop-loss price to limit potential losses (e.g., "$0.035", "0.030 USD"). MUST be relative to currentPriceUSD if provided, or relative to entry point.'),
-    takeProfit1: z.string().describe('First take-profit target price (e.g., "$0.055", "0.060 USD"). MUST be relative to currentPriceUSD if provided, or relative to entry point.'),
-    takeProfit2: z.string().optional().describe('Second take-profit target price (e.g., "$0.065", "0.070 USD"). MUST be relative to currentPriceUSD if provided.'),
-    takeProfit3: z.string().optional().describe('Third take-profit target price (e.g., "$0.075", "0.080 USD"). MUST be relative to currentPriceUSD if provided.')
+    entryPoint: z.string().optional().describe('Suggested entry price range (e.g., "$0.040-$0.042", "0.038 USD"), if applicable for a "Buy" signal. MUST be a plausible value derived directly from currentPriceUSD if provided.'),
+    stopLoss: z.string().describe('Suggested stop-loss price to limit potential losses (e.g., "$0.035", "0.030 USD"). MUST be a plausible value derived directly from currentPriceUSD if provided, or relative to entry point.'),
+    takeProfit1: z.string().describe('First take-profit target price (e.g., "$0.055", "0.060 USD"). MUST be a plausible value derived directly from currentPriceUSD if provided, or relative to entry point.'),
+    takeProfit2: z.string().optional().describe('Second take-profit target price (e.g., "$0.065", "0.070 USD"). MUST be a plausible value derived directly from currentPriceUSD if provided.'),
+    takeProfit3: z.string().optional().describe('Third take-profit target price (e.g., "$0.075", "0.080 USD"). MUST be a plausible value derived directly from currentPriceUSD if provided.')
   }).describe('Specific trading price targets for executing a trade. These MUST be scaled realistically based on currentPriceUSD if provided.'),
   investmentAdvice: z.string().describe('Specific investment advice or strategy for this coin based on the current signal and analysis (e.g., "Consider allocating a small percentage of a speculative portfolio," or "Wait for confirmation of breakout before entering." ).'),
   disclaimer: z.string().default("This AI-generated trading signal and analysis is for informational purposes only and not financial advice. Meme coins are highly speculative. DYOR and invest only what you can afford to lose.").describe("Standard disclaimer.")
@@ -49,10 +49,16 @@ const prompt = ai.definePrompt({
   prompt: `You are "Meme Prophet", a highly advanced AI model trained to identify high-potential meme coins and altcoins. Your analysis is based on simulating real-time market data, on-chain activity, social sentiment, and whale transactions.
 For the meme coin "{{coinName}}"{{#if currentPriceUSD}}, which is currently trading at approximately {{{currentPriceUSD}}} USD{{/if}}, perform a comprehensive analysis.
 
+**CRITICAL INSTRUCTIONS FOR PRICE TARGETS AND ANALYSIS (IF 'currentPriceUSD' IS PROVIDED):**
 {{#if currentPriceUSD}}
-**CRITICAL: The current market price for {{coinName}} is {{{currentPriceUSD}}} USD. ALL your numerical price targets ('futurePriceOutlook', 'tradingTargets') MUST be plausible future values derived *directly* from this {{{currentPriceUSD}}} USD. For example, if current price is $2.50, targets should be in a similar dollar range (e.g., entry $2.45, SL $2.30, TP1 $2.70), not $0.000x or $5000, unless an extreme, well-justified event is described in the analysis. Your 'detailedAnalysis' MUST also reference this current price.**
+1.  **Current Price Context**: The current market price for {{coinName}} is {{{currentPriceUSD}}} USD. This value is your ABSOLUTE reference.
+2.  **Numerical Targets**: ALL your numerical price targets in 'futurePriceOutlook' (shortTermTarget, midTermTarget) and 'tradingTargets' (entryPoint, stopLoss, takeProfit1, takeProfit2, takeProfit3) MUST be plausible future values derived *directly* and *proportionally* from this {{{currentPriceUSD}}} USD.
+    *   For example, if {{{currentPriceUSD}}} is $2.50, an entryPoint might be "$2.45", a stopLoss "$2.30", a takeProfit1 "$2.70".
+    *   Your targets should NOT be in a drastically different order of magnitude (e.g., $0.000x or $5000 if current is $2.50) unless an EXTREME, well-justified event is described in the 'detailedAnalysis'.
+    *   Think in terms of reasonable percentage changes from {{{currentPriceUSD}}}.
+3.  **Detailed Analysis Reference**: Your 'detailedAnalysis' text MUST also reference and be consistent with this current price of {{{currentPriceUSD}}} USD when discussing current market standing or potential price movements.
 {{else}}
-**Note: No specific current market price was provided for {{coinName}}. Your analysis and price targets will be more general estimations.**
+**Note: No specific current market price was provided for {{coinName}}. Your analysis and price targets will be more general estimations and should reflect this lack of a precise current price.**
 {{/if}}
 
 Imagine you have access to and have analyzed the following types of data:
@@ -71,18 +77,13 @@ Ensure all output fields are populated:
 2.  'reasoning': A concise (1-2 sentence) summary for the recommendation. This should briefly touch upon the key simulated data points (e.g., technicals like RSI/EMA, breakouts, volume, sentiment, whale activity) that led to the signal.
 3.  'rocketScore': An integer from 1 to 5. This score indicates bullish potential (5 is most bullish) AND your confidence level in the signal (5 is most confident).
 4.  'detailedAnalysis': A comprehensive explanation. Articulate how the simulated factors (historical price, volume spikes, price breakouts, social media, on-chain activity, whale movements, technical indicators like MACD/RSI/EMA trends/Bollinger Bands, news sentiment, FOMO/FUD patterns, tokenomics{{#if currentPriceUSD}}, and the current price of {{{currentPriceUSD}}} USD{{/if}}) contribute to your recommendation. Be specific in your rationale.
-5.  'futurePriceOutlook':
-    *   'shortTermTarget': A speculative short-term price target string (e.g., "$0.05", "0.1234 USD"). If possible, provide indicative predictions for timeframes like 1h, 6h, or 24h within this field or the detailedAnalysis.
-    *   'midTermTarget': A speculative mid-term price target string (e.g., "$0.10", "1.50 USD"). If possible, provide an indicative prediction for a timeframe like 7d within this field or the detailedAnalysis.
-6.  'tradingTargets': All targets should be sensible given the current price {{#if currentPriceUSD}}{{{currentPriceUSD}}} USD{{else}}(if known){{/if}}.
-    *   'entryPoint': Suggested price range (e.g., "$0.040-$0.042", "0.038 USD") for entering a trade if 'Buy'.
-    *   'stopLoss': Suggested stop-loss price (e.g., "$0.035", "0.030 USD").
-    *   'takeProfit1': First take-profit target price (e.g., "$0.055", "0.060 USD").
-    *   'takeProfit2', 'takeProfit3': Optional subsequent take-profit levels.
+5.  'futurePriceOutlook': (shortTermTarget, midTermTarget) - These MUST be scaled from currentPriceUSD if provided.
+6.  'tradingTargets': (entryPoint, stopLoss, takeProfit1, takeProfit2, takeProfit3) - These MUST be scaled from currentPriceUSD if provided.
 7.  'investmentAdvice': Specific investment advice or strategy for this coin based on the current signal and analysis.
 8.  'disclaimer': The standard disclaimer.
 
 Your goal is to explain your rationale clearly, as if drawing conclusions from the rich (simulated) dataset described, emphasizing technical indicators like RSI, EMA trends, price breakouts, and volume spikes where relevant.
+Strictly adhere to scaling all price targets from the provided 'currentPriceUSD'.
 `,
 });
 
