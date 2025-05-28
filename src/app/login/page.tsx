@@ -17,7 +17,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   RecaptchaVerifier,
-  signInWithPhoneNumber, // Added signInWithPhoneNumber
+  signInWithPhoneNumber,
   type ConfirmationResult
 } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -99,7 +99,7 @@ export default function LoginPage() {
   const handleEmailSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!auth) {
-      setError("Authentication service not ready.");
+      setError("Authentication service not ready. Please try again shortly.");
       toast({ title: "Error", description: "Auth service not ready.", variant: "destructive" });
       return;
     }
@@ -125,7 +125,7 @@ export default function LoginPage() {
       } else if (err.code === 'auth/email-already-in-use' && isSignUpMode) {
         errorMessage = "This email is already in use. Please try logging in.";
       } else if (err.code === 'auth/api-key-not-valid') {
-        errorMessage = "Firebase API Key is invalid. Please check the Firebase configuration.";
+        errorMessage = "Firebase API Key is invalid. Please check the Firebase configuration in your app. If you are the developer, verify the API key in your Firebase project settings.";
       }
       setError(errorMessage);
       toast({ title: `${isSignUpMode ? 'Sign Up' : 'Login'} Failed`, description: errorMessage, variant: "destructive" });
@@ -136,7 +136,7 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     if (!auth) {
-      setError("Authentication service not ready.");
+      setError("Authentication service not ready. Please try again shortly.");
       toast({ title: "Error", description: "Auth service not ready.", variant: "destructive" });
       return;
     }
@@ -153,7 +153,7 @@ export default function LoginPage() {
       if (errorCode === 'auth/popup-closed-by-user' || errorCode === 'auth/cancelled-popup-request') {
         toast({
           title: "Google Sign-In Cancelled",
-          description: "Popup closed or request cancelled. Ensure popups are allowed and no extensions are blocking it.",
+          description: "Popup closed or request cancelled. Ensure popups are allowed and no extensions are blocking it. Try again.",
           variant: "default",
           duration: 7000,
         });
@@ -162,11 +162,11 @@ export default function LoginPage() {
          setError("An account already exists with this email using a different sign-in method (e.g., email/password). Try that method.");
          toast({ title: "Account Conflict", description: "This email is linked to a different sign-in method. Try that method.", variant: "destructive", duration: 10000});
       } else if (errorCode === 'auth/api-key-not-valid') {
-        setError("Firebase API Key is invalid for Google Sign-In. Please check Firebase configuration.");
-        toast({ title: "Google Sign-In Failed", description: "Firebase API Key invalid. Check configuration.", variant: "destructive", duration: 10000 });
-      } else if (errorMessageText && errorMessageText.toLowerCase().includes("action is invalid")) {
-          setError("Google Sign-In failed: Invalid authentication action. Check Firebase/Google Cloud project settings (Authorized Domains, OAuth Redirect URIs).");
-          toast({ title: "Google Sign-In Failed", description: "Configuration issue suspected. Check Firebase/Google Cloud settings.", variant: "destructive", duration: 10000 });
+        setError("Firebase API Key is invalid for Google Sign-In. Please check Firebase configuration. If you are the developer, verify the API key and OAuth settings in your Firebase and Google Cloud projects.");
+        toast({ title: "Google Sign-In Failed", description: "Firebase API Key invalid or OAuth misconfigured. Check configuration.", variant: "destructive", duration: 10000 });
+      } else if (errorMessageText && (errorMessageText.toLowerCase().includes("action is invalid") || errorMessageText.toLowerCase().includes("redirect uri mismatch"))) {
+          setError("Google Sign-In failed: Invalid authentication action or redirect URI mismatch. Check Firebase/Google Cloud project settings (Authorized Domains, OAuth Redirect URIs).");
+          toast({ title: "Google Sign-In Failed", description: "Configuration issue suspected (redirect URIs). Check Firebase/Google Cloud settings.", variant: "destructive", duration: 10000 });
       } else {
         console.error("Google sign-in error:", err);
         setError(errorMessageText || "Failed to login with Google. Ensure popups are allowed and no extensions block them.");
@@ -179,7 +179,7 @@ export default function LoginPage() {
 
   const handleSendCode = async () => {
     if (!auth) {
-      setError("Authentication service not ready.");
+      setError("Authentication service not ready. Please try again shortly.");
       toast({ title: "Error", description: "Auth service not ready.", variant: "destructive" });
       return;
     }
@@ -206,9 +206,9 @@ export default function LoginPage() {
       if (err.code === 'auth/captcha-check-failed' || err.code === 'auth/missing-recaptcha-token') {
         detailedErrorMsg = "reCAPTCHA verification failed. Complete the security check or refresh. Check browser extensions.";
       } else if (err.message && (err.message.toLowerCase().includes("missing initial state") || err.message.toLowerCase().includes("sessionstorage is inaccessible"))) {
-        detailedErrorMsg = "Auth failed due to missing session data. Check browser privacy settings (cookies/sessionStorage) or extensions.";
+        detailedErrorMsg = "Auth failed due to missing session data. Check browser privacy settings (cookies/sessionStorage) or extensions. Ensure popups are allowed and try an incognito window.";
       } else if (err.code === 'auth/api-key-not-valid') {
-        detailedErrorMsg = "Firebase API Key is invalid for phone sign-in. Please check Firebase configuration.";
+        detailedErrorMsg = "Firebase API Key is invalid for phone sign-in. Please check Firebase configuration. If you are the developer, verify the API key in your Firebase project settings.";
       }
       setError(detailedErrorMsg);
       toast({ title: "Code Send Failed", description: detailedErrorMsg, variant: "destructive", duration: 10000 });
@@ -245,7 +245,7 @@ export default function LoginPage() {
       console.error("Error verifying code:", err);
       let detailedErrorMsg = err.message || "Failed to verify code. Incorrect or expired.";
       if (err.code === 'auth/api-key-not-valid') {
-        detailedErrorMsg = "Firebase API Key is invalid during code verification. Check Firebase configuration.";
+        detailedErrorMsg = "Firebase API Key is invalid during code verification. Check Firebase configuration. If you are the developer, verify the API key in your Firebase project settings.";
       }
       setError(detailedErrorMsg);
       toast({ title: "Verification Failed", description: detailedErrorMsg, variant: "destructive" });
@@ -289,8 +289,8 @@ export default function LoginPage() {
                 {isLoadingGoogle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
                 Sign in with Google
               </Button>
-              <p className="text-xs text-center text-muted-foreground -mt-2">
-                If Google Sign-In fails or popup is cancelled, ensure popups are allowed and no extensions are blocking it.
+              <p className="text-xs text-center text-muted-foreground -mt-2 px-2">
+                If Google Sign-In fails or popup is cancelled, ensure popups are allowed in your browser and no extensions (like ad blockers or privacy guards) are interfering.
               </p>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -331,7 +331,7 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       disabled={isLoadingEmail || isLoadingGoogle || isLoadingPhone}
-                      placeholder={isSignUpMode ? "Choose a strong password (min. 6 characters)" : "Enter your password"}
+                      placeholder={isSignUpMode ? "Create a strong password (min. 6 characters)" : "Enter your password"}
                     />
                   </div>
                 </div>
@@ -426,4 +426,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
