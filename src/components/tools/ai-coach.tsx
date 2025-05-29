@@ -54,27 +54,27 @@ const tradingStyleOptions = [
 
 export function AiCoach() {
   const [coinName, setCoinName] = useState("");
-  const [selectedTradingStyle, setSelectedTradingStyle] = useState<GetCoinTradingSignalInput['tradingStyle'] | undefined>(undefined);
-  const [coachAdvice, setCoachAdvice] = useState<GetCoinTradingSignalOutput | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedTradingStyle, setSelectedTradingStyle = useState<GetCoinTradingSignalInput['tradingStyle'] | undefined>(undefined);
+  const [coachAdvice, setCoachAdvice = useState<GetCoinTradingSignalOutput | null>(null);
+  const [isLoading, setIsLoading = useState(false);
+  const [error, setError = useState<string | null>(null);
   const { toast } = useToast();
 
-  const [currentCoinPrice, setCurrentCoinPrice] = useState<number | null>(null);
-  const [priceLoading, setPriceLoading] = useState(false);
-  const [priceError, setPriceError] = useState<string | null>(null);
+  const [currentCoinPrice, setCurrentCoinPrice = useState<number | null>(null);
+  const [priceLoading, setPriceLoading = useState(false);
+  const [priceError, setPriceError = useState<string | null>(null);
 
-  const [threatRadarData, setThreatRadarData] = useState<GetCoinRiskAssessmentOutput | null>(null);
-  const [threatRadarLoading, setThreatRadarLoading] = useState(false);
-  const [threatRadarError, setThreatRadarError] = useState<string | null>(null);
+  const [threatRadarData, setThreatRadarData = useState<GetCoinRiskAssessmentOutput | null>(null);
+  const [threatRadarLoading, setThreatRadarLoading = useState(false);
+  const [threatRadarError, setThreatRadarError = useState<string | null>(null);
 
-  const [isVoiceLoading, setIsVoiceLoading] = useState(false);
+  const [isVoiceLoading, setIsVoiceLoading = useState(false);
 
-  const [hypotheticalPrice, setHypotheticalPrice] = useState<string>("");
-  const [hypotheticalVolumeCondition, setHypotheticalVolumeCondition] = useState<string>("");
-  const [whatIfSignal, setWhatIfSignal] = useState<GetWhatIfScenarioSignalOutput | null>(null);
-  const [isLoadingWhatIf, setIsLoadingWhatIf] = useState(false);
-  const [whatIfError, setWhatIfError] = useState<string | null>(null);
+  const [hypotheticalPrice, setHypotheticalPrice = useState<string>("");
+  const [hypotheticalVolumeCondition, setHypotheticalVolumeCondition = useState<string>("");
+  const [whatIfSignal, setWhatIfSignal = useState<GetWhatIfScenarioSignalOutput | null>(null);
+  const [isLoadingWhatIf, setIsLoadingWhatIf = useState(false);
+  const [whatIfError, setWhatIfError = useState<string | null>(null);
 
   const fetchPriceForCoin = useCallback(async (nameOfCoin: string): Promise<number | null> => {
     if (!nameOfCoin.trim()) return null;
@@ -137,9 +137,12 @@ export function AiCoach() {
     setWhatIfError(null);
 
     let priceForAnalysis = currentCoinPrice;
+    // Check if the price being shown is for the coin we're about to analyze
+    // Or if the price is simply null (e.g. first load, or API error for previous coin)
     if (nameForCoaching.toLowerCase() !== coinName.toLowerCase() || currentCoinPrice === null) {
+        toast({ title: "Fetching Context", description: `Getting latest price for ${nameForCoaching}...`, duration: 2000});
         priceForAnalysis = await fetchPriceForCoin(nameForCoaching);
-        // If fetching for a different coin, update the main currentCoinPrice for context
+        // If this call was for the primary coinName, update its price
         if (nameForCoaching.toLowerCase() === coinName.toLowerCase()) {
           setCurrentCoinPrice(priceForAnalysis);
         }
@@ -168,7 +171,7 @@ export function AiCoach() {
     } finally {
         setThreatRadarLoading(false);
     }
-  }, [currentCoinPrice, fetchPriceForCoin, coinName]);
+  }, [currentCoinPrice, fetchPriceForCoin, coinName, toast]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -212,6 +215,7 @@ export function AiCoach() {
               // This is a bit tricky; ideally, getCoachingData waits for price.
               // For simplicity, let's assume user hits "Get Coaching" after voice sets coin.
               // Or trigger getCoachingData after a small delay if style is already set.
+              toast({ title: "Processing Voice Command", description: `Analyzing ${parsedCoinName} for ${selectedTradingStyle} style...`, duration: 2000});
               setTimeout(() => {
                 if(selectedTradingStyle){ // Re-check in case it changed
                   getCoachingData(parsedCoinName, selectedTradingStyle);
@@ -324,7 +328,7 @@ export function AiCoach() {
                 <p className="mt-1 text-xs text-destructive">{priceError}</p>
             )}
             {currentCoinPrice !== null && !priceLoading && !priceError && (
-                <p className="mt-1 text-xs text-green-500">Current price for {coinName.trim()}: ${currentCoinPrice.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</p>
+                <p className="mt-1 text-xs text-green-500">Current price for {coinName.trim()}: ${currentCoinPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: currentCoinPrice > 0.01 ? 2 : 8 })}</p>
             )}
           </div>
 
@@ -376,7 +380,7 @@ export function AiCoach() {
             </CardDescription>
              {currentCoinPrice !== null && (
                 <p className="text-xs text-muted-foreground text-center -mt-3">
-                    (Analysis based on current price of ${currentCoinPrice.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })})
+                    (Analysis based on current price of ${currentCoinPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: currentCoinPrice > 0.01 ? 2 : 8 })})
                 </p>
             )}
 
@@ -622,3 +626,4 @@ const InfoCard: React.FC<InfoCardProps> = ({icon, title, children}) => (
         </CardContent>
     </Card>
 );
+
