@@ -5,6 +5,7 @@
  *
  * - getAlphaFeedIdeas - A function that generates a feed of trade ideas.
  * - GetAlphaFeedIdeasInput - The input type (now includes optional filter).
+ * - AlphaFeedTradeIdea - The type for a single trade idea in the output.
  * - GetAlphaFeedIdeasOutput - The return type.
  */
 
@@ -24,19 +25,19 @@ const ideaTypeValues = [
     "Short-Term Momentum",
     "Undervalued Gem",
     "Ecosystem Growth"
-] as const; // Use 'as const' for strong typing
+] as const;
 
 // Create the Zod enum using this array for internal schema validation
 const IdeaTypeEnumInternal = z.enum(ideaTypeValues);
 
-// Export the type derived from the enum (this is fine)
-export type IdeaType = z.infer<typeof IdeaTypeEnumInternal>;
+// This type is internal and not exported to avoid conflicts
+type InternalIdeaType = z.infer<typeof IdeaTypeEnumInternal>;
 
 
 const TradeIdeaSchema = z.object({
   coinName: z.string().describe('The name of the coin or token.'),
   symbol: z.string().describe('The ticker symbol for the coin (e.g., BTC, DOGE).'),
-  ideaType: IdeaTypeEnumInternal.describe('The category or type of trade idea.'), // Use the internal enum
+  ideaType: IdeaTypeEnumInternal.describe('The category or type of trade idea.'),
   signal: z.enum(["Buy", "Accumulate", "Watch", "Consider Short"]).describe('The suggested trading action.'),
   riskRewardProfile: z.enum([
       "High Risk / High Reward",
@@ -51,7 +52,7 @@ const TradeIdeaSchema = z.object({
   suggestedTimeframe: z.string().describe('Suggested holding or monitoring timeframe for this idea (e.g., "1-2 weeks", "Next 24-72 hours", "Medium-term hold (1-3 months)").'),
   keyMetricsToWatch: z.array(z.string()).optional().describe("Specific metrics or events to monitor that would support or invalidate the idea.")
 });
-export type TradeIdea = z.infer<typeof TradeIdeaSchema>;
+export type AlphaFeedTradeIdea = z.infer<typeof TradeIdeaSchema>;
 
 const GetAlphaFeedIdeasOutputSchema = z.object({
   feedItems: z.array(TradeIdeaSchema).describe('A list of AI-generated trade ideas.'),
@@ -70,7 +71,7 @@ const prompt = ai.definePrompt({
   output: {schema: GetAlphaFeedIdeasOutputSchema},
   prompt: `You are an AI Crypto Strategist specializing in identifying "alpha" - high-potential trade ideas with a unique edge.
 Generate a feed of 3-5 distinct and actionable trade ideas for various meme coins, altcoins, or crypto narratives.
-{{#if filter}}Focus your ideas related to the idea type: {{filter}}. Ensure the generated 'ideaType' matches this filter.{{/if}}
+{{#if filter}}Focus your ideas related to the idea type: {{{filter}}}. Ensure the generated 'ideaType' matches this filter.{{/if}}
 
 For each trade idea, provide:
 - 'coinName' and 'symbol'.
@@ -107,3 +108,9 @@ const getAlphaFeedIdeasFlow = ai.defineFlow(
     return output!;
   }
 );
+
+// This array is for use by client components if needed, define it here and export it.
+// Since it's a simple array, it's fine to export from a 'use server' file IF the client component is also a client component.
+// However, to be absolutely safe with strict server module rules, client components should define their own options.
+// For now, the AlphaFeedDisplay.tsx defines its own options.
+// export const AlphaIdeaTypeOptions = [...ideaTypeValues];

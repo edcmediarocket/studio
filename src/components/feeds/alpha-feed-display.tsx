@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { getAlphaFeedIdeas, type GetAlphaFeedIdeasOutput, type TradeIdea } from "@/ai/flows/get-alpha-feed-ideas";
+import { getAlphaFeedIdeas, type GetAlphaFeedIdeasOutput, type AlphaFeedTradeIdea } from "@/ai/flows/get-alpha-feed-ideas"; // Updated import type
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle, Info, RefreshCw, Sparkles, Target, ShieldHalf, CalendarDays, Brain, TrendingUp, Zap, Filter, X } from "lucide-react";
@@ -29,7 +29,7 @@ export function AlphaFeedDisplay() {
   const [error, setError] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string | undefined>(undefined);
 
-  const ideaTypes = AlphaIdeaTypeOptions; 
+  const ideaTypes = AlphaIdeaTypeOptions;
 
   const fetchFeed = useCallback(async (filter?: string) => {
     setIsLoading(true);
@@ -58,20 +58,20 @@ export function AlphaFeedDisplay() {
     setSelectedFilter(undefined);
   };
 
-  const getSignalColor = (signal: TradeIdea['signal']) => {
+  const getSignalColor = (signal: AlphaFeedTradeIdea['signal']) => { // Updated type
     if (signal === "Buy" || signal === "Accumulate") return "text-green-400 border-green-400/70 bg-green-500/10";
     if (signal === "Consider Short") return "text-red-400 border-red-400/70 bg-red-500/10";
     return "text-yellow-400 border-yellow-400/70 bg-yellow-500/10"; // For "Watch"
   };
 
-  const getRiskColor = (risk: TradeIdea['riskRewardProfile']) => {
+  const getRiskColor = (risk: AlphaFeedTradeIdea['riskRewardProfile']) => { // Updated type
     if (risk.toLowerCase().includes("high risk")) return "border-red-500 text-red-500";
     if (risk.toLowerCase().includes("medium risk")) return "border-yellow-500 text-yellow-500";
     if (risk.toLowerCase().includes("low risk")) return "border-green-500 text-green-500";
     return "border-purple-500 text-purple-500"; // For speculative/asymmetric
   };
 
-  if (isLoading && !feedData) { 
+  if (isLoading && !feedData) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
         <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
@@ -80,7 +80,7 @@ export function AlphaFeedDisplay() {
     );
   }
 
-  if (error && !feedData) { 
+  if (error && !feedData) {
     return (
       <Alert variant="destructive" className="mt-6">
         <AlertTriangle className="h-4 w-4" />
@@ -92,7 +92,7 @@ export function AlphaFeedDisplay() {
       </Alert>
     );
   }
-  
+
   return (
     <div className="space-y-6">
       <Card className="p-4 shadow-md">
@@ -127,14 +127,14 @@ export function AlphaFeedDisplay() {
             </p>
           )}
       </Card>
-      
-      {isLoading && feedData && ( 
+
+      {isLoading && feedData && (
           <div className="flex items-center justify-center text-muted-foreground py-4">
             <Loader2 className="h-5 w-5 animate-spin mr-2" /> Updating feed...
           </div>
       )}
 
-      {!isLoading && error && feedData && ( 
+      {!isLoading && error && feedData && (
            <Alert variant="destructive" className="my-4">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Refresh Error</AlertTitle>
@@ -171,7 +171,7 @@ export function AlphaFeedDisplay() {
                 <InfoItem icon={<ShieldHalf className="h-4 w-4 text-primary/80"/>} label="Risk/Reward" value={idea.riskRewardProfile} valueClassName={getRiskColor(idea.riskRewardProfile)} />
                 <InfoItem icon={<TrendingUp className="h-4 w-4 text-primary/80"/>} label="Market Context" value={idea.marketConditionContext} />
                 <InfoItem icon={<CalendarDays className="h-4 w-4 text-primary/80"/>} label="Narrative Timing" value={idea.narrativeTimingContext} />
-                
+
                 <div>
                   <h4 className="font-semibold text-primary/90 flex items-center mb-1 text-xs"><Brain className="h-4 w-4 mr-1.5"/>Rationale:</h4>
                   <p className="text-muted-foreground text-xs leading-relaxed bg-muted/30 p-2 rounded-md">{idea.rationale}</p>
@@ -228,8 +228,9 @@ const InfoItem: React.FC<InfoItemProps> = ({ icon, label, value, valueClassName 
 );
 
 // Helper type for lastGeneratedTime which is not in schema but can be used for key
+// This is purely a client-side convenience for key generation and does not affect AI flow.
 declare module "@/ai/flows/get-alpha-feed-ideas" {
-  interface TradeIdea {
+  interface AlphaFeedTradeIdea { // Ensure this matches the exported type name
     lastGeneratedTime?: string;
   }
 }
