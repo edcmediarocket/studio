@@ -7,27 +7,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Sparkles, AlertTriangle, Info, DollarSign, TrendingUp, ShieldCheck, Target, HelpCircle, Briefcase, GraduationCap } from "lucide-react";
+import { Loader2, Sparkles, AlertTriangle, Info, DollarSign, TrendingUp, TrendingDown, ShieldCheck, Target, HelpCircle, Briefcase, GraduationCap, CheckCircle, XCircle, MinusCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Rocket } from "lucide-react"; // For RocketScoreDisplay
-import { cn } from "@/lib/utils"; // For cn utility
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { StatItem } from "@/components/shared/stat-item";
+import { StatItem } from '@/components/shared/stat-item';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-
-const RocketScoreDisplay: React.FC<{ score: number }> = ({ score }) => (
-    <div className="flex">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Rocket
-          key={i}
-          className={cn("h-5 w-5", i < score ? "text-neon fill-neon" : "text-muted-foreground/50")}
-        />
-      ))}
-    </div>
-  );
 
 const TradingTargetLabel: React.FC<{ label: string; tooltip: string }> = ({ label, tooltip }) => (
   <div className="flex items-center">
@@ -44,6 +32,12 @@ const TradingTargetLabel: React.FC<{ label: string; tooltip: string }> = ({ labe
     </Popover>
   </div>
 );
+
+const FactorImpactIcon: React.FC<{ impact: "Positive" | "Negative" | "Neutral" }> = ({ impact }) => {
+  if (impact === "Positive") return <CheckCircle className="h-4 w-4 text-green-500" />;
+  if (impact === "Negative") return <XCircle className="h-4 w-4 text-red-500" />;
+  return <MinusCircle className="h-4 w-4 text-yellow-500" />;
+};
 
 
 export function AiCoach() {
@@ -65,7 +59,7 @@ export function AiCoach() {
       }
       setPriceLoading(true);
       setPriceError(null);
-      setCurrentCoinPrice(null); // Reset previous price
+      setCurrentCoinPrice(null); 
 
       let coinId = coinName.trim().toLowerCase();
       const coinIdMappings: { [key: string]: string } = {
@@ -116,7 +110,7 @@ export function AiCoach() {
             setPriceError(null);
             setPriceLoading(false);
         }
-    }, 500); // Debounce API call
+    }, 500); 
 
     return () => clearTimeout(debounceTimer);
   }, [coinName]);
@@ -224,8 +218,35 @@ export function AiCoach() {
                 {coachAdvice.recommendation}
               </Badge>
               <p className="text-sm text-muted-foreground">{coachAdvice.reasoning}</p>
-              <RocketScoreDisplay score={coachAdvice.rocketScore} />
+              <div>
+                 <span className="text-sm font-medium text-foreground">AI Confidence: {coachAdvice.confidenceScore}%</span>
+                 <Progress value={coachAdvice.confidenceScore} className="h-2 mt-1 [&>div]:bg-neon max-w-xs mx-auto" />
+              </div>
             </div>
+            
+            {coachAdvice.keyReasoningFactors && coachAdvice.keyReasoningFactors.length > 0 && (
+              <InfoCard icon={<Info className="h-5 w-5" />} title="Key Reasoning Factors">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Factor</TableHead>
+                      <TableHead className="text-xs">Observation</TableHead>
+                      <TableHead className="text-center text-xs">Impact</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {coachAdvice.keyReasoningFactors.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="text-xs py-1.5">{item.factor}</TableCell>
+                        <TableCell className="text-xs py-1.5">{item.value}</TableCell>
+                        <TableCell className="text-center py-1.5"><FactorImpactIcon impact={item.impact} /></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </InfoCard>
+            )}
+
 
             <InfoCard icon={<Info className="h-5 w-5" />} title="Detailed Analysis">
               <p className="text-base sm:text-sm text-muted-foreground whitespace-pre-wrap">{coachAdvice.detailedAnalysis}</p>
@@ -288,3 +309,4 @@ const InfoCard: React.FC<InfoCardProps> = ({icon, title, children}) => (
         </CardContent>
     </Card>
 );
+

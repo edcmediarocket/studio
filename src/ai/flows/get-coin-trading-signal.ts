@@ -20,7 +20,12 @@ export type GetCoinTradingSignalInput = z.infer<typeof GetCoinTradingSignalInput
 const GetCoinTradingSignalOutputSchema = z.object({
   recommendation: z.enum(['Buy', 'Sell', 'Hold']).describe('The trading recommendation: Buy, Sell, or Hold.'),
   reasoning: z.string().describe('A concise summary of the main reason for the recommendation.'),
-  rocketScore: z.number().min(1).max(5).int().describe('A score from 1 to 5 rockets, indicating bullish potential or strength of the signal. 5 is highest. This also reflects the AI\'s confidence.'),
+  confidenceScore: z.number().min(0).max(100).int().describe('A numerical confidence score (0-100) for the generated signal. Higher means more confident.'),
+  keyReasoningFactors: z.array(z.object({
+    factor: z.string().describe("The contributing factor, e.g., RSI, MACD, Social Sentiment, Whale Activity, Developer Activity, AI Forecast Agreement."),
+    value: z.string().describe("The observed value or state of the factor, e.g., '68', 'Bullish Crossover', '73% Positive', '$3.2M Inflow', 'High'."),
+    impact: z.enum(["Positive", "Negative", "Neutral"]).describe("The perceived impact of this factor on the signal (Positive, Negative, or Neutral towards the recommendation).")
+  })).optional().describe("A breakdown of 3-5 key factors and their impact influencing the trading signal."),
   detailedAnalysis: z.string().describe('In-depth analysis of the factors influencing the signal. This should be a comprehensive summary reflecting analysis of market sentiment, technical indicators (including RSI, MACD, EMA trends, price breakouts, volume spikes), on-chain data, whale activity, and tokenomics, as if derived from a sophisticated AI model trained on extensive crypto datasets. If currentPriceUSD was provided, this analysis MUST reference it.'),
   futurePriceOutlook: z.object({
     shortTermTarget: z.string().optional().describe('Speculative short-term price target (e.g., "$0.05 in 1 week", "0.1234 USD"). This MUST be a plausible value derived directly from currentPriceUSD if provided. Include indicative predictions for timeframes like 1h, 6h, or 24h if possible.'),
@@ -69,18 +74,24 @@ Imagine you have access to and have analyzed the following types of data:
 - Technical Indicators: Including Moving Average Convergence Divergence (MACD), Relative Strength Index (RSI) (identifying overbought/oversold conditions), Exponential Moving Averages (EMA trends), and Bollinger Bands.
 - News Sentiment: Overall bullish, bearish, or neutral sentiment from recent news.
 - Behavioral Triggers: Indicators of FOMO (Fear Of Missing Out) or FUD (Fear, Uncertainty, Doubt) patterns.
+- Developer Activity: Simulated or known developer activity.
+- AI Forecast Agreement: Conceptual agreement with other AI forecasting models.
 
 Based on your simulated multi-faceted analysis of these inputs, provide a trading signal for "{{coinName}}". Your response MUST adhere to the JSON output schema.
 
 Ensure all output fields are populated:
 1.  'recommendation': "Buy", "Sell", or "Hold".
 2.  'reasoning': A concise (1-2 sentence) summary for the recommendation. This should briefly touch upon the key simulated data points (e.g., technicals like RSI/EMA, breakouts, volume, sentiment, whale activity) that led to the signal.
-3.  'rocketScore': An integer from 1 to 5. This score indicates bullish potential (5 is most bullish) AND your confidence level in the signal (5 is most confident).
-4.  'detailedAnalysis': A comprehensive explanation. Articulate how the simulated factors (historical price, volume spikes, price breakouts, social media, on-chain activity, whale movements, technical indicators like MACD/RSI/EMA trends/Bollinger Bands, news sentiment, FOMO/FUD patterns, tokenomics{{#if currentPriceUSD}}, and the current price of {{{currentPriceUSD}}} USD{{/if}}) contribute to your recommendation. Be specific in your rationale.
-5.  'futurePriceOutlook': (shortTermTarget, midTermTarget) - These MUST be scaled from currentPriceUSD if provided.
-6.  'tradingTargets': (entryPoint, stopLoss, takeProfit1, takeProfit2, takeProfit3) - These MUST be scaled from currentPriceUSD if provided.
-7.  'investmentAdvice': Provide advanced and detailed investment advice as per the schema description. It should cover portfolio allocation, entry/exit nuances, risk management, invalidation conditions, and what to monitor for "Hold" signals. Be specific and actionable.
-8.  'disclaimer': The standard disclaimer.
+3.  'confidenceScore': An integer from 0 to 100 representing your confidence in this signal.
+4.  'keyReasoningFactors': Provide 3-5 key factors that significantly influenced your signal. For each factor, specify:
+    *   'factor': The name of the factor (e.g., "RSI (14D)", "Social Sentiment (Twitter)", "Whale Net Inflow (24h)").
+    *   'value': The observed state or value (e.g., "68", "73% Positive", "$3.2M Inflow", "High").
+    *   'impact': Its perceived impact on your signal recommendation ("Positive", "Negative", "Neutral").
+5.  'detailedAnalysis': A comprehensive explanation. Articulate how the simulated factors (historical price, volume spikes, price breakouts, social media, on-chain activity, whale movements, technical indicators like MACD/RSI/EMA trends/Bollinger Bands, news sentiment, FOMO/FUD patterns, tokenomics{{#if currentPriceUSD}}, and the current price of {{{currentPriceUSD}}} USD{{/if}}) contribute to your recommendation. Be specific in your rationale.
+6.  'futurePriceOutlook': (shortTermTarget, midTermTarget) - These MUST be scaled from currentPriceUSD if provided.
+7.  'tradingTargets': (entryPoint, stopLoss, takeProfit1, takeProfit2, takeProfit3) - These MUST be scaled from currentPriceUSD if provided.
+8.  'investmentAdvice': Provide advanced and detailed investment advice as per the schema description. It should cover portfolio allocation, entry/exit nuances, risk management, invalidation conditions, and what to monitor for "Hold" signals. Be specific and actionable.
+9.  'disclaimer': The standard disclaimer.
 
 Your goal is to explain your rationale clearly, as if drawing conclusions from the rich (simulated) dataset described, emphasizing technical indicators like RSI, EMA trends, price breakouts, and volume spikes where relevant.
 Strictly adhere to scaling all price targets from the provided 'currentPriceUSD'.
