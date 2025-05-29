@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, AlertTriangle, Info, DollarSign, TrendingUp, TrendingDown, ShieldCheck, Target, HelpCircle, Briefcase, GraduationCap, CheckCircle, XCircle, MinusCircle, Siren, Mic, BarChart, MessageSquare, Zap, ListChecks, FileText, SlidersHorizontal } from "lucide-react";
+import { Loader2, Sparkles, AlertTriangle, Info, DollarSign, TrendingUp, TrendingDown, ShieldCheck, Target, HelpCircle, Briefcase, GraduationCap, CheckCircle, XCircle, MinusCircle, Siren, Mic, BarChart, MessageSquare, Zap, ListChecks, FileText, SlidersHorizontal, CalendarClock } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -376,7 +376,7 @@ export function AiCoach() {
              {currentCoinPrice !== null && (
                 <p className="text-xs text-muted-foreground text-center -mt-3">
                     (Analysis based on current price of ${currentCoinPrice.toLocaleString(undefined, {
-                        minimumFractionDigits: currentCoinPrice < 0.01 && currentCoinPrice !== 0 ? 8 : 2,
+                        minimumFractionDigits: 2,
                         maximumFractionDigits: currentCoinPrice < 0.01 && currentCoinPrice !== 0 ? 8 : 2,
                     })})
                 </p>
@@ -437,6 +437,24 @@ export function AiCoach() {
             <InfoCard icon={<Briefcase className="h-5 w-5" />} title="Investment Advice">
               <p className="text-base sm:text-sm text-muted-foreground whitespace-pre-wrap">{coachAdvice.investmentAdvice}</p>
             </InfoCard>
+
+            {coachAdvice.eventBasedTriggers && coachAdvice.eventBasedTriggers.length > 0 && (
+              <InfoCard icon={<CalendarClock className="h-5 w-5" />} title="AI Event-Based Triggers & Conditional Strategies">
+                <div className="space-y-4">
+                  {coachAdvice.eventBasedTriggers.map((trigger, index) => (
+                    <Card key={index} className="bg-card/50 p-3 shadow-inner">
+                      <h5 className="text-sm font-semibold text-primary mb-1 flex items-center">
+                        <Zap className="h-4 w-4 mr-2 text-neon"/>
+                        {trigger.eventName}
+                      </h5>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground/80">Condition:</span> {trigger.triggerCondition}</p>
+                      <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground/80">Action:</span> {trigger.recommendedAction}</p>
+                      {trigger.rationale && <p className="text-xs text-muted-foreground/80 mt-1 italic"><span className="font-medium text-foreground/80">Rationale:</span> {trigger.rationale}</p>}
+                    </Card>
+                  ))}
+                </div>
+              </InfoCard>
+            )}
 
             {coachAdvice.disclaimer && (
               <p className="text-xs text-muted-foreground pt-4 border-t border-dashed mt-4">{coachAdvice.disclaimer}</p>
@@ -624,4 +642,3 @@ const InfoCard: React.FC<InfoCardProps> = ({icon, title, children}) => (
         </CardContent>
     </Card>
 );
-

@@ -48,6 +48,12 @@ const GetCoinTradingSignalOutputSchema = z.object({
     takeProfit3: z.string().optional().describe('Third take-profit target price (e.g., "$0.075", "0.080 USD"). MUST be a plausible value derived directly from currentPriceUSD if provided, and tailored to the tradingStyle.')
   }).describe('Specific trading price targets for executing a trade. These MUST be scaled realistically based on currentPriceUSD if provided and heavily influenced by the selected tradingStyle.'),
   investmentAdvice: z.string().describe('Provide advanced and detailed investment advice or strategy for this coin based on the current signal, analysis, and the user\'s selected tradingStyle. This should include: \n1. Suggested portfolio allocation (e.g., "For a High-Risk/High-Reward style, consider this a 5-10% speculative play..." or "For a Conservative style, this might represent a 1-2% allocation..."). \n2. Specific entry/exit strategy nuances tailored to the tradingStyle (e.g., "Scalpers might look for quick 1-2% gains with tight stops." or "Conservative investors could DCA around the entry point and aim for mid-term targets."). \n3. Key risk management techniques relevant to the signal and tradingStyle (e.g., "High-Risk traders must use firm stop-losses. Conservative traders might avoid this signal if broader market is bearish."). \n4. Conditions that might invalidate the current signal or warrant a re-evaluation, considering the tradingStyle. \n5. If "Hold", specify key metrics to monitor for a change in outlook based on the tradingStyle.'),
+  eventBasedTriggers: z.array(z.object({
+    eventName: z.string().describe("The specific event or condition to monitor (e.g., 'BTC Dominance Change', 'Significant Whale Wallet Activity', 'CPI Data Release Effect', 'Major Exchange Listing News', 'Regulatory News Impact')."),
+    triggerCondition: z.string().describe("The specific condition related to the event that would trigger a strategic adjustment (e.g., 'BTC dominance drops by 2%', 'net outflows from top 10 whale wallets exceed $1M in 6 hours', 'sentiment flips decidedly bullish post-CPI data and holds for 4 hours', 'coin lists on a Tier-1 exchange like Binance/Coinbase', 'negative regulatory announcement directly impacting meme coins')."),
+    recommendedAction: z.string().describe("The suggested strategic adjustment or trading action if the trigger condition is met (e.g., 'Consider scaling into a Buy position', 'Prepare to Sell/Take Profit', 'Re-evaluate current Hold position', 'Potential short-term Buy opportunity, monitor closely', 'Temporarily de-risk position and observe')."),
+    rationale: z.string().optional().describe("Brief reasoning for this event-based trigger strategy and its relevance to the selected trading style.")
+  })).optional().describe("A list of 1-3 event-based triggers or conditional trading strategies based on potential market catalysts or changes, tailored to the selected trading style."),
   disclaimer: z.string().default("This AI-generated trading signal and analysis is for informational purposes only and not financial advice. Meme coins are highly speculative. DYOR and invest only what you can afford to lose.").describe("Standard disclaimer.")
 });
 export type GetCoinTradingSignalOutput = z.infer<typeof GetCoinTradingSignalOutputSchema>;
@@ -64,14 +70,14 @@ const prompt = ai.definePrompt({
 For the meme coin "{{coinName}}"{{#if currentPriceUSD}}, which is currently trading at approximately {{{currentPriceUSD}}} USD{{/if}}, perform a comprehensive analysis.
 
 {{#if tradingStyle}}
-The user has selected the "{{{tradingStyle}}}" trading style. Your entire analysis, including entry points, stop-loss, take-profit targets, price outlook, and investment advice, MUST be tailored to this style.
-- **Conservative**: Focus on lower risk, potentially wider stops, longer hold times, smaller position sizes, and clearer confirmations.
-- **Swing Trader**: Focus on short-to-mid-term price movements, technical analysis, identifying swing highs/lows, with balanced risk/reward.
-- **Scalper**: Focus on very short-term (intraday) micro-movements, tight stop-losses and take-profits, requiring high precision.
-- **High-Risk/High-Reward**: Focus on momentum, hype, potentially higher volatility plays, with asymmetric upside but acknowledging significant risk.
-- **AI Hybrid**: Explain how you are dynamically blending strategies based on current market conditions and coin characteristics.
+The user has selected the "{{{tradingStyle}}}" trading style. Your entire analysis, including entry points, stop-loss, take-profit targets, price outlook, investment advice, and any event-based triggers, MUST be tailored to this style.
+- **Conservative**: Focus on lower risk, potentially wider stops, longer hold times, smaller position sizes, and clearer confirmations. Event triggers might focus on broad market stability or significant positive news.
+- **Swing Trader**: Focus on short-to-mid-term price movements, technical analysis, identifying swing highs/lows, with balanced risk/reward. Event triggers might be tied to technical breakouts or news directly impacting the coin's perceived value.
+- **Scalper**: Focus on very short-term (intraday) micro-movements, tight stop-losses and take-profits, requiring high precision. Event triggers might be very sensitive to immediate volume spikes or order book imbalances.
+- **High-Risk/High-Reward**: Focus on momentum, hype, potentially higher volatility plays, with asymmetric upside but acknowledging significant risk. Event triggers might be more speculative, like major influencer mentions or early signs of a viral narrative.
+- **AI Hybrid**: Explain how you are dynamically blending strategies based on current market conditions and coin characteristics. Event triggers might be a mix, adapting to the overall market context.
 {{else}}
-No specific trading style was selected by the user. Provide a balanced, general-purpose trading analysis.
+No specific trading style was selected by the user. Provide a balanced, general-purpose trading analysis and general event-based considerations.
 {{/if}}
 
 **CRITICAL INSTRUCTIONS FOR PRICE TARGETS AND ANALYSIS (IF 'currentPriceUSD' IS PROVIDED):**
@@ -83,7 +89,7 @@ No specific trading style was selected by the user. Provide a balanced, general-
     *   Think in terms of reasonable percentage changes from {{{currentPriceUSD}}}, adjusted for the selected 'tradingStyle'.
 3.  **Detailed Analysis Reference**: Your 'detailedAnalysis' text MUST also reference and be consistent with this current price of {{{currentPriceUSD}}} USD when discussing current market standing or potential price movements.
 {{else}}
-**Note: No specific current market price was provided for {{coinName}}. Your analysis and price targets will be more general estimations and should reflect this lack of a precise current price. However, still tailor the *nature* of the targets and advice to the selected 'tradingStyle' if provided.**
+**Note: No specific current market price was provided for {{coinName}}. Your analysis and price targets will be more general estimations and should reflect this lack of a precise current price. However, still tailor the *nature* of the targets, advice, and event-based triggers to the selected 'tradingStyle' if provided.**
 {{/if}}
 
 Imagine you have access to and have analyzed the following types of data:
@@ -96,12 +102,13 @@ Imagine you have access to and have analyzed the following types of data:
 - Behavioral Triggers: Indicators of FOMO (Fear Of Missing Out) or FUD (Fear, Uncertainty, Doubt) patterns.
 - Developer Activity: Simulated or known developer activity.
 - AI Forecast Agreement: Conceptual agreement with other AI forecasting models.
+- Potential upcoming market events or catalysts: e.g., CPI data releases, major exchange listings, regulatory announcements, BTC dominance shifts.
 
 Based on your simulated multi-faceted analysis of these inputs, provide a trading signal for "{{coinName}}". Your response MUST adhere to the JSON output schema.
 
 Ensure all output fields are populated:
 1.  'recommendation': "Buy", "Sell", or "Hold".
-2.  'reasoning': A concise (1-2 sentence) summary for the recommendation. This should briefly touch upon the key simulated data points (e.g., technicals like RSI/EMA, breakouts, volume, sentiment, whale activity) that led to the signal.
+2.  'reasoning': A concise (1-2 sentence) summary for the recommendation.
 3.  'confidenceScore': An integer from 0 to 100 representing your confidence in this signal.
 4.  'keyReasoningFactors': Provide 3-5 key factors that significantly influenced your signal. For each factor, specify:
     *   'factor': The name of the factor (e.g., "RSI (14D)", "Social Sentiment (Twitter)", "Whale Net Inflow (24h)").
@@ -111,10 +118,11 @@ Ensure all output fields are populated:
 6.  'futurePriceOutlook': (shortTermTarget, midTermTarget) - These MUST be scaled from currentPriceUSD if provided and reflect the 'tradingStyle'.
 7.  'tradingTargets': (entryPoint, stopLoss, takeProfit1, takeProfit2, takeProfit3) - These MUST be scaled from currentPriceUSD if provided and reflect the 'tradingStyle'.
 8.  'investmentAdvice': Provide advanced and detailed investment advice as per the schema description, **explicitly tailored to the selected 'tradingStyle'**. It should cover portfolio allocation, entry/exit nuances, risk management, invalidation conditions, and what to monitor for "Hold" signals, all through the lens of the chosen style.
-9.  'disclaimer': The standard disclaimer.
+9.  **'eventBasedTriggers' (Optional but Highly Encouraged)**: Provide 1-3 plausible event-based triggers or conditional strategies relevant to "{{coinName}}" and the selected 'tradingStyle'. For each, specify 'eventName', 'triggerCondition', 'recommendedAction', and 'rationale'. Consider events like BTC dominance shifts, significant whale movements, CPI data releases, major exchange listing news, or relevant regulatory news.
+10. 'disclaimer': The standard disclaimer.
 
 Your goal is to explain your rationale clearly, as if drawing conclusions from the rich (simulated) dataset described, emphasizing technical indicators like RSI, EMA trends, price breakouts, and volume spikes where relevant.
-Strictly adhere to scaling all price targets from the provided 'currentPriceUSD' and tailoring all advice to the 'tradingStyle' if provided.
+Strictly adhere to scaling all price targets from the provided 'currentPriceUSD' and tailoring all advice, including event-based triggers, to the 'tradingStyle' if provided.
 `,
 });
 
@@ -132,4 +140,3 @@ const getCoinTradingSignalFlow = ai.defineFlow(
     return output!;
   }
 );
-
