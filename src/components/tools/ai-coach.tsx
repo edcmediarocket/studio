@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, AlertTriangle, Info, DollarSign, TrendingUp, TrendingDown, ShieldCheck, Target, HelpCircle, Briefcase, GraduationCap, CheckCircle, XCircle, MinusCircle, Siren, Mic, BarChart, MessageSquare, Zap, ListChecks, FileText, SlidersHorizontal, CalendarClock, Clock4 } from "lucide-react"; // Added Clock4
+import { Loader2, Sparkles, AlertTriangle, Info, DollarSign, TrendingUp, TrendingDown, ShieldCheck, Target, HelpCircle, Briefcase, GraduationCap, CheckCircle, XCircle, MinusCircle, Siren, Mic, BarChart, MessageSquare, Zap, ListChecks, FileText, SlidersHorizontal, CalendarClock, Clock4 } from "lucide-react"; 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -206,11 +206,12 @@ export function AiCoach() {
             setCoinName(parsedCoinName);
             if (selectedTradingStyle) {
               toast({ title: "Processing Voice Command", description: `Analyzing ${parsedCoinName} for ${selectedTradingStyle} style...`, duration: 2000});
+              // Delay slightly to allow coinName state to update and potentially trigger price fetch
               setTimeout(() => {
-                if(selectedTradingStyle){
+                if(selectedTradingStyle){ // Re-check selectedTradingStyle in case it was cleared
                   getCoachingData(parsedCoinName, selectedTradingStyle);
                 }
-              }, 700);
+              }, 700); // Adjust delay if needed
             } else {
               toast({ title: "Trading Style Needed", description: "Please select a trading style to get advice for " + parsedCoinName, variant: "default"});
             }
@@ -259,11 +260,11 @@ export function AiCoach() {
 
 
   const getRecommendationBadgeVariant = (recommendation?: GetCoinTradingSignalOutput['recommendation'] | GetWhatIfScenarioSignalOutput['recommendation']) => {
-    const recString = recommendation as string;
+    const recString = recommendation as string; // Cast to string to handle different enum types
     if (!recString) return 'outline';
-    if (recString.toLowerCase().includes('buy')) return 'default';
-    if (recString.toLowerCase().includes('sell')) return 'destructive';
-    if (recString.toLowerCase().includes('hold')) return 'secondary';
+    if (recString.toLowerCase().includes('buy')) return 'default'; // Catches "Buy", "Strong Buy", "Aggressive Buy"
+    if (recString.toLowerCase().includes('sell')) return 'destructive'; // Catches "Sell", "Strong Sell"
+    if (recString.toLowerCase().includes('hold')) return 'secondary'; // Catches "Hold", "Cautious Hold"
     return 'outline';
   };
 
@@ -376,7 +377,7 @@ export function AiCoach() {
              {currentCoinPrice !== null && (
                 <p className="text-xs text-muted-foreground text-center -mt-3">
                     (Analysis based on current price of ${currentCoinPrice.toLocaleString(undefined, {
-                        minimumFractionDigits: currentCoinPrice < 0.01 && currentCoinPrice !== 0 ? 8 : 2,
+                        minimumFractionDigits: 2,
                         maximumFractionDigits: currentCoinPrice < 0.01 && currentCoinPrice !== 0 ? 8 : 2,
                     })})
                 </p>
@@ -424,6 +425,7 @@ export function AiCoach() {
                 <InfoCard icon={<TrendingUp className="h-5 w-5" />} title="Future Price Outlook">
                      <StatItem label="Short-Term Target" value={coachAdvice.futurePriceOutlook?.shortTermTarget} className="px-0 py-1" labelClassName="text-xs" valueClassName="text-sm"/>
                      <StatItem label="Mid-Term Target" value={coachAdvice.futurePriceOutlook?.midTermTarget} className="px-0 py-1" labelClassName="text-xs" valueClassName="text-sm"/>
+                     <StatItem label="Long-Term Target" value={coachAdvice.futurePriceOutlook?.longTermTarget} className="px-0 py-1" labelClassName="text-xs" valueClassName="text-sm"/>
                 </InfoCard>
                 <InfoCard icon={<Target className="h-5 w-5" />} title="Suggested Trading Targets">
                     <StatItem label={<TradingTargetLabel label="Entry Point" tooltip="The suggested price or price range at which to consider buying the coin." />} value={coachAdvice.tradingTargets?.entryPoint} className="px-0 py-1" labelClassName="text-xs" valueClassName="text-sm"/>
@@ -648,4 +650,5 @@ const InfoCard: React.FC<InfoCardProps> = ({icon, title, children}) => (
         </CardContent>
     </Card>
 );
+
 
