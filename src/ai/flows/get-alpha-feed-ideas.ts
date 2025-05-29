@@ -17,7 +17,7 @@ const GetAlphaFeedIdeasInputSchema = z.object({
 });
 export type GetAlphaFeedIdeasInput = z.infer<typeof GetAlphaFeedIdeasInputSchema>;
 
-// This array is for internal Zod enum definition
+// Define the array of string values for the enum directly
 const ideaTypeValues = [
     "High Potential Upside",
     "Narrative Play",
@@ -25,14 +25,13 @@ const ideaTypeValues = [
     "Short-Term Momentum",
     "Undervalued Gem",
     "Ecosystem Growth"
-] as const;
+] as const; // Use 'as const' for string literal union
 
-// Internal Zod enum using the array
+// Internal Zod enum using the array - NOT EXPORTED
 const IdeaTypeEnumInternal = z.enum(ideaTypeValues);
-// type InternalIdeaType = z.infer<typeof IdeaTypeEnumInternal>; // This type is not exported
 
-// Define the schema for a single trade idea with a unique internal name
-const InternalSingleTradeIdeaSchema = z.object({ // Renamed from TradeIdeaSchema
+// Define the schema for a single trade idea with a unique internal name - NOT EXPORTED
+const InternalSingleTradeIdeaSchema = z.object({
   coinName: z.string().describe('The name of the coin or token.'),
   symbol: z.string().describe('The ticker symbol for the coin (e.g., BTC, DOGE).'),
   ideaType: IdeaTypeEnumInternal.describe('The category or type of trade idea.'),
@@ -55,12 +54,13 @@ const InternalSingleTradeIdeaSchema = z.object({ // Renamed from TradeIdeaSchema
 export type AlphaFeedTradeIdea = z.infer<typeof InternalSingleTradeIdeaSchema>;
 
 const GetAlphaFeedIdeasOutputSchema = z.object({
-  feedItems: z.array(InternalSingleTradeIdeaSchema).describe('A list of AI-generated trade ideas.'), // Use the renamed internal schema here
+  feedItems: z.array(InternalSingleTradeIdeaSchema).describe('A list of AI-generated trade ideas.'),
   lastGenerated: z.string().describe('Timestamp of when the feed was generated.'),
   disclaimer: z.string().default("These AI-generated trade ideas are for informational and educational purposes only, and do not constitute financial advice. Trading cryptocurrencies is highly speculative and involves substantial risk of loss. Always do your own research (DYOR).")
 });
 export type GetAlphaFeedIdeasOutput = z.infer<typeof GetAlphaFeedIdeasOutputSchema>;
 
+// Main exported async function for the flow
 export async function getAlphaFeedIdeas(input?: GetAlphaFeedIdeasInput): Promise<GetAlphaFeedIdeasOutput> {
   return getAlphaFeedIdeasFlow(input || {});
 }
@@ -71,11 +71,11 @@ const prompt = ai.definePrompt({
   output: {schema: GetAlphaFeedIdeasOutputSchema},
   prompt: `You are an AI Crypto Strategist specializing in identifying "alpha" - high-potential trade ideas with a unique edge.
 Generate a feed of 3-5 distinct and actionable trade ideas for various meme coins, altcoins, or crypto narratives.
-{{#if filter}}Focus your ideas related to the idea type: {{{filter}}}. Ensure the generated 'ideaType' matches this filter.{{/if}}
+{{#if filter}}Focus your ideas related to the idea type: {{{filter}}}. Ensure the generated 'ideaType' for each item matches this filter.{{/if}}
 
 For each trade idea, provide:
 - 'coinName' and 'symbol'.
-- 'ideaType': Classify the idea (e.g., "High Potential Upside", "Narrative Play", "Contrarian Bet", "Short-Term Momentum", "Undervalued Gem", "Ecosystem Growth"). {{#if filter}}This MUST be "{{filter}}"{{/if}}
+- 'ideaType': Classify the idea (from the allowed types: "${ideaTypeValues.join('", "')}"). {{#if filter}}This MUST be "{{filter}}"{{/if}}
 - 'signal': "Buy", "Accumulate", "Watch", or "Consider Short".
 - 'riskRewardProfile': Assess the risk/reward (e.g., "High Risk / High Reward", "Speculative / Asymmetric Upside").
 - 'marketConditionContext': Briefly explain relevant current market conditions.
@@ -91,6 +91,7 @@ Include the 'disclaimer'.
 `,
 });
 
+// Internal Genkit flow definition
 const getAlphaFeedIdeasFlow = ai.defineFlow(
   {
     name: 'getAlphaFeedIdeasFlow',
@@ -108,3 +109,6 @@ const getAlphaFeedIdeasFlow = ai.defineFlow(
     return output!;
   }
 );
+
+// This ensures the file has a distinct change for git, potentially helping with cache invalidation.
+// Final check for clarity.
