@@ -1,0 +1,175 @@
+
+"use client";
+
+import React, { useState } from "react";
+import { getStrategicCoinTiming, type StrategicCoinTimingOutput } from "@/ai/flows/get-strategic-coin-timing";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, Target, Sparkles, AlertTriangle, Info, Clock, BarChart, ShieldCheck, MessageSquare, Zap } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+
+export function StrategicTimingAdvisor() {
+  const [coinName, setCoinName] = useState("");
+  const [timingAdvice, setTimingAdvice] = useState<StrategicCoinTimingOutput | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!coinName.trim()) {
+      setError("Please enter a coin name to get strategic timing advice.");
+      setTimingAdvice(null);
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    setTimingAdvice(null);
+    try {
+      const result = await getStrategicCoinTiming({ coinName: coinName.trim() });
+      setTimingAdvice(result);
+    } catch (err) {
+      console.error("Error getting strategic timing advice:", err);
+      setError("Failed to get timing advice. The AI might be contemplating the sands of time, please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getConfidenceBadgeVariant = (confidence: 'High' | 'Medium' | 'Low' | undefined) => {
+    if (confidence === 'High') return 'default';
+    if (confidence === 'Medium') return 'secondary';
+    if (confidence === 'Low') return 'destructive';
+    return 'outline';
+  };
+
+  const getActionBadgeVariant = (action: StrategicCoinTimingOutput['predictedAction'] | undefined) => {
+    if (!action) return 'outline';
+    if (action.toLowerCase().includes('buy')) return 'default';
+    if (action.toLowerCase().includes('sell') || action.toLowerCase().includes('exit')) return 'destructive';
+    if (action.toLowerCase().includes('monitor') || action.toLowerCase().includes('observe')) return 'secondary';
+    return 'outline';
+  };
+
+  return (
+    <Card className="shadow-lg w-full">
+      <CardHeader>
+        <CardTitle className="flex items-center text-xl text-primary">
+          <Clock className="mr-2 h-5 w-5" /> AI Strategic Coin Timing
+        </CardTitle>
+        <CardDescription>
+          Enter a coin name for AI-powered insights on potentially opportune buy/sell windows.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4 mb-6">
+          <div>
+            <Label htmlFor="timing-coinName">Coin Name</Label>
+            <Input
+              id="timing-coinName"
+              type="text"
+              placeholder="e.g., Bitcoin, Ethereum, Dogecoin"
+              value={coinName}
+              onChange={(e) => setCoinName(e.target.value)}
+              disabled={isLoading}
+              className="mt-1"
+            />
+          </div>
+          <Button type="submit" disabled={isLoading || !coinName.trim()} className="w-full bg-primary hover:bg-primary/90">
+            {isLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" /> Get Timing Advice
+              </>
+            )}
+          </Button>
+        </form>
+
+        {error && (
+          <Alert variant="destructive" className="mt-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Timing Analysis Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {timingAdvice && (
+          <div className="mt-8 space-y-6">
+            <Separator />
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-neon">
+                Strategic Timing Insight for: {timingAdvice.coinName.toUpperCase()}
+              </h3>
+            </div>
+            
+            <div className="flex flex-col items-center space-y-2 text-center p-4 bg-muted/30 rounded-lg">
+              <Badge variant={getActionBadgeVariant(timingAdvice.predictedAction)} className="text-md px-3 py-1 font-semibold">
+                {timingAdvice.predictedAction}
+              </Badge>
+              <p className="text-sm text-muted-foreground">
+                Timing Window: <span className="font-medium text-foreground">{timingAdvice.timingWindowEstimate}</span>
+              </p>
+              <div className="text-xs">
+                AI Confidence: 
+                <Badge variant={getConfidenceBadgeVariant(timingAdvice.confidence)} className="ml-1.5 text-xs px-2 py-0.5">
+                  {timingAdvice.confidence}
+                </Badge>
+              </div>
+            </div>
+
+            <InfoBlock icon={<MessageSquare className="h-5 w-5"/>} title="Key Reasoning">
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{timingAdvice.keyReasoning}</p>
+            </InfoBlock>
+
+            <InfoBlock icon={<Zap className="h-5 w-5"/>} title="Strategy Notes">
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{timingAdvice.strategyNotes}</p>
+            </InfoBlock>
+            
+            {timingAdvice.disclaimer && (
+              <Alert variant="default" className="mt-6 border-primary/30 text-sm">
+                <Info className="h-4 w-4 text-primary" />
+                <AlertDescription className="text-muted-foreground text-xs">{timingAdvice.disclaimer}</AlertDescription>
+              </Alert>
+            )}
+          </div>
+        )}
+         {!isLoading && !timingAdvice && !error && (
+            <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center bg-muted/10 mt-6">
+                <Clock className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                <p className="text-muted-foreground">Enter a coin name above for AI strategic timing advice.</p>
+            </div>
+        )}
+      </CardContent>
+      <CardFooter className="mt-auto pt-4">
+         <p className="text-xs text-muted-foreground">
+           Strategic timing predictions are AI-simulated and highly speculative. Not financial advice.
+         </p>
+      </CardFooter>
+    </Card>
+  );
+}
+
+interface InfoBlockProps {
+    icon: React.ReactNode;
+    title: string;
+    children: React.ReactNode;
+}
+const InfoBlock: React.FC<InfoBlockProps> = ({icon, title, children}) => (
+    <Card className="bg-card shadow-sm">
+        <CardHeader className="pb-2 pt-4">
+            <CardTitle className="text-md text-primary flex items-center">
+                {React.cloneElement(icon as React.ReactElement, { className: "mr-2 h-5 w-5" })} 
+                {title}
+            </CardTitle>
+        </CardHeader>
+        <CardContent>
+            {children}
+        </CardContent>
+    </Card>
+);
+
+    

@@ -31,5 +31,8 @@ import '@/ai/flows/optimize-performance.ts'; // Added new flow for performance o
 import '@/ai/flows/get-conceptual-tokenomics-analysis.ts'; // Added new flow for Tokenomics Deep Dive
 import '@/ai/flows/get-what-if-scenario-signal.ts'; // Added for What-If Simulator
 import '@/ai/flows/calculate-future-profit.ts'; // Added for Future Profit Estimator
+import '@/ai/flows/get-strategic-coin-timing.ts'; // Added for Strategic Coin Timing
 // AI Coach feature uses getCoinTradingSignal, so no new flow import needed for it.
 
+
+    

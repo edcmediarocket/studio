@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, BarChart2, Eye, UserCircle, BotMessageSquare, Signal, Calculator, GitCompareArrows, Activity, SlidersHorizontal, Newspaper, Rocket, Siren, Lightbulb, DatabaseZap, ShieldQuestion, ShieldAlert, Flame, SearchCode, BellPlus, GraduationCap } from "lucide-react";
+import { LayoutDashboard, BarChart2, Eye, UserCircle, BotMessageSquare, Signal, Calculator, GitCompareArrows, Activity, SlidersHorizontal, Newspaper, Rocket, Siren, Lightbulb, DatabaseZap, ShieldQuestion, ShieldAlert, Flame, SearchCode, BellPlus, GraduationCap, Target } from "lucide-react"; // Added Target
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar } from "@/components/ui/sidebar";
 import { useTier } from "@/context/tier-context";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
@@ -22,6 +22,7 @@ const baseNavItems: NavItem[] = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/signals", label: "AI Signals", icon: Signal },
   { href: "/alpha-feed", label: "Alpha Feed", icon: Flame, isPremiumFeature: true },
+  { href: "/strategic-insights", label: "Strategic Insights", icon: Target, isPremiumFeature: true },
   { href: "/custom-signals", label: "Custom Signals", icon: SlidersHorizontal, isProFeature: true },
   { href: "/ai-advisor", label: "AI Advisor", icon: BotMessageSquare, isProFeature: true }, 
   { href: "/ai-coach", label: "AI Coach", icon: GraduationCap, isPremiumFeature: true },
@@ -70,25 +71,25 @@ export function MainNav() {
     <SidebarMenu>
       {navItemsToDisplay.map((item) => {
         let tooltipText = item.label;
-        let featureRequiresPro = item.isProFeature && !item.isPremiumFeature;
-        let featureRequiresPremium = item.isPremiumFeature;
-        
-        let userHasAccess = false;
-        if (featureRequiresPremium) {
-          userHasAccess = currentTier === 'Premium';
-          if (!userHasAccess) tooltipText = `${item.label} (Upgrade to Premium)`;
-        } else if (featureRequiresPro) {
-          userHasAccess = currentTier === 'Pro' || currentTier === 'Premium';
-          if (!userHasAccess) tooltipText = `${item.label} (Upgrade to Pro/Premium)`;
-        } else {
-          userHasAccess = true; 
-        }
-        
-        if (item.href === "/admin/dashboard") {
-          userHasAccess = true; 
-          tooltipText = item.label; 
-        }
+        let featureLocked = false;
+        let styleAsLocked = false;
 
+        if (item.isPremiumFeature) {
+          featureLocked = currentTier !== 'Premium';
+          if (featureLocked) tooltipText = `${item.label} (Upgrade to Premium)`;
+        } else if (item.isProFeature) {
+          featureLocked = currentTier !== 'Pro' && currentTier !== 'Premium';
+          if (featureLocked) tooltipText = `${item.label} (Upgrade to Pro/Premium)`;
+        }
+        
+        // Admin link should not be styled as locked by tier logic
+        if (item.href === "/admin/dashboard") {
+          featureLocked = false; 
+          styleAsLocked = false;
+        } else {
+          styleAsLocked = featureLocked;
+        }
+        
         return (
           <SidebarMenuItem key={item.href}>
             <SidebarMenuButton
@@ -100,14 +101,15 @@ export function MainNav() {
               }}
               className={cn(
                 "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                // Removed blur/opacity classes: styleAsLocked && "blur-sm opacity-50 pointer-events-none"
               )}
-              aria-disabled={false} 
+              aria-disabled={false} // All links are considered enabled for navigation
             >
               <Link href={item.href} onClick={handleLinkClick}>
                 <item.icon />
                 <span className="flex items-center">
                   {item.label}
-                  {(featureRequiresPro || featureRequiresPremium) && item.href !== "/admin/dashboard" && (
+                  {(item.isProFeature || item.isPremiumFeature) && item.href !== "/admin/dashboard" && (
                      <Rocket className="ml-auto h-3.5 w-3.5 text-neon opacity-80 group-data-[collapsible=icon]:hidden" />
                   )}
                 </span>
@@ -119,3 +121,5 @@ export function MainNav() {
     </SidebarMenu>
   );
 }
+
+    
