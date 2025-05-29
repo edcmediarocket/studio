@@ -1,4 +1,38 @@
 {
     "IDX.aI.enableInlineCompletion": true,
-    "IDX.aI.enableCodebaseIndexing": true
+    "IDX.aI.enableCodebaseIndexing": true,
+    "piny.project_settings": {
+        "open-pages": [
+            "index.html"
+        ],
+        "app-routes": {
+            "routes": [
+                "/",
+                "/(admin)/admin/dashboard",
+                "/(app)",
+                "/(app)/account",
+                "/(app)/ai-advisor",
+                "/(app)/ai-coach",
+                "/(app)/alpha-feed",
+                "/(app)/analysis",
+                "/(app)/coin-comparison",
+                "/(app)/confidence-dashboard",
+                "/(app)/custom-signals",
+                "/(app)/market-anomalies",
+                "/(app)/narrative-engine",
+                "/(app)/news-buzz",
+                "/(app)/on-chain-insights",
+                "/(app)/onchain-intelligence",
+                "/(app)/pre-launch-radar",
+                "/(app)/roi-calculator",
+                "/(app)/signals",
+                "/(app)/smart-alerts",
+                "/(app)/strategic-insights",
+                "/(app)/tools",
+                "/(app)/watchlist",
+                "/login"
+            ],
+            "current_route": "/(app)/ai-coach"
+        }
+    }
 }

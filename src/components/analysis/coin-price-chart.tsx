@@ -6,6 +6,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Loader2, AlertTriangle, BarChartHorizontalBig } from "lucide-react";
 import { format } from 'date-fns';
+import type { ValueType, NameType } from 'recharts/types/component/DefaultTooltipContent';
 
 export interface OhlcData {
   timestamp: number;
@@ -77,7 +78,7 @@ export function CoinPriceChart({ coinName, data, loading, error }: CoinPriceChar
         <CardTitle className="text-xl text-primary">Price Chart: {coinName}</CardTitle>
         <CardDescription>Closing prices over the last 30 days (USD).</CardDescription>
       </CardHeader>
-      <CardContent className="h-[50vh] sm:h-[400px] p-0"> {/* Changed padding to p-0 */}
+      <CardContent className="h-[50vh] sm:h-[400px] p-0">
         <ChartContainer config={chartConfig} className="w-full h-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
@@ -97,7 +98,7 @@ export function CoinPriceChart({ coinName, data, loading, error }: CoinPriceChar
                 axisLine={false}
                 dy={5}
                 fontSize={10}
-                interval={6} // Display fewer ticks on X-axis
+                interval={6} 
               />
               <YAxis
                 stroke="hsl(var(--muted-foreground))"
@@ -110,22 +111,22 @@ export function CoinPriceChart({ coinName, data, loading, error }: CoinPriceChar
                     return `$${numValue.toFixed(fixedDigits)}`;
                 }}
                 domain={['auto', 'auto']}
-                width={50} // Reduced YAxis width further
+                width={50} 
                 fontSize={10}
               />
               <Tooltip
                 content={<ChartTooltipContent
                             indicator="dot"
-                            formatter={(value, name) => {
+                            formatter={(value: ValueType, name: NameType) => {
                                 const numValue = Number(value);
                                 if (name === 'price') {
-                                    return [`$${numValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: numValue < 0.01 && numValue !== 0 ? 8 : 2})}`, name];
+                                    return [`$${numValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: numValue < 0.01 && numValue !== 0 ? 8 : 2})}`, name as string];
                                 }
-                                return [numValue.toLocaleString(), name];
+                                return [numValue.toLocaleString(), name as string];
                             }}
-                            cursorStyle={{ stroke: 'hsl(var(--neon-accent-hsl))', strokeWidth: 2 }}
                         />}
                 wrapperStyle={{ outline: "none" }}
+                cursor={{ stroke: 'hsl(var(--neon-accent-hsl))', strokeWidth: 2 }}
               />
               <Legend wrapperStyle={{fontSize: "12px"}}/>
               <Line
