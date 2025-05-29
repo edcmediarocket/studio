@@ -86,11 +86,15 @@ export default function LoginPage() {
     }
     
     return () => {
-      if (window.recaptchaVerifier) {
-         try {
-          window.recaptchaVerifier.clear();
+      // Ensure verifier.clear() is called on the correct instance
+      // and only if it exists.
+      const currentVerifier = window.recaptchaVerifier;
+      if (currentVerifier) {
+        try {
+          currentVerifier.clear();
+          window.recaptchaVerifier = undefined; // Clear the global reference
         } catch (e) {
-           console.warn("Error clearing global reCAPTCHA verifier on unmount:", e);
+          console.warn("Error clearing global reCAPTCHA verifier on unmount:", e);
         }
       }
     };
@@ -119,13 +123,15 @@ export default function LoginPage() {
       console.error("Email/Password action error:", err);
       let errorMessage = err.message || `Failed to ${isSignUpMode ? 'sign up' : 'login'}. Please check your credentials.`;
       if (err.code === 'auth/user-not-found' && !isSignUpMode) {
-        errorMessage = "User not found. Have you signed up? Or try Google Sign-In.";
+        errorMessage = "User not found. Please check your email or Sign Up for a new account.";
       } else if (err.code === 'auth/wrong-password' && !isSignUpMode) {
         errorMessage = "Incorrect password. Please try again.";
       } else if (err.code === 'auth/email-already-in-use' && isSignUpMode) {
-        errorMessage = "This email is already in use. Please try logging in.";
+        errorMessage = "This email is already in use. Please try logging in or use a different email.";
       } else if (err.code === 'auth/api-key-not-valid') {
-        errorMessage = "Firebase API Key is invalid. Please check the Firebase configuration in your app. If you are the developer, verify the API key in your Firebase project settings.";
+        errorMessage = "Firebase API Key is invalid. Please check the Firebase configuration. Contact support if issue persists.";
+      } else if (err.code === 'auth/invalid-credential') {
+        errorMessage = "Invalid credentials. Please check your email and password, or sign up if you don't have an account.";
       }
       setError(errorMessage);
       toast({ title: `${isSignUpMode ? 'Sign Up' : 'Login'} Failed`, description: errorMessage, variant: "destructive" });
@@ -213,8 +219,9 @@ export default function LoginPage() {
       setError(detailedErrorMsg);
       toast({ title: "Code Send Failed", description: detailedErrorMsg, variant: "destructive", duration: 10000 });
 
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear(); 
+      const currentVerifier = window.recaptchaVerifier;
+      if (currentVerifier) {
+        currentVerifier.clear(); 
         if (recaptchaContainerRef.current && auth) {
              try {
                 window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, { size: 'invisible' });
@@ -246,6 +253,8 @@ export default function LoginPage() {
       let detailedErrorMsg = err.message || "Failed to verify code. Incorrect or expired.";
       if (err.code === 'auth/api-key-not-valid') {
         detailedErrorMsg = "Firebase API Key is invalid during code verification. Check Firebase configuration. If you are the developer, verify the API key in your Firebase project settings.";
+      } else if (err.code === 'auth/invalid-verification-code') {
+        detailedErrorMsg = "Invalid verification code. Please check the code and try again.";
       }
       setError(detailedErrorMsg);
       toast({ title: "Verification Failed", description: detailedErrorMsg, variant: "destructive" });
@@ -426,3 +435,6 @@ export default function LoginPage() {
     </div>
   );
 }
+
+
+    
