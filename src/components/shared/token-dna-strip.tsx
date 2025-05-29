@@ -1,12 +1,12 @@
 
 "use client";
 
-import React from 'react';
+import React from 'react'; // Added explicit React import
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { HelpCircle, Activity, Users, Layers, TrendingUp } from 'lucide-react'; // Corrected icon import
+import { HelpCircle, Activity, Users, Layers, TrendingUp } from 'lucide-react';
 
 interface DnaMetric {
   label: string;
@@ -67,26 +67,28 @@ export function TokenDnaStrip({
       <CardContent className="space-y-3 pt-2 pb-3">
         {dnaMetrics.map((metric) => (
           metric.score !== undefined ? (
-            <div key={metric.label}>
-              <div className="flex items-center justify-between mb-0.5">
-                <div className="flex items-center text-xs text-muted-foreground">
-                  {React.cloneElement(metric.icon as React.ReactElement, { className: "mr-1.5 h-3.5 w-3.5"})}
-                  {metric.label}
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button className="ml-1 text-muted-foreground hover:text-foreground focus:outline-none">
-                        <HelpCircle className="h-3 w-3" />
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-48 text-xs p-2">
-                      {metric.description}
-                    </PopoverContent>
-                  </Popover>
+            <React.Fragment key={metric.label}>
+              <div>
+                <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-center text-xs text-muted-foreground">
+                    {React.cloneElement(metric.icon as React.ReactElement, { className: "mr-1.5 h-3.5 w-3.5"})}
+                    {metric.label}
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button className="ml-1 text-muted-foreground hover:text-foreground focus:outline-none">
+                          <HelpCircle className="h-3 w-3" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-48 text-xs p-2">
+                        {metric.description}
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <span className="text-xs font-semibold text-foreground">{metric.score}/100</span>
                 </div>
-                <span className="text-xs font-semibold text-foreground">{metric.score}/100</span>
+                <Progress value={metric.score} className={`h-1.5 [&>div]:${getScoreColor(metric.score)}`} />
               </div>
-              <Progress value={metric.score} className={`h-1.5 [&>div]:${getScoreColor(metric.score)}`} />
-            </div>
+            </React.Fragment>
           ) : null
         ))}
       </CardContent>
