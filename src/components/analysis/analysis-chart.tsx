@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts"
@@ -32,12 +33,12 @@ interface AnalysisChartProps {
   chartType?: "bar" | "line"; // Add more types as needed
 }
 
-export function AnalysisChart({ 
-  title, 
-  description, 
-  data = chartData, 
-  config = chartConfig, 
-  chartType = "bar" 
+export function AnalysisChart({
+  title,
+  description,
+  data = chartData,
+  config = chartConfig,
+  chartType = "bar"
 }: AnalysisChartProps) {
   return (
     <Card className="shadow-lg">
@@ -48,7 +49,7 @@ export function AnalysisChart({
       <CardContent>
         <ChartContainer config={config} className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            {chartType === "bar" && (
+            {chartType === "bar" ? (
               <BarChart accessibilityLayer data={data}>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
                 <XAxis
@@ -58,7 +59,7 @@ export function AnalysisChart({
                   axisLine={false}
                   tickFormatter={(value) => value.slice(0, 3)}
                 />
-                <YAxis 
+                <YAxis
                   stroke="hsl(var(--muted-foreground))"
                   tickLine={false}
                   axisLine={false}
@@ -68,7 +69,7 @@ export function AnalysisChart({
                 <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
                 <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
               </BarChart>
-            )}
+            ) : null}
             {/* Add other chart types like LineChart here */}
           </ResponsiveContainer>
         </ChartContainer>
