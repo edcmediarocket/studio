@@ -157,7 +157,7 @@ export function AlphaFeedDisplay() {
       {feedData && feedData.feedItems.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {feedData.feedItems.map((idea, index) => (
-            <Card key={`${idea.symbol}-${index}-${idea.lastGeneratedTime || ''}`} className="shadow-lg hover:shadow-neon/20 transition-shadow duration-300 flex flex-col bg-card">
+            <Card key={`${idea.symbol}-${index}-${feedData?.lastGenerated || ''}`} className="shadow-lg hover:shadow-neon/20 transition-shadow duration-300 flex flex-col bg-card">
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start mb-1">
                   <CardTitle className="text-lg text-primary flex items-center">
@@ -227,7 +227,3 @@ const InfoItem: React.FC<InfoItemProps> = ({ icon, label, value, valueClassName 
     <p className={`${valueClassName} pl-5 leading-relaxed whitespace-pre-wrap`}>{value}</p>
   </div>
 );
-
-// Removed the declare module block that was previously here
-// as it was causing issues with "use server" and type exports.
-// The AlphaIdeaTypeOptions are now defined directly in this client component.
