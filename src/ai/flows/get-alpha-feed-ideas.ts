@@ -32,8 +32,6 @@ const IdeaTypeEnumInternal = z.enum(ideaTypeValues);
 // Export the type derived from the enum (this is fine)
 export type IdeaType = z.infer<typeof IdeaTypeEnumInternal>;
 
-// DO NOT EXPORT AlphaIdeaTypeOptions from here.
-// The client component will define its own options array.
 
 const TradeIdeaSchema = z.object({
   coinName: z.string().describe('The name of the coin or token.'),
@@ -53,7 +51,7 @@ const TradeIdeaSchema = z.object({
   suggestedTimeframe: z.string().describe('Suggested holding or monitoring timeframe for this idea (e.g., "1-2 weeks", "Next 24-72 hours", "Medium-term hold (1-3 months)").'),
   keyMetricsToWatch: z.array(z.string()).optional().describe("Specific metrics or events to monitor that would support or invalidate the idea.")
 });
-export type TradeIdea = z.infer<typeof TradeIdeaSchema>; // Changed LocalTradeIdea to TradeIdea
+export type TradeIdea = z.infer<typeof TradeIdeaSchema>;
 
 const GetAlphaFeedIdeasOutputSchema = z.object({
   feedItems: z.array(TradeIdeaSchema).describe('A list of AI-generated trade ideas.'),
