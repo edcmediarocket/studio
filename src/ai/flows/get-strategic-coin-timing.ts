@@ -9,7 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z}from 'genkit';
 
 const StrategicCoinTimingInputSchema = z.object({
   coinName: z.string().describe('The name of the cryptocurrency to get strategic timing advice for (e.g., Dogecoin).'),
@@ -39,6 +39,11 @@ const StrategicCoinTimingOutputSchema = z.object({
   strategyNotes: z
     .string()
     .describe('Brief, actionable notes on how to approach this timing (e.g., "Look for volume confirmation before entry.", "Consider scaling in/out rather than a single transaction.", "Set tight stop-loss if entering during high volatility window.").'),
+  detailedSessionTimings: z.object({
+    usSession: z.string().describe("Specific buy/sell timing advice for the U.S. trading session for the selected coin, including rationale based on typical volume and volatility patterns during these hours."),
+    europeanSession: z.string().describe("Specific buy/sell timing advice for the European trading session for the selected coin, including rationale."),
+    asianSession: z.string().describe("Specific buy/sell timing advice for the Asian trading session for the selected coin, including rationale.")
+  }).optional().describe("Detailed timing advice for U.S., European, and Asian trading sessions regarding the selected coin, outlining potentially favorable buy/sell windows."),
   disclaimer: z
     .string()
     .default('Strategic timing predictions are highly speculative and based on AI-simulated market analysis. Not financial advice. Always conduct your own research and manage risk carefully.')
@@ -74,7 +79,12 @@ Based on this simulated deep analysis, provide:
 4.  'keyReasoning': A detailed explanation of why this timing window and action are suggested. What specific simulated indicators, patterns, or expected events make this window strategic? If 'currentPriceUSD' was provided, make sure your reasoning acknowledges it and is consistent with that current price.
 5.  'confidence': Your confidence level (High, Medium, Low) in this prediction.
 6.  'strategyNotes': Brief, actionable advice for a trader considering this timing (e.g., "Confirm with a break above resistance", "Consider a partial position", "Have a clear stop-loss in mind due to event risk").
-7.  'disclaimer': The standard disclaimer.
+7.  **'detailedSessionTimings'**: Provide specific buy/sell timing advice for the selected coin for each of the major trading sessions:
+    *   'usSession': Insights for the U.S. session (e.g., "Consider buying around U.S. market open (9:30 AM EST) if momentum indicators confirm bullishness. Best to avoid initiating new positions during midday lull unless significant news breaks.").
+    *   'europeanSession': Insights for the European session (e.g., "European session (approx 3 AM - 12 PM EST) often sees follow-through from Asian trends. Look for consolidation breakouts mid-session (7-10 AM EST). Potential profit-taking window towards London close if price has rallied significantly.").
+    *   'asianSession': Insights for the Asian session (e.g., "Early Asian session (e.g., 8 PM - 10 PM EST previous day) can be volatile; assess for continuation or reversal of U.S. closing momentum. Liquidity may thin out late in the session, consider wider stops or avoid new entries then.").
+    Be specific about potential buy or sell windows or conditions for each session, and provide a brief rationale based on typical session characteristics.
+8.  'disclaimer': The standard disclaimer.
 
 Your analysis should be insightful, clearly linking the predicted timing to underlying (simulated) market dynamics or expected events.
 `,

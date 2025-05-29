@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Target, Sparkles, AlertTriangle, Info, Clock, BarChart, DollarSign, MessageSquare, Zap } from "lucide-react";
+import { Loader2, Target, Sparkles, AlertTriangle, Info, Clock, BarChart, DollarSign, MessageSquare, Zap, Globe, TrendingUpIcon, TrendingDownIcon } from "lucide-react"; // Added Globe and other icons
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -128,7 +128,7 @@ export function StrategicTimingAdvisor() {
           <Clock className="mr-2 h-5 w-5" /> AI Strategic Coin Timing
         </CardTitle>
         <CardDescription>
-          Enter a coin name for AI-powered insights on potentially opportune buy/sell windows.
+          Enter a coin name for AI-powered insights on potentially opportune buy/sell windows, considering current live prices.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -218,6 +218,31 @@ export function StrategicTimingAdvisor() {
             <InfoBlock icon={<Zap className="h-5 w-5"/>} title="Strategy Notes">
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{timingAdvice.strategyNotes}</p>
             </InfoBlock>
+
+            {timingAdvice.detailedSessionTimings && (
+              <InfoBlock icon={<Globe className="h-5 w-5"/>} title="Detailed Trading Session Timings">
+                <div className="space-y-3">
+                  <div>
+                    <h5 className="text-sm font-semibold text-primary/90 flex items-center mb-1">
+                      <TrendingUpIcon className="h-4 w-4 mr-1.5 text-blue-400"/> U.S. Session:
+                    </h5>
+                    <p className="text-xs text-muted-foreground whitespace-pre-wrap pl-5">{timingAdvice.detailedSessionTimings.usSession}</p>
+                  </div>
+                  <div>
+                    <h5 className="text-sm font-semibold text-primary/90 flex items-center mb-1">
+                       <TrendingDownIcon className="h-4 w-4 mr-1.5 text-green-400"/> European Session:
+                    </h5>
+                    <p className="text-xs text-muted-foreground whitespace-pre-wrap pl-5">{timingAdvice.detailedSessionTimings.europeanSession}</p>
+                  </div>
+                  <div>
+                    <h5 className="text-sm font-semibold text-primary/90 flex items-center mb-1">
+                        <BarChart className="h-4 w-4 mr-1.5 text-yellow-400"/> Asian Session:
+                    </h5>
+                    <p className="text-xs text-muted-foreground whitespace-pre-wrap pl-5">{timingAdvice.detailedSessionTimings.asianSession}</p>
+                  </div>
+                </div>
+              </InfoBlock>
+            )}
             
             {timingAdvice.disclaimer && (
               <Alert variant="default" className="mt-6 border-primary/30 text-sm">
