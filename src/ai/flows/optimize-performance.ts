@@ -18,7 +18,7 @@ export type OptimizePerformanceInput = z.infer<typeof OptimizePerformanceInputSc
 
 // The output is a string containing Markdown formatted advice.
 const OptimizePerformanceOutputSchema = z.string().describe("Actionable performance improvement suggestions in Markdown format, covering frontend, backend, and infrastructure.");
-export type OptimizePerformanceOutput = OptimizePerformanceOutputSchema; // z.infer is not needed for z.string()
+export type OptimizePerformanceOutput = z.infer<typeof OptimizePerformanceOutputSchema>;
 
 export async function optimizePerformance(input: OptimizePerformanceInput): Promise<string> {
   return optimizePerformanceFlow(input);

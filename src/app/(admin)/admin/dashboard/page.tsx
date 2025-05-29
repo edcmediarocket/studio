@@ -3,9 +3,10 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { getFirestore, collection, onSnapshot, updateDoc, doc, query, orderBy, deleteDoc } from 'firebase/firestore';
-import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
-import { app } from '@/lib/firebase'; 
+import { collection, onSnapshot, updateDoc, doc, query, orderBy, deleteDoc } from 'firebase/firestore';
+import { onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
+// Import initialized auth and db directly
+import { auth, db } from '@/lib/firebase'; 
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -24,9 +25,10 @@ interface UserData {
   id: string; 
   email?: string;
   tier?: UserTier;
+  // Add any other fields you expect in your user documents
 }
 
-const TIER_OPTIONS: UserTier[] = ["Free", "Basic", "Pro", "Premium"];
+const TIER_OPTIONS: UserTier[] = ["Free", "Basic", "Pro", "Premium"]; // Consistent tier options
 
 export default function AdminDashboardPage() {
   const [users, setUsers] = useState<UserData[]>([]);
@@ -39,8 +41,6 @@ export default function AdminDashboardPage() {
   const [firestoreError, setFirestoreError] = useState<string | null>(null);
 
   const { toast } = useToast();
-  const auth = getAuth(app);
-  const db = getFirestore(app);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
@@ -70,7 +70,7 @@ export default function AdminDashboardPage() {
       }
     });
     return () => unsubscribeAuth();
-  }, [auth]);
+  }, []); // auth is stable from firebase.ts
 
   useEffect(() => {
     if (!authCheckLoading && currentUser && !isAdmin) {
@@ -82,13 +82,14 @@ export default function AdminDashboardPage() {
     if (authCheckLoading || !isAdmin) {
       setLoadingUsers(false);
       if(!authCheckLoading && !isAdmin && currentUser) {
-        setUsers([]);
+        setUsers([]); // Clear users if not admin after auth check
       }
       return;
     }
 
     setLoadingUsers(true);
     setFirestoreError(null); 
+    // Use the directly imported db instance
     const usersQuery = query(collection(db, 'users'), orderBy("email"));
     const unsubscribeUsers = onSnapshot(usersQuery, (snapshot) => {
       const fetchedUsers: UserData[] = snapshot.docs.map(docSnapshot => ({
@@ -112,7 +113,7 @@ export default function AdminDashboardPage() {
     });
 
     return () => unsubscribeUsers();
-  }, [isAdmin, db, toast, authCheckLoading, currentUser]);
+  }, [isAdmin, toast, authCheckLoading, currentUser]); // db is stable
 
   const handleTierChange = useCallback(async (userId: string, newTier: UserTier) => {
     if (!isAdmin) {
@@ -120,6 +121,7 @@ export default function AdminDashboardPage() {
       return;
     }
     try {
+      // Use the directly imported db instance
       const userDocRef = doc(db, 'users', userId);
       await updateDoc(userDocRef, { tier: newTier });
       toast({ title: "Success", description: `User tier updated to ${newTier}.` });
@@ -127,7 +129,7 @@ export default function AdminDashboardPage() {
       console.error("Error updating tier:", error);
       toast({ title: "Error", description: "Failed to update user tier. Check Firestore rules.", variant: "destructive" });
     }
-  }, [isAdmin, db, toast]);
+  }, [isAdmin, toast]); // db is stable
 
   const handleDeleteUser = useCallback(async (userId: string) => {
     if (!isAdmin) {
@@ -136,6 +138,7 @@ export default function AdminDashboardPage() {
     }
     if (!window.confirm("Are you sure you want to delete this user document? This action cannot be undone and does not delete their Firebase Auth account.")) return;
     try {
+      // Use the directly imported db instance
       const userDocRef = doc(db, 'users', userId);
       await deleteDoc(userDocRef);
       toast({ title: "Success", description: "User document deleted from Firestore." });
@@ -143,7 +146,7 @@ export default function AdminDashboardPage() {
       console.error("Error deleting user document:", error);
       toast({ title: "Error", description: "Failed to delete user document. Check Firestore rules.", variant: "destructive" });
     }
-  }, [isAdmin, db, toast]);
+  }, [isAdmin, toast]); // db is stable
 
   const filteredUsers = users
     .filter(user => filterTier === "all" || user.tier === filterTier)
@@ -287,3 +290,5 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
+
+    
