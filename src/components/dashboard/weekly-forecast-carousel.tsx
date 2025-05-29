@@ -10,6 +10,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, AlertTriangle, TrendingUp, TrendingDown, MinusCircle, CalendarDays, Zap, RefreshCw } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Added Alert imports
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -150,7 +151,7 @@ export function WeeklyForecastCarousel() {
         {error && ( // Display a less intrusive error if data already exists
           <Alert variant="destructive" className="mt-2 text-xs py-1.5 px-2.5">
             <AlertTriangle className="h-3.5 w-3.5" />
-            <AlertDescription>Update failed: {error}</AlertDescription>
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
       </CardHeader>
@@ -227,4 +228,5 @@ export function WeeklyForecastCarousel() {
 const asDivButton = {
     className: "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-auto p-0 text-neon hover:text-neon/80 text-xs"
 };
+
 
