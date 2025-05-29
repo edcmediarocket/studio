@@ -11,7 +11,8 @@
 import {ai} from '@/ai/genkit';
 import {z}from 'genkit';
 
-export const GetWhatIfScenarioSignalInputSchema = z.object({
+// Keep Zod schema definitions internal (not exported)
+const GetWhatIfScenarioSignalInputSchema = z.object({
   coinName: z.string().describe('The name of the meme coin (e.g., Dogecoin).'),
   currentPriceUSD: z.number().optional().describe('The current actual market price of the coin in USD, for context.'),
   hypotheticalPriceUSD: z.number().describe('The hypothetical future price of the coin in USD for this scenario.'),
@@ -22,7 +23,8 @@ export const GetWhatIfScenarioSignalInputSchema = z.object({
 });
 export type GetWhatIfScenarioSignalInput = z.infer<typeof GetWhatIfScenarioSignalInputSchema>;
 
-export const GetWhatIfScenarioSignalOutputSchema = z.object({
+// Keep Zod schema definitions internal (not exported)
+const GetWhatIfScenarioSignalOutputSchema = z.object({
   scenarioDescription: z.string().describe('A clear description of the "what-if" scenario being analyzed.'),
   recommendation: z.enum(['Buy', 'Sell', 'Hold', 'Strong Buy', 'Strong Sell', 'Aggressive Buy', 'Cautious Hold']).describe('The trading recommendation based on the hypothetical scenario.'),
   confidenceScore: z.number().min(0).max(100).int().describe('AI\'s confidence in this scenario-based recommendation (0-100).'),
