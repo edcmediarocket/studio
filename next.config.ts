@@ -3,7 +3,7 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   output: 'export',
-  trailingSlash: true, // Ensures URLs end with a slash, e.g., /about/
+  // trailingSlash: true, // Removed for simplification
   typescript: {
     ignoreBuildErrors: false, // Ensure this is false for strict type checking during build
   },
