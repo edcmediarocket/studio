@@ -1,10 +1,9 @@
-
 // src/lib/firebase.ts
 import { initializeApp, getApps, getApp, type FirebaseOptions, type FirebaseApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { getFirestore, doc, getDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 import { getMessaging, getToken, onMessage, isSupported, type Messaging } from 'firebase/messaging';
-import { getStorage, type FirebaseStorage } from "firebase/storage"; // Import FirebaseStorage type
+import { getStorage, type FirebaseStorage } from "firebase/storage";
 import { getAnalytics, type Analytics } from "firebase/analytics";
 
 // Your web app's Firebase configuration
@@ -85,13 +84,15 @@ export const onMessageListener = () =>
       reject(new Error(errorMsg));
       return;
     }
+    // onMessage typically takes the messaging instance and a 'next' callback.
+    // The error callback provided previously is not part of this standard signature.
     onMessage(messagingInstance, (payload) => {
       console.log('Foreground message received. ', payload);
       resolve(payload);
-    }, (error: any) => {
-      console.error('Error receiving foreground message: ', error);
-      reject(error);
     });
+    // If you need to handle errors specific to onMessage setup or unsubscription,
+    // it's often done by checking the messagingInstance or handling errors from getToken/requestPermission.
+    // The onMessage function itself usually returns an unsubscribe function.
   });
 
 export const ADMIN_EMAILS = [
