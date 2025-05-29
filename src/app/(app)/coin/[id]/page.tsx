@@ -225,6 +225,7 @@ export default function CoinDetailPage() {
           console.warn(`CoinGecko API error for ${coinId}:`, errorMessage);
           setError(errorMessage); 
           setLoading(false); 
+          // Stop further AI calls if primary coin data fails
           setSignalLoading(false);
           setRiskLoading(false);
           setViralPredictionLoading(false);
@@ -257,7 +258,7 @@ export default function CoinDetailPage() {
               } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
                 errorMsg = "AI service for trading signals is temporarily overloaded or unavailable. Please try again later.";
               } else {
-                errorMsg = `Failed to fetch AI trading signal for ${detailData.name}. Please try again later. Details: ${errorMsg}`;
+                errorMsg = `Failed to fetch AI trading signal for ${detailData.name}. Details: ${errorMsg}`;
               }
               setSignalError(errorMsg);
             } finally {
@@ -279,7 +280,7 @@ export default function CoinDetailPage() {
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
                 errorMsg = "AI service for risk assessment is temporarily overloaded or unavailable. Please try again later.";
             } else {
-              errorMsg = `Failed to fetch AI risk assessment for ${detailData.name}. Please try again later. Details: ${errorMsg}`;
+              errorMsg = `Failed to fetch AI risk assessment for ${detailData.name}. Details: ${errorMsg}`;
             }
             setRiskError(errorMsg);
           } finally {
@@ -297,7 +298,7 @@ export default function CoinDetailPage() {
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
               errorMsg = "AI service for virality prediction is temporarily overloaded or unavailable. Please try again later.";
             } else {
-              errorMsg = `Failed to fetch AI virality prediction for ${detailData.name}. Please try again later. Details: ${errorMsg}`;
+              errorMsg = `Failed to fetch AI virality prediction for ${detailData.name}. Details: ${errorMsg}`;
             }
             setViralPredictionError(errorMsg);
           } finally {
@@ -315,7 +316,7 @@ export default function CoinDetailPage() {
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
               errorMsg = "AI service for lifespan prediction is temporarily overloaded or unavailable. Please try again later.";
             } else {
-              errorMsg = `Failed to fetch AI lifespan prediction for ${detailData.name}. Please try again later. Details: ${errorMsg}`;
+              errorMsg = `Failed to fetch AI lifespan prediction for ${detailData.name}. Details: ${errorMsg}`;
             }
             setLifespanError(errorMsg);
           } finally {
@@ -355,7 +356,7 @@ export default function CoinDetailPage() {
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
               errorMsg = "AI service for Entry Zone Status is temporarily overloaded or unavailable. Please try again later.";
             } else {
-              errorMsg = `Failed to fetch AI Entry Zone Status for ${detailData.name}. Please try again later. Details: ${errorMsg}`;
+              errorMsg = `Failed to fetch AI Entry Zone Status for ${detailData.name}. Details: ${errorMsg}`;
             }
             setEntryZoneError(errorMsg);
           } finally {
@@ -373,7 +374,7 @@ export default function CoinDetailPage() {
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
               errorMsg = "AI service for tokenomics insights is temporarily overloaded or unavailable. Please try again later.";
             } else {
-              errorMsg = `Failed to fetch AI tokenomics insights for ${detailData.name}. Please try again later. Details: ${errorMsg}`;
+              errorMsg = `Failed to fetch AI tokenomics insights for ${detailData.name}. Details: ${errorMsg}`;
             }
             setTokenomicsError(errorMsg);
           } finally {
@@ -549,9 +550,7 @@ export default function CoinDetailPage() {
                         <TableCell className="text-xs py-1.5">{item.factor}</TableCell>
                         <TableCell className="text-xs py-1.5">{item.value}</TableCell>
                         <TableCell className="text-center py-1.5">
-                          {item.impact === "Positive" && <TrendingUpIcon className="h-4 w-4 text-green-500 mx-auto" />}
-                          {item.impact === "Negative" && <TrendingDownIcon className="h-4 w-4 text-red-500 mx-auto" />}
-                          {item.impact === "Neutral" && <MinusCircle className="h-4 w-4 text-yellow-500 mx-auto" />}
+                           <FactorImpactIcon impact={item.impact} />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -1160,8 +1159,8 @@ export default function CoinDetailPage() {
             >
                 <Accordion type="single" collapsible className="w-full" defaultValue="supply">
                   <AccordionItem value="supply">
-                    <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between">
-                        <div className="flex items-center text-lg font-semibold">
+                    <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between text-lg font-semibold">
+                        <div className="flex items-center">
                             <FileJson className="mr-2 h-4 w-4" />Supply Metrics (Live Data)
                         </div>
                     </AccordionTrigger>
@@ -1172,8 +1171,8 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="conceptual-allocation">
-                     <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between">
-                        <div className="flex items-center text-lg font-semibold">
+                     <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between text-lg font-semibold">
+                        <div className="flex items-center">
                             <UsersRound className="mr-2 h-4 w-4" />AI Conceptual Allocation
                         </div>
                     </AccordionTrigger>
@@ -1184,8 +1183,8 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                    <AccordionItem value="conceptual-vesting">
-                     <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between">
-                        <div className="flex items-center text-lg font-semibold">
+                     <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between text-lg font-semibold">
+                        <div className="flex items-center">
                             <KeyRound className="mr-2 h-4 w-4" />AI Conceptual Vesting
                         </div>
                     </AccordionTrigger>
@@ -1196,8 +1195,8 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                    <AccordionItem value="simulated-audit">
-                        <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between">
-                            <div className="flex items-center text-lg font-semibold">
+                        <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between text-lg font-semibold">
+                            <div className="flex items-center">
                                 <AuditIcon className="mr-2 h-4 w-4" />AI Simulated Audit Concerns
                             </div>
                         </AccordionTrigger>
@@ -1208,8 +1207,8 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="dev-wallets" className="border-b-0">
-                        <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between">
-                            <div className="flex items-center text-lg font-semibold">
+                        <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between text-lg font-semibold">
+                            <div className="flex items-center">
                                 <Briefcase className="mr-2 h-4 w-4" />AI Dev Wallet Observations
                             </div>
                         </AccordionTrigger>

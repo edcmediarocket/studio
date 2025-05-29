@@ -1,16 +1,17 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   output: 'export',
   trailingSlash: true, // Ensures URLs end with a slash, e.g., /about/
   typescript: {
-    ignoreBuildErrors: false, // Changed to false for stricter type checking
+    ignoreBuildErrors: false, // Ensure this is false for strict type checking during build
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
   images: {
-    unoptimized: true, // Add this line to disable image optimization for static export
+    unoptimized: true, // Required for static export
     remotePatterns: [
       {
         protocol: 'https',
@@ -30,7 +31,7 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
-      { 
+      {
         protocol: 'https',
         hostname: 'upload.wikimedia.org',
         port: '',

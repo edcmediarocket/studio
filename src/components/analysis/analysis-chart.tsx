@@ -3,7 +3,7 @@
 
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { ChartTooltipContent, ChartContainer, ChartConfig } from "@/components/ui/chart" // Ensure ChartConfig is exported
+import { ChartTooltipContent, ChartContainer, ChartConfig } from "@/components/ui/chart" 
 
 const chartData = [
   { month: "January", desktop: 186, mobile: 80 },
@@ -23,14 +23,14 @@ const chartConfig = {
     label: "Mobile",
     color: "hsl(var(--chart-2))",
   },
-} satisfies ChartConfig // Use satisfies for type checking
+} satisfies ChartConfig
 
 interface AnalysisChartProps {
   title: string;
   description: string;
-  data?: any[]; // Replace any with specific data type
-  config?: ChartConfig; // Replace any with specific config type
-  chartType?: "bar" | "line"; // Add more types as needed
+  data?: any[]; 
+  config?: ChartConfig; 
+  chartType?: "bar" | "line"; 
 }
 
 export function AnalysisChart({
@@ -53,7 +53,7 @@ export function AnalysisChart({
               <BarChart accessibilityLayer data={data}>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
                 <XAxis
-                  dataKey="month" // Make this dynamic based on data structure
+                  dataKey="month" 
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}
@@ -69,7 +69,9 @@ export function AnalysisChart({
                 <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
                 <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
               </BarChart>
-            ) : <></>} {/* Changed null to an empty fragment */}
+            ) : (
+              <></> 
+            )}
             {/* Add other chart types like LineChart here */}
           </ResponsiveContainer>
         </ChartContainer>
