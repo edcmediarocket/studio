@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, AlertTriangle, Info, DollarSign, TrendingUp, TrendingDown, ShieldCheck, Target, HelpCircle, Briefcase, GraduationCap, CheckCircle, XCircle, MinusCircle, Siren, Mic, BarChart, MessageSquare, Zap, ListChecks, FileText, SlidersHorizontal, CalendarClock } from "lucide-react";
+import { Loader2, Sparkles, AlertTriangle, Info, DollarSign, TrendingUp, TrendingDown, ShieldCheck, Target, HelpCircle, Briefcase, GraduationCap, CheckCircle, XCircle, MinusCircle, Siren, Mic, BarChart, MessageSquare, Zap, ListChecks, FileText, SlidersHorizontal, CalendarClock, Clock4 } from "lucide-react"; // Added Clock4
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -320,7 +320,7 @@ export function AiCoach() {
             {currentCoinPrice !== null && !priceLoading && !priceError && (
                  <p className="mt-1 text-xs text-green-500">
                     Current price for {coinName.trim()}: ${currentCoinPrice.toLocaleString(undefined, {
-                        minimumFractionDigits: currentCoinPrice < 0.01 && currentCoinPrice !== 0 ? 8 : 2,
+                        minimumFractionDigits: 2,
                         maximumFractionDigits: currentCoinPrice < 0.01 && currentCoinPrice !== 0 ? 8 : 2,
                     })}
                 </p>
@@ -376,7 +376,7 @@ export function AiCoach() {
              {currentCoinPrice !== null && (
                 <p className="text-xs text-muted-foreground text-center -mt-3">
                     (Analysis based on current price of ${currentCoinPrice.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
+                        minimumFractionDigits: currentCoinPrice < 0.01 && currentCoinPrice !== 0 ? 8 : 2,
                         maximumFractionDigits: currentCoinPrice < 0.01 && currentCoinPrice !== 0 ? 8 : 2,
                     })})
                 </p>
@@ -453,6 +453,12 @@ export function AiCoach() {
                     </Card>
                   ))}
                 </div>
+              </InfoCard>
+            )}
+
+            {coachAdvice.tradingSessionInsights && (
+              <InfoCard icon={<Clock4 className="h-5 w-5" />} title="Trading Session Insights">
+                <p className="text-base sm:text-sm text-muted-foreground whitespace-pre-wrap">{coachAdvice.tradingSessionInsights}</p>
               </InfoCard>
             )}
 
@@ -642,3 +648,4 @@ const InfoCard: React.FC<InfoCardProps> = ({icon, title, children}) => (
         </CardContent>
     </Card>
 );
+
