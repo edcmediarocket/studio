@@ -69,7 +69,7 @@ export function AnalysisChart({
                 <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
                 <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
               </BarChart>
-            ) : null}
+            ) : <></>} {/* Changed null to an empty fragment */}
             {/* Add other chart types like LineChart here */}
           </ResponsiveContainer>
         </ChartContainer>
