@@ -109,11 +109,3 @@ const getAlphaFeedIdeasFlow = ai.defineFlow(
     return output!;
   }
 );
-
-// Helper type for lastGeneratedTime which is not in schema but can be used for key
-// This was added for UI component, should be removed or properly handled if not used.
-// declare module "@/ai/flows/get-alpha-feed-ideas" {
-//   interface TradeIdea {
-//     lastGeneratedTime?: string;
-//   }
-// }
