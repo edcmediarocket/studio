@@ -53,7 +53,7 @@ const TradeIdeaSchema = z.object({
   suggestedTimeframe: z.string().describe('Suggested holding or monitoring timeframe for this idea (e.g., "1-2 weeks", "Next 24-72 hours", "Medium-term hold (1-3 months)").'),
   keyMetricsToWatch: z.array(z.string()).optional().describe("Specific metrics or events to monitor that would support or invalidate the idea.")
 });
-export type LocalTradeIdea = z.infer<typeof TradeIdeaSchema>;
+export type TradeIdea = z.infer<typeof TradeIdeaSchema>; // Changed LocalTradeIdea to TradeIdea
 
 const GetAlphaFeedIdeasOutputSchema = z.object({
   feedItems: z.array(TradeIdeaSchema).describe('A list of AI-generated trade ideas.'),
@@ -109,3 +109,11 @@ const getAlphaFeedIdeasFlow = ai.defineFlow(
     return output!;
   }
 );
+
+// Helper type for lastGeneratedTime which is not in schema but can be used for key
+// This was added for UI component, should be removed or properly handled if not used.
+// declare module "@/ai/flows/get-alpha-feed-ideas" {
+//   interface TradeIdea {
+//     lastGeneratedTime?: string;
+//   }
+// }
