@@ -2,13 +2,14 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from "@/ai/flows/get-coin-trading-signal";
+import { getCoinTradingSignal, type GetCoinTradingSignalOutput, type GetCoinTradingSignalInput } from "@/ai/flows/get-coin-trading-signal";
 import { getCoinRiskAssessment, type GetCoinRiskAssessmentOutput } from "@/ai/flows/get-coin-risk-assessment";
-import { getWhatIfScenarioSignal, type GetWhatIfScenarioSignalInput, type GetWhatIfScenarioSignalOutput } from "@/ai/flows/get-what-if-scenario-signal"; // Import new flow
+import { getWhatIfScenarioSignal, type GetWhatIfScenarioSignalInput, type GetWhatIfScenarioSignalOutput } from "@/ai/flows/get-what-if-scenario-signal"; 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Sparkles, AlertTriangle, Info, DollarSign, TrendingUp, TrendingDown, ShieldCheck, Target, HelpCircle, Briefcase, GraduationCap, CheckCircle, XCircle, MinusCircle, Siren, Mic, BarChart, MessageSquare, Zap, ListChecks, FileText, SlidersHorizontal } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -42,9 +43,18 @@ const FactorImpactIcon: React.FC<{ impact: "Positive" | "Negative" | "Neutral" }
   return <MinusCircle className="h-4 w-4 text-yellow-500" />;
 };
 
+const tradingStyleOptions = [
+  { value: "Conservative", label: "Conservative (Long-term, Low Risk)" },
+  { value: "Swing Trader", label: "Swing Trader (Mid-term, TA Focus)" },
+  { value: "Scalper", label: "Scalper (Intraday, Micro Moves)" },
+  { value: "High-Risk/High-Reward", label: "High-Risk/High-Reward (Momentum)" },
+  { value: "AI Hybrid", label: "AI Hybrid (Optimized Mix)" },
+];
+
 
 export function AiCoach() {
   const [coinName, setCoinName] = useState("");
+  const [selectedTradingStyle, setSelectedTradingStyle] = useState<GetCoinTradingSignalInput['tradingStyle'] | undefined>(undefined);
   const [coachAdvice, setCoachAdvice] = useState<GetCoinTradingSignalOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,7 +70,6 @@ export function AiCoach() {
 
   const [isVoiceLoading, setIsVoiceLoading] = useState(false);
 
-  // State for What-If Scenario
   const [hypotheticalPrice, setHypotheticalPrice] = useState<string>("");
   const [hypotheticalVolumeCondition, setHypotheticalVolumeCondition] = useState<string>("");
   const [whatIfSignal, setWhatIfSignal] = useState<GetWhatIfScenarioSignalOutput | null>(null);
@@ -89,13 +98,12 @@ export function AiCoach() {
         const data = await response.json();
         if (data[coinId] && data[coinId].usd !== undefined) {
           fetchedPrice = data[coinId].usd;
-          setCurrentCoinPrice(fetchedPrice); // Update main current price if this is for the primary coin
+          // setCurrentCoinPrice will be set by the calling effect if this is for the main coinName
         } else {
           setPriceError(`Current price not available for "${nameOfCoin}" from CoinGecko. AI advice will be general.`);
         }
       }
     } catch (err) {
-      // Error handling similar to useEffect, adapt as needed
       setPriceError(`Network error fetching price for "${nameOfCoin}". AI advice will be general.`);
     } finally {
       setPriceLoading(false);
@@ -118,26 +126,30 @@ export function AiCoach() {
     return () => clearTimeout(debounceTimer);
   }, [coinName, fetchPriceForCoin]);
 
-  const getCoachingData = useCallback(async (nameForCoaching: string) => {
+  const getCoachingData = useCallback(async (nameForCoaching: string, style?: GetCoinTradingSignalInput['tradingStyle']) => {
     setIsLoading(true);
     setThreatRadarLoading(true);
     setError(null);
     setThreatRadarError(null);
     setCoachAdvice(null);
     setThreatRadarData(null);
-    // Clear previous what-if results when getting new main advice
     setWhatIfSignal(null);
     setWhatIfError(null);
 
     let priceForAnalysis = currentCoinPrice;
     if (nameForCoaching.toLowerCase() !== coinName.toLowerCase() || currentCoinPrice === null) {
         priceForAnalysis = await fetchPriceForCoin(nameForCoaching);
+        // If fetching for a different coin, update the main currentCoinPrice for context
+        if (nameForCoaching.toLowerCase() === coinName.toLowerCase()) {
+          setCurrentCoinPrice(priceForAnalysis);
+        }
     }
     
     try {
       const adviceResult = await getCoinTradingSignal({ 
         coinName: nameForCoaching, 
-        currentPriceUSD: priceForAnalysis !== null ? priceForAnalysis : undefined
+        currentPriceUSD: priceForAnalysis !== null ? priceForAnalysis : undefined,
+        tradingStyle: style,
       });
       setCoachAdvice(adviceResult);
     } catch (err) {
@@ -168,7 +180,11 @@ export function AiCoach() {
       setWhatIfSignal(null);
       return;
     }
-    getCoachingData(coinName.trim());
+    if (!selectedTradingStyle) {
+      setError("Please select a trading style.");
+      return;
+    }
+    getCoachingData(coinName.trim(), selectedTradingStyle);
   };
 
   const handleVoiceCommand = useCallback(async () => {
@@ -188,20 +204,28 @@ export function AiCoach() {
         }
         
         if (parsedCoinName) {
-            setCoinName(parsedCoinName); // This will trigger useEffect to fetch price
-            // getCoachingData will be triggered by the useEffect that depends on coinName changing and price loading
-            // For direct trigger after setting name and price is fetched:
-            // const price = await fetchPriceForCoin(parsedCoinName);
-            // setCurrentCoinPrice(price);
-            // if (price !== null) { // Or proceed even if price fetch fails, AI flow handles optional price
-            //    getCoachingData(parsedCoinName);
-            // }
+            setCoinName(parsedCoinName); 
+            // Price fetching will be triggered by useEffect.
+            // getCoachingData will be called by handleSubmit if a style is selected, or user needs to click "Get Coaching"
+            if (selectedTradingStyle) {
+              // Wait for price to potentially update via useEffect, then get coaching data
+              // This is a bit tricky; ideally, getCoachingData waits for price.
+              // For simplicity, let's assume user hits "Get Coaching" after voice sets coin.
+              // Or trigger getCoachingData after a small delay if style is already set.
+              setTimeout(() => {
+                if(selectedTradingStyle){ // Re-check in case it changed
+                  getCoachingData(parsedCoinName, selectedTradingStyle);
+                }
+              }, 700); // Delay to allow price fetch
+            } else {
+              toast({ title: "Trading Style Needed", description: "Please select a trading style to get advice for " + parsedCoinName, variant: "default"});
+            }
         } else {
             toast({ title: "Voice Query", description: "Could not identify a coin name. Please be more specific or type the name.", variant: "default"});
         }
     }
     setIsVoiceLoading(false);
-  }, [toast, getCoachingData, fetchPriceForCoin]);
+  }, [toast, getCoachingData, selectedTradingStyle]);
 
   const handleSimulateWhatIf = async () => {
     if (!coinName.trim()) {
@@ -241,7 +265,7 @@ export function AiCoach() {
 
 
   const getRecommendationBadgeVariant = (recommendation?: GetCoinTradingSignalOutput['recommendation'] | GetWhatIfScenarioSignalOutput['recommendation']) => {
-    const recString = recommendation as string; // To handle different enum types from different flows
+    const recString = recommendation as string; 
     if (!recString) return 'outline';
     if (recString.toLowerCase().includes('buy')) return 'default'; 
     if (recString.toLowerCase().includes('sell')) return 'destructive';
@@ -270,7 +294,7 @@ export function AiCoach() {
           <GraduationCap className="mr-2 h-5 w-5" /> Ask the AI Coach
         </CardTitle>
         <CardDescription>
-          Enter a coin name to receive advanced investment strategies, signals, and its on-chain threat assessment. Or, simulate a What-If scenario.
+          Enter a coin name and select your trading style to receive advanced investment strategies, signals, and its on-chain threat assessment.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -303,7 +327,26 @@ export function AiCoach() {
                 <p className="mt-1 text-xs text-green-500">Current price for {coinName.trim()}: ${currentCoinPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: currentCoinPrice > 0.01 ? 2 : 8 })}</p>
             )}
           </div>
-          <Button type="submit" disabled={mainLoading || !coinName.trim()} className="w-full bg-primary hover:bg-primary/90">
+
+          <div>
+            <Label htmlFor="coach-tradingStyle">Trading Style</Label>
+            <Select
+              value={selectedTradingStyle}
+              onValueChange={(value) => setSelectedTradingStyle(value as GetCoinTradingSignalInput['tradingStyle'])}
+              disabled={mainLoading || isVoiceLoading}
+            >
+              <SelectTrigger id="coach-tradingStyle" className="mt-1">
+                <SelectValue placeholder="Select your trading style..." />
+              </SelectTrigger>
+              <SelectContent>
+                {tradingStyleOptions.map(style => (
+                  <SelectItem key={style.value} value={style.value}>{style.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button type="submit" disabled={mainLoading || !coinName.trim() || !selectedTradingStyle} className="w-full bg-primary hover:bg-primary/90">
             {mainLoading && !isVoiceLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -328,6 +371,9 @@ export function AiCoach() {
             <h3 className="text-xl font-semibold text-neon text-center">
               AI Coach's Strategy for: {coinName.trim().toUpperCase()}
             </h3>
+             <CardDescription className="text-center -mt-3">
+              Tailored for: <Badge variant="secondary">{selectedTradingStyle || "General"}</Badge>
+            </CardDescription>
              {currentCoinPrice !== null && (
                 <p className="text-xs text-muted-foreground text-center -mt-3">
                     (Analysis based on current price of ${currentCoinPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: currentCoinPrice > 0.01 ? 2 : 8 })})
@@ -396,14 +442,13 @@ export function AiCoach() {
           </div>
         )}
 
-        {/* On-Chain Threat Radar Section */}
-        {threatRadarLoading && !threatRadarData && coachAdvice && ( // Show loading only if main advice is there
+        {threatRadarLoading && !threatRadarData && coachAdvice && ( 
              <div className="mt-8 text-center">
                 <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary mb-2" />
                 <p className="text-sm text-muted-foreground">Scanning On-Chain Threats...</p>
             </div>
         )}
-        {threatRadarError && coachAdvice && ( // Show error only if main advice is there
+        {threatRadarError && coachAdvice && ( 
              <Alert variant="destructive" className="mt-6">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>Threat Radar Error</AlertTitle>
@@ -455,7 +500,6 @@ export function AiCoach() {
             </Card>
         )}
 
-        {/* What-If Scenario Section */}
         <Separator className="my-8"/>
         <div className="space-y-4 mb-6 pt-4">
             <h3 className="text-xl font-semibold text-neon flex items-center">
@@ -547,7 +591,7 @@ export function AiCoach() {
          {(!isLoading && !threatRadarLoading) && !coachAdvice && !error && !whatIfSignal && !isLoadingWhatIf && (
             <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center bg-muted/10 mt-6">
                 <GraduationCap className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <p className="text-muted-foreground">Enter a coin name above to get personalized AI coaching and its on-chain threat assessment, or simulate a What-If scenario.</p>
+                <p className="text-muted-foreground">Enter a coin name and select a trading style above to get personalized AI coaching and its on-chain threat assessment, or simulate a What-If scenario.</p>
             </div>
         )}
       </CardContent>
