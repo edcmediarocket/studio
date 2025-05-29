@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon, Siren, Hourglass, TrendingUpIcon, TrendingDownIcon, BarChartBig, ActivityIcon, UsersIcon, FileTextIcon, Layers, Dna, MapPin, FileJson, KeyRound, ShieldQuestion as AuditIcon, UsersRound, MinusCircle, MessageSquare, CalendarClock } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon, Siren, Hourglass, TrendingUpIcon, TrendingDownIcon, BarChartBig, ActivityIcon, UsersIcon, FileTextIcon, Layers, Dna, MapPin, FileJson, KeyRound, ShieldQuestion as AuditIcon, UsersRound, MessageSquare, CalendarClock, MinusCircle } from 'lucide-react'; // Added MinusCircle
 import { Table, TableBody, TableCell, TableRow, TableHead, TableHeader } from '@/components/ui/table';
 import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from '@/ai/flows/get-coin-trading-signal';
 import { getCoinRiskAssessment, type GetCoinRiskAssessmentOutput } from '@/ai/flows/get-coin-risk-assessment';
@@ -20,10 +20,10 @@ import { getSimulatedSignalPerformance, type GetSimulatedSignalPerformanceOutput
 import { getEntryZoneStatus, type GetEntryZoneStatusOutput } from '@/ai/flows/get-entry-zone-status';
 import { getConceptualTokenomicsAnalysis, type GetConceptualTokenomicsAnalysisOutput } from '@/ai/flows/get-conceptual-tokenomics-analysis';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import * as AccordionPrimitive from "@radix-ui/react-accordion" 
+import * as AccordionPrimitive from "@radix-ui/react-accordion"
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
-import { StatItem } from '@/components/shared/stat-item'; // Use shared StatItem
+import { StatItem } from '@/components/shared/stat-item';
 import { TokenDnaStrip } from '@/components/shared/token-dna-strip';
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Progress } from '@/components/ui/progress';
@@ -78,8 +78,8 @@ const SectionCardComponent: React.FC<SectionCardProps> = ({ title, icon, childre
       <Card className={cn("shadow-lg", className)}>
         <Accordion type="single" collapsible className="w-full" defaultValue={defaultOpenAccordion ? "item-1" : undefined}>
           <AccordionItem value="item-1" className="border-b-0">
-            <AccordionPrimitive.Header className={cn("flex items-center justify-between", "px-4")}>
-              <AccordionTrigger className={cn("py-4", "hover:no-underline flex-grow p-0")}>
+            <AccordionPrimitive.Header className={cn("flex items-center justify-between", noPadding ? "p-0" : "px-4")}>
+              <AccordionTrigger className={cn(noPadding ? "py-3" : "py-4", "hover:no-underline flex-grow p-0")}>
                 <div className={cn("flex items-center text-xl text-primary font-semibold", titleClassName)}>
                   {icon}
                   <span className={cn(icon && "ml-2")}>{title}</span>
@@ -100,7 +100,7 @@ const SectionCardComponent: React.FC<SectionCardProps> = ({ title, icon, childre
                 </div>
                 )}
             </AccordionPrimitive.Header>
-            <AccordionContent className={cn("text-sm", "px-4 pb-4")}>
+            <AccordionContent className={cn("text-sm", noPadding ? "p-0" : "px-4 pb-4")}>
               {children}
             </AccordionContent>
           </AccordionItem>
@@ -151,6 +151,12 @@ const TradingTargetLabel: React.FC<{ label: string; tooltip: string }> = ({ labe
     </Popover>
   </div>
 );
+
+const FactorImpactIcon: React.FC<{ impact: "Positive" | "Negative" | "Neutral" }> = ({ impact }) => {
+  if (impact === "Positive") return <TrendingUpIcon className="h-4 w-4 text-green-500 mx-auto" />;
+  if (impact === "Negative") return <TrendingDownIcon className="h-4 w-4 text-red-500 mx-auto" />;
+  return <MinusCircle className="h-4 w-4 text-yellow-500 mx-auto" />;
+};
 
 export default function CoinDetailPage() {
   const params = useParams();
@@ -243,7 +249,6 @@ export default function CoinDetailPage() {
               const signal = await getCoinTradingSignal({
                 coinName: detailData.name,
                 currentPriceUSD: currentPriceUSD,
-                // tradingStyle: 'AI Hybrid' // Example: pass a default or user-selected style
               });
               setTradingSignal(signal);
             } catch (err: any) {
@@ -552,9 +557,7 @@ export default function CoinDetailPage() {
                         <TableCell className="text-xs py-1.5">{item.factor}</TableCell>
                         <TableCell className="text-xs py-1.5">{item.value}</TableCell>
                         <TableCell className="text-center py-1.5">
-                          {item.impact === "Positive" && <TrendingUpIcon className="h-4 w-4 text-green-500 mx-auto" />}
-                          {item.impact === "Negative" && <TrendingDownIcon className="h-4 w-4 text-red-500 mx-auto" />}
-                          {item.impact === "Neutral" && <MinusCircle className="h-4 w-4 text-yellow-500 mx-auto" />}
+                          <FactorImpactIcon impact={item.impact} />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -624,7 +627,7 @@ export default function CoinDetailPage() {
     return <p className="text-muted-foreground text-sm text-center">No AI trading signal available for this coin.</p>;
   };
 
-  const aiSignalInfo = (
+   const aiSignalInfo = (
     <>
       <h4 className="font-semibold mb-2 text-base">About AI Trading Signal</h4>
       <p>
@@ -1331,8 +1334,4 @@ export default function CoinDetailPage() {
     
 
     
-
-
-
-
-
+```
