@@ -5,12 +5,13 @@ import React, { useState, useEffect, useCallback } from "react";
 import { getCoinTradingSignal, type GetCoinTradingSignalOutput, type GetCoinTradingSignalInput } from "@/ai/flows/get-coin-trading-signal";
 import { getCoinRiskAssessment, type GetCoinRiskAssessmentOutput } from "@/ai/flows/get-coin-risk-assessment";
 import { getWhatIfScenarioSignal, type GetWhatIfScenarioSignalInput, type GetWhatIfScenarioSignalOutput } from "@/ai/flows/get-what-if-scenario-signal";
+import { calculateFutureProfit, type CalculateFutureProfitInput, type CalculateFutureProfitOutput } from "@/ai/flows/calculate-future-profit"; // New import
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, AlertTriangle, Info, DollarSign, TrendingUp, TrendingDown, ShieldCheck, Target, HelpCircle, Briefcase, GraduationCap, CheckCircle, XCircle, MinusCircle, Siren, Mic, BarChart, MessageSquare, Zap, ListChecks, FileText, SlidersHorizontal, CalendarClock, Clock4 } from "lucide-react"; 
+import { Loader2, Sparkles, AlertTriangle, Info, DollarSign, TrendingUp, TrendingDown, ShieldCheck, Target, HelpCircle, Briefcase, GraduationCap, CheckCircle, XCircle, MinusCircle, Siren, Mic, BarChart, MessageSquare, Zap, ListChecks, FileText, SlidersHorizontal, CalendarClock, Clock4, Percent } from "lucide-react"; 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -76,6 +77,16 @@ export function AiCoach() {
   const [isLoadingWhatIf, setIsLoadingWhatIf] = useState(false);
   const [whatIfError, setWhatIfError] = useState<string | null>(null);
 
+  // State for Future Profit Estimator
+  const [profitCalcCoinName, setProfitCalcCoinName] = useState("");
+  const [buyPrice, setBuyPrice] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [targetPrice, setTargetPrice] = useState("");
+  const [profitCalcResult, setProfitCalcResult] = useState<CalculateFutureProfitOutput | null>(null);
+  const [isLoadingProfitCalc, setIsLoadingProfitCalc] = useState(false);
+  const [profitCalcError, setProfitCalcError] = useState<string | null>(null);
+
+
   const fetchPriceForCoin = useCallback(async (nameOfCoin: string): Promise<number | null> => {
     if (!nameOfCoin.trim()) return null;
     setPriceLoading(true);
@@ -116,6 +127,10 @@ export function AiCoach() {
         if (coinName.trim()) {
             const price = await fetchPriceForCoin(coinName);
             setCurrentCoinPrice(price);
+             // Also set the coin name for profit calculator if not already set by user
+            if (!profitCalcCoinName.trim() && coinName.trim()) {
+                setProfitCalcCoinName(coinName.trim());
+            }
         } else {
             setCurrentCoinPrice(null);
             setPriceError(null);
@@ -123,7 +138,7 @@ export function AiCoach() {
     }, 500);
 
     return () => clearTimeout(debounceTimer);
-  }, [coinName, fetchPriceForCoin]);
+  }, [coinName, fetchPriceForCoin, profitCalcCoinName]);
 
   const getCoachingData = useCallback(async (nameForCoaching: string, style?: GetCoinTradingSignalInput['tradingStyle']) => {
     setIsLoading(true);
@@ -134,15 +149,22 @@ export function AiCoach() {
     setThreatRadarData(null);
     setWhatIfSignal(null);
     setWhatIfError(null);
+    setProfitCalcResult(null); // Clear profit calc result as well
+    setProfitCalcError(null);
+
 
     let priceForAnalysis = currentCoinPrice;
+    // Check if the coinName for coaching is different from the one we have currentCoinPrice for,
+    // or if currentCoinPrice is null (meaning it wasn't fetched or fetch failed).
     if (nameForCoaching.toLowerCase() !== coinName.toLowerCase() || currentCoinPrice === null) {
         toast({ title: "Fetching Context", description: `Getting latest price for ${nameForCoaching}...`, duration: 2000});
         priceForAnalysis = await fetchPriceForCoin(nameForCoaching);
+        // If the coaching is for the same coin currently in the main input, update its price
         if (nameForCoaching.toLowerCase() === coinName.toLowerCase()) {
           setCurrentCoinPrice(priceForAnalysis);
         }
     }
+
 
     try {
       const adviceResult = await getCoinTradingSignal({
@@ -177,6 +199,7 @@ export function AiCoach() {
       setCoachAdvice(null);
       setThreatRadarData(null);
       setWhatIfSignal(null);
+      setProfitCalcResult(null);
       return;
     }
     if (!selectedTradingStyle) {
@@ -206,12 +229,11 @@ export function AiCoach() {
             setCoinName(parsedCoinName);
             if (selectedTradingStyle) {
               toast({ title: "Processing Voice Command", description: `Analyzing ${parsedCoinName} for ${selectedTradingStyle} style...`, duration: 2000});
-              // Delay slightly to allow coinName state to update and potentially trigger price fetch
               setTimeout(() => {
-                if(selectedTradingStyle){ // Re-check selectedTradingStyle in case it was cleared
+                if(selectedTradingStyle){ 
                   getCoachingData(parsedCoinName, selectedTradingStyle);
                 }
-              }, 700); // Adjust delay if needed
+              }, 700); 
             } else {
               toast({ title: "Trading Style Needed", description: "Please select a trading style to get advice for " + parsedCoinName, variant: "default"});
             }
@@ -258,13 +280,49 @@ export function AiCoach() {
     }
   };
 
+  const handleProfitCalcSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profitCalcCoinName.trim() || !buyPrice.trim() || !quantity.trim() || !targetPrice.trim()) {
+        setProfitCalcError("Please fill in all fields for the profit calculation.");
+        return;
+    }
+    const numBuyPrice = parseFloat(buyPrice);
+    const numQuantity = parseFloat(quantity);
+    const numTargetPrice = parseFloat(targetPrice);
+
+    if (isNaN(numBuyPrice) || numBuyPrice <= 0 || isNaN(numQuantity) || numQuantity <= 0 || isNaN(numTargetPrice) || numTargetPrice <= 0) {
+        setProfitCalcError("Buy Price, Quantity, and Target Price must be valid positive numbers.");
+        return;
+    }
+
+    setIsLoadingProfitCalc(true);
+    setProfitCalcError(null);
+    setProfitCalcResult(null);
+
+    try {
+        const input: CalculateFutureProfitInput = {
+            coinName: profitCalcCoinName.trim(),
+            buyPrice: numBuyPrice,
+            quantity: numQuantity,
+            targetPrice: numTargetPrice,
+        };
+        const result = await calculateFutureProfit(input);
+        setProfitCalcResult(result);
+    } catch (err) {
+        console.error("Error calculating future profit:", err);
+        setProfitCalcError("Failed to calculate profit. The AI might be crunching numbers, please try again.");
+    } finally {
+        setIsLoadingProfitCalc(false);
+    }
+  };
+
 
   const getRecommendationBadgeVariant = (recommendation?: GetCoinTradingSignalOutput['recommendation'] | GetWhatIfScenarioSignalOutput['recommendation']) => {
-    const recString = recommendation as string; // Cast to string to handle different enum types
+    const recString = recommendation as string; 
     if (!recString) return 'outline';
-    if (recString.toLowerCase().includes('buy')) return 'default'; // Catches "Buy", "Strong Buy", "Aggressive Buy"
-    if (recString.toLowerCase().includes('sell')) return 'destructive'; // Catches "Sell", "Strong Sell"
-    if (recString.toLowerCase().includes('hold')) return 'secondary'; // Catches "Hold", "Cautious Hold"
+    if (recString.toLowerCase().includes('buy')) return 'default'; 
+    if (recString.toLowerCase().includes('sell')) return 'destructive'; 
+    if (recString.toLowerCase().includes('hold')) return 'secondary'; 
     return 'outline';
   };
 
@@ -529,103 +587,229 @@ export function AiCoach() {
         )}
 
         <Separator className="my-8"/>
-        <div className="space-y-4 mb-6 pt-4">
-            <h3 className="text-xl font-semibold text-neon flex items-center">
-                <SlidersHorizontal className="mr-2 h-5 w-5"/> AI What-If Scenario Simulator
-            </h3>
-            <p className="text-sm text-muted-foreground">
-                Explore how the AI Coach might adjust its strategy under hypothetical market conditions for {coinName ? `"${coinName.trim()}"` : "the selected coin"}.
-            </p>
-            <div>
-                <Label htmlFor="coach-hypotheticalPrice">Hypothetical Price (USD)</Label>
-                <Input
-                    id="coach-hypotheticalPrice"
-                    type="number"
-                    placeholder="e.g., 0.50"
-                    value={hypotheticalPrice}
-                    onChange={(e) => setHypotheticalPrice(e.target.value)}
-                    disabled={isLoadingWhatIf || !coinName.trim()}
-                    className="mt-1"
-                />
-            </div>
-            <div>
-                <Label htmlFor="coach-hypotheticalVolume">Hypothetical Volume Condition</Label>
-                <Input
-                    id="coach-hypotheticalVolume"
-                    type="text"
-                    placeholder="e.g., 'volume triples', 'halves', '+100%'"
-                    value={hypotheticalVolumeCondition}
-                    onChange={(e) => setHypotheticalVolumeCondition(e.target.value)}
-                    disabled={isLoadingWhatIf || !coinName.trim()}
-                    className="mt-1"
-                />
-            </div>
-            <Button
-                onClick={handleSimulateWhatIf}
-                disabled={isLoadingWhatIf || !coinName.trim() || !hypotheticalPrice.trim() || !hypotheticalVolumeCondition.trim()}
-                className="w-full"
-            >
-                {isLoadingWhatIf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
-                Simulate Scenario
-            </Button>
-        </div>
-
-        {whatIfError && (
-            <Alert variant="destructive" className="mt-6">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>What-If Scenario Error</AlertTitle>
-                <AlertDescription>{whatIfError}</AlertDescription>
-            </Alert>
-        )}
-
-        {whatIfSignal && !isLoadingWhatIf && (
-            <div className="mt-6 space-y-4 p-4 border border-dashed border-primary/50 rounded-lg bg-muted/20">
-                <h4 className="text-lg font-semibold text-primary text-center">
-                    What-If Scenario Analysis for {coinName.trim().toUpperCase()}
-                </h4>
-                <p className="text-sm text-muted-foreground text-center -mt-2">{whatIfSignal.scenarioDescription}</p>
-
-                <div className="flex flex-col items-center space-y-1 text-center">
-                    <Badge variant={getRecommendationBadgeVariant(whatIfSignal.recommendation)} className="text-md px-3 py-1 font-semibold">
-                        {whatIfSignal.recommendation}
-                    </Badge>
-                     <div>
-                        <span className="text-xs font-medium text-foreground">Scenario Confidence: {whatIfSignal.confidenceScore}%</span>
-                        <Progress value={whatIfSignal.confidenceScore} className="h-1.5 mt-0.5 [&>div]:bg-neon max-w-[150px] mx-auto" />
-                    </div>
+        <Card className="shadow-md border-primary/50">
+            <CardHeader>
+                <CardTitle className="flex items-center text-xl text-neon">
+                    <SlidersHorizontal className="mr-2 h-5 w-5"/> AI What-If Scenario Simulator
+                </CardTitle>
+                <CardDescription>
+                    Explore how the AI Coach might adjust its strategy under hypothetical market conditions for {coinName ? `"${coinName.trim()}"` : "the selected coin"}.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div>
+                    <Label htmlFor="coach-hypotheticalPrice">Hypothetical Price (USD)</Label>
+                    <Input
+                        id="coach-hypotheticalPrice"
+                        type="number"
+                        placeholder="e.g., 0.50"
+                        value={hypotheticalPrice}
+                        onChange={(e) => setHypotheticalPrice(e.target.value)}
+                        disabled={isLoadingWhatIf || !coinName.trim()}
+                        className="mt-1"
+                    />
                 </div>
+                <div>
+                    <Label htmlFor="coach-hypotheticalVolume">Hypothetical Volume Condition</Label>
+                    <Input
+                        id="coach-hypotheticalVolume"
+                        type="text"
+                        placeholder="e.g., 'volume triples', 'halves', '+100%'"
+                        value={hypotheticalVolumeCondition}
+                        onChange={(e) => setHypotheticalVolumeCondition(e.target.value)}
+                        disabled={isLoadingWhatIf || !coinName.trim()}
+                        className="mt-1"
+                    />
+                </div>
+                <Button
+                    onClick={handleSimulateWhatIf}
+                    disabled={isLoadingWhatIf || !coinName.trim() || !hypotheticalPrice.trim() || !hypotheticalVolumeCondition.trim()}
+                    className="w-full"
+                >
+                    {isLoadingWhatIf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
+                    Simulate Scenario
+                </Button>
 
-                <InfoCard icon={<MessageSquare className="h-5 w-5"/>} title="Scenario Analysis & Strategy">
-                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">{whatIfSignal.analysisAndStrategy}</p>
-                </InfoCard>
-
-                {whatIfSignal.keyConsiderations && whatIfSignal.keyConsiderations.length > 0 && (
-                     <InfoCard icon={<ListChecks className="h-5 w-5"/>} title="Key Considerations for This Scenario">
-                        <ul className="list-disc list-inside space-y-1 pl-4 text-sm text-muted-foreground">
-                            {whatIfSignal.keyConsiderations.map((item, index) => (
-                                <li key={`whatif-consider-${index}`}>{item}</li>
-                            ))}
-                        </ul>
-                    </InfoCard>
+                {whatIfError && (
+                    <Alert variant="destructive" className="mt-4">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>What-If Scenario Error</AlertTitle>
+                        <AlertDescription>{whatIfError}</AlertDescription>
+                    </Alert>
                 )}
-                {whatIfSignal.disclaimer && (
-                     <p className="text-xs text-muted-foreground pt-3 border-t border-dashed mt-3">{whatIfSignal.disclaimer}</p>
+
+                {whatIfSignal && !isLoadingWhatIf && (
+                    <div className="mt-6 space-y-4 p-4 border border-dashed border-primary/30 rounded-lg bg-muted/20">
+                        <h4 className="text-lg font-semibold text-primary text-center">
+                            What-If Scenario Analysis for {coinName.trim().toUpperCase()}
+                        </h4>
+                        <p className="text-sm text-muted-foreground text-center -mt-2">{whatIfSignal.scenarioDescription}</p>
+
+                        <div className="flex flex-col items-center space-y-1 text-center">
+                            <Badge variant={getRecommendationBadgeVariant(whatIfSignal.recommendation)} className="text-md px-3 py-1 font-semibold">
+                                {whatIfSignal.recommendation}
+                            </Badge>
+                            <div>
+                                <span className="text-xs font-medium text-foreground">Scenario Confidence: {whatIfSignal.confidenceScore}%</span>
+                                <Progress value={whatIfSignal.confidenceScore} className="h-1.5 mt-0.5 [&>div]:bg-neon max-w-[150px] mx-auto" />
+                            </div>
+                        </div>
+
+                        <InfoCard icon={<MessageSquare className="h-5 w-5"/>} title="Scenario Analysis & Strategy">
+                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{whatIfSignal.analysisAndStrategy}</p>
+                        </InfoCard>
+
+                        {whatIfSignal.keyConsiderations && whatIfSignal.keyConsiderations.length > 0 && (
+                            <InfoCard icon={<ListChecks className="h-5 w-5"/>} title="Key Considerations for This Scenario">
+                                <ul className="list-disc list-inside space-y-1 pl-4 text-sm text-muted-foreground">
+                                    {whatIfSignal.keyConsiderations.map((item, index) => (
+                                        <li key={`whatif-consider-${index}`}>{item}</li>
+                                    ))}
+                                </ul>
+                            </InfoCard>
+                        )}
+                        {whatIfSignal.disclaimer && (
+                            <p className="text-xs text-muted-foreground pt-3 border-t border-dashed mt-3">{whatIfSignal.disclaimer}</p>
+                        )}
+                    </div>
                 )}
-            </div>
-        )}
+            </CardContent>
+        </Card>
+
+        <Separator className="my-8"/>
+         <Card className="shadow-md border-primary/50">
+            <CardHeader>
+                <CardTitle className="flex items-center text-xl text-neon">
+                    <Percent className="mr-2 h-5 w-5"/> AI Future Profit Estimator
+                </CardTitle>
+                <CardDescription>
+                    Estimate potential profit/loss for a hypothetical investment in {profitCalcCoinName ? `"${profitCalcCoinName}"` : "a coin"}.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <form onSubmit={handleProfitCalcSubmit} className="space-y-4">
+                    <div>
+                        <Label htmlFor="profit-calc-coinName">Coin Name</Label>
+                        <Input
+                            id="profit-calc-coinName"
+                            type="text"
+                            placeholder="Defaults to main coach coin if set"
+                            value={profitCalcCoinName}
+                            onChange={(e) => setProfitCalcCoinName(e.target.value)}
+                            disabled={isLoadingProfitCalc}
+                            className="mt-1"
+                        />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <Label htmlFor="profit-calc-buyPrice">Buy Price (USD)</Label>
+                            <Input
+                                id="profit-calc-buyPrice"
+                                type="number"
+                                step="any"
+                                placeholder="e.g., 0.15"
+                                value={buyPrice}
+                                onChange={(e) => setBuyPrice(e.target.value)}
+                                disabled={isLoadingProfitCalc}
+                                className="mt-1"
+                                required
+                            />
+                        </div>
+                         <div>
+                            <Label htmlFor="profit-calc-quantity">Quantity Purchased</Label>
+                            <Input
+                                id="profit-calc-quantity"
+                                type="number"
+                                step="any"
+                                placeholder="e.g., 1000"
+                                value={quantity}
+                                onChange={(e) => setQuantity(e.target.value)}
+                                disabled={isLoadingProfitCalc}
+                                className="mt-1"
+                                required
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <Label htmlFor="profit-calc-targetPrice">Future Target Price (USD)</Label>
+                        <Input
+                            id="profit-calc-targetPrice"
+                            type="number"
+                            step="any"
+                            placeholder="e.g., 0.30"
+                            value={targetPrice}
+                            onChange={(e) => setTargetPrice(e.target.value)}
+                            disabled={isLoadingProfitCalc}
+                            className="mt-1"
+                            required
+                        />
+                    </div>
+                    <Button
+                        type="submit"
+                        disabled={isLoadingProfitCalc || !profitCalcCoinName.trim() || !buyPrice.trim() || !quantity.trim() || !targetPrice.trim()}
+                        className="w-full"
+                    >
+                        {isLoadingProfitCalc ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                        Calculate & Analyze
+                    </Button>
+                </form>
+
+                {profitCalcError && (
+                    <Alert variant="destructive" className="mt-4">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Profit Calculation Error</AlertTitle>
+                        <AlertDescription>{profitCalcError}</AlertDescription>
+                    </Alert>
+                )}
+                {profitCalcResult && !isLoadingProfitCalc && (
+                    <div className="mt-6 space-y-4 p-4 border border-dashed border-primary/30 rounded-lg bg-muted/20">
+                        <h4 className="text-lg font-semibold text-primary text-center">
+                            Profit Estimation for {profitCalcResult.coinName.toUpperCase()}
+                        </h4>
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                            <StatItem label="Buy Price" value={`$${profitCalcResult.buyPrice.toFixed(4)}`} className="bg-card/30 p-2 rounded"/>
+                            <StatItem label="Quantity" value={profitCalcResult.quantity.toLocaleString()} className="bg-card/30 p-2 rounded"/>
+                            <StatItem label="Target Price" value={`$${profitCalcResult.targetPrice.toFixed(4)}`} className="bg-card/30 p-2 rounded"/>
+                            <StatItem label="Total Investment" value={`$${profitCalcResult.totalInvestmentUSD.toFixed(2)}`} className="bg-card/30 p-2 rounded"/>
+                            <StatItem label="Value at Target" value={`$${profitCalcResult.totalValueAtTargetUSD.toFixed(2)}`} className="bg-card/30 p-2 rounded"/>
+                            <StatItem 
+                                label="Net Profit/Loss" 
+                                value={`${profitCalcResult.netProfitOrLossUSD >= 0 ? '+' : ''}$${profitCalcResult.netProfitOrLossUSD.toFixed(2)}`} 
+                                valueClassName={profitCalcResult.netProfitOrLossUSD >= 0 ? "text-green-400" : "text-red-400"}
+                                className="bg-card/30 p-2 rounded col-span-2 sm:col-span-1 font-bold"
+                            />
+                             <StatItem 
+                                label="ROI" 
+                                value={`${profitCalcResult.roiPercentage.toFixed(2)}%`} 
+                                valueClassName={profitCalcResult.roiPercentage >= 0 ? "text-green-400" : "text-red-400"}
+                                className="bg-card/30 p-2 rounded col-span-2 sm:col-span-1 font-bold"
+                            />
+                        </div>
+                         <InfoCard icon={<MessageSquare className="h-5 w-5"/>} title="AI Realism Commentary">
+                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{profitCalcResult.realismCommentary}</p>
+                        </InfoCard>
+                         <InfoCard icon={<ShieldCheck className="h-5 w-5"/>} title="AI Risk Analysis">
+                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{profitCalcResult.riskAnalysis}</p>
+                        </InfoCard>
+                        {profitCalcResult.disclaimer && (
+                            <p className="text-xs text-muted-foreground pt-3 border-t border-dashed mt-3">{profitCalcResult.disclaimer}</p>
+                        )}
+                    </div>
+                )}
+            </CardContent>
+        </Card>
 
 
-
-         {(!isLoading && !threatRadarLoading) && !coachAdvice && !error && !whatIfSignal && !isLoadingWhatIf && (
+         {(!isLoading && !threatRadarLoading) && !coachAdvice && !whatIfSignal && !profitCalcResult && !error && !whatIfError && !profitCalcError && (
             <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center bg-muted/10 mt-6">
                 <GraduationCap className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <p className="text-muted-foreground">Enter a coin name and select a trading style above to get personalized AI coaching and its on-chain threat assessment, or simulate a What-If scenario.</p>
+                <p className="text-muted-foreground">Enter a coin name and select a trading style above to get personalized AI coaching and its on-chain threat assessment, or simulate a What-If scenario or estimate future profits.</p>
             </div>
         )}
       </CardContent>
       <CardFooter className="mt-auto pt-4">
          <p className="text-xs text-muted-foreground">
-           AI Coach advice, Threat Radar, and What-If Scenarios are for informational purposes only and not financial advice. Always DYOR.
+           AI Coach advice, Threat Radar, What-If Scenarios, and Profit Estimations are for informational purposes only and not financial advice. Always DYOR.
          </p>
       </CardFooter>
     </Card>
@@ -641,7 +825,7 @@ const InfoCard: React.FC<InfoCardProps> = ({icon, title, children}) => (
     <Card className="bg-card shadow-sm">
         <CardHeader className="pb-2 pt-4">
             <CardTitle className="text-lg text-primary flex items-center">
-                {React.cloneElement(icon as React.ReactElement, { className: "mr-2 h-5 w-5" })}
+                {React.cloneElement(icon as React.ReactElement, { className: "mr-2 h-5 w-5" })} 
                 {title}
             </CardTitle>
         </CardHeader>
@@ -650,5 +834,3 @@ const InfoCard: React.FC<InfoCardProps> = ({icon, title, children}) => (
         </CardContent>
     </Card>
 );
-
-
