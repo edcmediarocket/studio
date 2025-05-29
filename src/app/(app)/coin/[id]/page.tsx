@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon, Siren, Hourglass, TrendingUpIcon, TrendingDownIcon, BarChartBig, ActivityIcon, UsersIcon, FileTextIcon, Layers, Dna, MapPin, FileJson, KeyRound, ShieldQuestion as AuditIcon, UsersRound, MinusCircle } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, RefreshCw, Rocket, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon, Siren, Hourglass, TrendingUpIcon, TrendingDownIcon, BarChartBig, ActivityIcon, UsersIcon, FileTextIcon, Layers, Dna, MapPin, FileJson, KeyRound, ShieldQuestion as AuditIcon, UsersRound, MinusCircle, MessageSquare, CalendarClock } from 'lucide-react';
 import { Table, TableBody, TableCell, TableRow, TableHead, TableHeader } from '@/components/ui/table';
 import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from '@/ai/flows/get-coin-trading-signal';
 import { getCoinRiskAssessment, type GetCoinRiskAssessmentOutput } from '@/ai/flows/get-coin-risk-assessment';
@@ -20,10 +20,10 @@ import { getSimulatedSignalPerformance, type GetSimulatedSignalPerformanceOutput
 import { getEntryZoneStatus, type GetEntryZoneStatusOutput } from '@/ai/flows/get-entry-zone-status';
 import { getConceptualTokenomicsAnalysis, type GetConceptualTokenomicsAnalysisOutput } from '@/ai/flows/get-conceptual-tokenomics-analysis';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import * as AccordionPrimitive from "@radix-ui/react-accordion" // Import for direct use of Header
+import * as AccordionPrimitive from "@radix-ui/react-accordion" 
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
-import { StatItem } from '@/components/shared/stat-item';
+import { StatItem } from '@/components/shared/stat-item'; // Use shared StatItem
 import { TokenDnaStrip } from '@/components/shared/token-dna-strip';
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Progress } from '@/components/ui/progress';
@@ -78,8 +78,8 @@ const SectionCardComponent: React.FC<SectionCardProps> = ({ title, icon, childre
       <Card className={cn("shadow-lg", className)}>
         <Accordion type="single" collapsible className="w-full" defaultValue={defaultOpenAccordion ? "item-1" : undefined}>
           <AccordionItem value="item-1" className="border-b-0">
-            <AccordionPrimitive.Header className={cn("flex items-center justify-between", noPadding ? "p-0" : "px-4")}>
-              <AccordionTrigger className={cn(noPadding ? "py-3" : "py-4", "hover:no-underline flex-grow p-0")}>
+            <AccordionPrimitive.Header className={cn("flex items-center justify-between", "px-4")}>
+              <AccordionTrigger className={cn("py-4", "hover:no-underline flex-grow p-0")}>
                 <div className={cn("flex items-center text-xl text-primary font-semibold", titleClassName)}>
                   {icon}
                   <span className={cn(icon && "ml-2")}>{title}</span>
@@ -100,7 +100,7 @@ const SectionCardComponent: React.FC<SectionCardProps> = ({ title, icon, childre
                 </div>
                 )}
             </AccordionPrimitive.Header>
-            <AccordionContent className={cn(noPadding ? "p-0" : "text-sm", noPadding && "px-4 pb-4")}>
+            <AccordionContent className={cn("text-sm", "px-4 pb-4")}>
               {children}
             </AccordionContent>
           </AccordionItem>
@@ -248,7 +248,7 @@ export default function CoinDetailPage() {
               setTradingSignal(signal);
             } catch (err: any) {
               console.error("Error fetching trading signal:", err);
-              let errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+              let errorMsg = err.message || "An unknown error occurred";
               if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
                 errorMsg = "Network error: Failed to fetch AI trading signal. Please check your connection.";
               } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
@@ -271,7 +271,7 @@ export default function CoinDetailPage() {
             setRiskAssessment(risk);
           } catch (err: any) {
             console.error("Error fetching risk assessment:", err);
-            let errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+            let errorMsg = err.message || "An unknown error occurred";
             if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
               errorMsg = "Network error: Failed to fetch AI risk assessment. Please check your connection.";
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
@@ -290,7 +290,7 @@ export default function CoinDetailPage() {
             setViralPrediction(prediction);
           } catch (err: any) {
             console.error("Error fetching viral prediction:", err);
-            let errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+            let errorMsg = err.message || "An unknown error occurred";
             if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
               errorMsg = "Network error: Failed to fetch AI virality prediction. Please check your connection.";
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
@@ -309,7 +309,7 @@ export default function CoinDetailPage() {
             setLifespanPrediction(lifespan);
           } catch (err: any) {
             console.error("Error fetching lifespan prediction:", err);
-            let errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+            let errorMsg = err.message || "An unknown error occurred";
             if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
               errorMsg = "Network error: Failed to fetch AI lifespan prediction. Please check your connection.";
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
@@ -328,7 +328,7 @@ export default function CoinDetailPage() {
             setSignalPerformance(performance);
           } catch (err: any) {
             console.error("Error fetching signal performance:", err);
-            let errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+            let errorMsg = err.message || "An unknown error occurred";
             if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
               errorMsg = "Network error: Failed to fetch AI signal performance. Please check your connection and try again.";
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
@@ -351,7 +351,7 @@ export default function CoinDetailPage() {
             setEntryZoneStatus(status);
           } catch (err: any) {
             console.error("Error fetching entry zone status:", err);
-            let errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+            let errorMsg = err.message || "An unknown error occurred";
             if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
               errorMsg = "Network error: Failed to fetch AI Entry Zone Status. Please check your connection.";
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
@@ -370,7 +370,7 @@ export default function CoinDetailPage() {
             setTokenomicsAnalysis(tokenomics);
           } catch (err: any) {
             console.error("Error fetching conceptual tokenomics analysis:", err);
-            let errorMsg = err instanceof Error ? err.message : "An unknown error occurred";
+            let errorMsg = err.message || "An unknown error occurred";
             if (errorMsg.toLowerCase().includes('failed to fetch') || errorMsg.toLowerCase().includes('networkerror')) {
               errorMsg = "Network error: Failed to fetch AI tokenomics insights. Please check connection.";
             } else if (errorMsg.toLowerCase().includes('503') || errorMsg.toLowerCase().includes('overloaded') || errorMsg.toLowerCase().includes('service unavailable')) {
@@ -1163,7 +1163,7 @@ export default function CoinDetailPage() {
             >
                 <Accordion type="single" collapsible className="w-full" defaultValue="supply">
                   <AccordionItem value="supply">
-                    <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between text-lg text-primary/90 font-semibold">
+                    <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between text-lg font-semibold">
                         <div className="flex items-center">
                             <FileJson className="mr-2 h-4 w-4" />Supply Metrics (Live Data)
                         </div>
@@ -1175,7 +1175,7 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="conceptual-allocation">
-                     <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between text-lg text-primary/90 font-semibold">
+                     <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between text-lg font-semibold">
                         <div className="flex items-center">
                             <UsersRound className="mr-2 h-4 w-4" />AI Conceptual Allocation
                         </div>
@@ -1187,7 +1187,7 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                    <AccordionItem value="conceptual-vesting">
-                     <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between text-lg text-primary/90 font-semibold">
+                     <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between text-lg font-semibold">
                         <div className="flex items-center">
                             <KeyRound className="mr-2 h-4 w-4" />AI Conceptual Vesting
                         </div>
@@ -1199,7 +1199,7 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                    <AccordionItem value="simulated-audit">
-                        <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between text-lg text-primary/90 font-semibold">
+                        <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between text-lg font-semibold">
                             <div className="flex items-center">
                                 <AuditIcon className="mr-2 h-4 w-4" />AI Simulated Audit Concerns
                             </div>
@@ -1211,7 +1211,7 @@ export default function CoinDetailPage() {
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="dev-wallets" className="border-b-0">
-                        <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between text-lg text-primary/90 font-semibold">
+                        <AccordionTrigger className="py-3 px-4 hover:no-underline flex-grow p-0 justify-between text-lg font-semibold">
                             <div className="flex items-center">
                                 <Briefcase className="mr-2 h-4 w-4" />AI Dev Wallet Observations
                             </div>
@@ -1331,6 +1331,7 @@ export default function CoinDetailPage() {
     
 
     
+
 
 
 

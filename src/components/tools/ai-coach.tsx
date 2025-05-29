@@ -5,13 +5,13 @@ import React, { useState, useEffect, useCallback } from "react";
 import { getCoinTradingSignal, type GetCoinTradingSignalOutput, type GetCoinTradingSignalInput } from "@/ai/flows/get-coin-trading-signal";
 import { getCoinRiskAssessment, type GetCoinRiskAssessmentOutput } from "@/ai/flows/get-coin-risk-assessment";
 import { getWhatIfScenarioSignal, type GetWhatIfScenarioSignalInput, type GetWhatIfScenarioSignalOutput } from "@/ai/flows/get-what-if-scenario-signal";
-import { calculateFutureProfit, type CalculateFutureProfitInput, type CalculateFutureProfitOutput } from "@/ai/flows/calculate-future-profit"; // New import
+import { calculateFutureProfit, type CalculateFutureProfitInput, type CalculateFutureProfitOutput } from "@/ai/flows/calculate-future-profit";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, AlertTriangle, Info, DollarSign, TrendingUp, TrendingDown, ShieldCheck, Target, HelpCircle, Briefcase, GraduationCap, CheckCircle, XCircle, MinusCircle, Siren, Mic, BarChart, MessageSquare, Zap, ListChecks, FileText, SlidersHorizontal, CalendarClock, Clock4, Percent } from "lucide-react"; 
+import { Loader2, Sparkles, AlertTriangle, Info, DollarSign, TrendingUp, TrendingDown, ShieldCheck, Target, HelpCircle, Briefcase, GraduationCap, CheckCircle, XCircle, MinusCircle, Siren, Mic, BarChart, MessageSquare, Zap, ListChecks, FileText, SlidersHorizontal, CalendarClock, Clock4, Percent, TrendingUpIcon, TrendingDownIcon, ActivityIcon, UsersIcon, FileTextIcon } from "lucide-react"; 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -149,17 +149,16 @@ export function AiCoach() {
     setThreatRadarData(null);
     setWhatIfSignal(null);
     setWhatIfError(null);
-    setProfitCalcResult(null); // Clear profit calc result as well
+    setProfitCalcResult(null); 
     setProfitCalcError(null);
 
 
     let priceForAnalysis = currentCoinPrice;
-    // Check if the coinName for coaching is different from the one we have currentCoinPrice for,
-    // or if currentCoinPrice is null (meaning it wasn't fetched or fetch failed).
+    
     if (nameForCoaching.toLowerCase() !== coinName.toLowerCase() || currentCoinPrice === null) {
         toast({ title: "Fetching Context", description: `Getting latest price for ${nameForCoaching}...`, duration: 2000});
         priceForAnalysis = await fetchPriceForCoin(nameForCoaching);
-        // If the coaching is for the same coin currently in the main input, update its price
+        
         if (nameForCoaching.toLowerCase() === coinName.toLowerCase()) {
           setCurrentCoinPrice(priceForAnalysis);
         }
@@ -602,6 +601,7 @@ export function AiCoach() {
                     <Input
                         id="coach-hypotheticalPrice"
                         type="number"
+                        step="any"
                         placeholder="e.g., 0.50"
                         value={hypotheticalPrice}
                         onChange={(e) => setHypotheticalPrice(e.target.value)}
@@ -834,3 +834,4 @@ const InfoCard: React.FC<InfoCardProps> = ({icon, title, children}) => (
         </CardContent>
     </Card>
 );
+
