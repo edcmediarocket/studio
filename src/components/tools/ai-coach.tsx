@@ -324,7 +324,7 @@ export function AiCoach() {
                 <p className="mt-1 text-xs text-destructive">{priceError}</p>
             )}
             {currentCoinPrice !== null && !priceLoading && !priceError && (
-                <p className="mt-1 text-xs text-green-500">Current price for {coinName.trim()}: ${currentCoinPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: currentCoinPrice > 0.01 ? 2 : 8 })}</p>
+                <p className="mt-1 text-xs text-green-500">Current price for {coinName.trim()}: ${currentCoinPrice.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</p>
             )}
           </div>
 
@@ -376,7 +376,7 @@ export function AiCoach() {
             </CardDescription>
              {currentCoinPrice !== null && (
                 <p className="text-xs text-muted-foreground text-center -mt-3">
-                    (Analysis based on current price of ${currentCoinPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: currentCoinPrice > 0.01 ? 2 : 8 })})
+                    (Analysis based on current price of ${currentCoinPrice.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })})
                 </p>
             )}
 
@@ -622,4 +622,3 @@ const InfoCard: React.FC<InfoCardProps> = ({icon, title, children}) => (
         </CardContent>
     </Card>
 );
-
