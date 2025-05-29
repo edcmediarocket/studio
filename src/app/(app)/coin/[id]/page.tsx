@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon, Siren, Hourglass, TrendingUpIcon, TrendingDownIcon, BarChartBig, ActivityIcon, UsersIcon, FileTextIcon, Layers, MapPin, FileJson, KeyRound, ShieldQuestion as AuditIcon, UsersRound, MessageSquare, CalendarClock, MinusCircle } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, ExternalLink, Globe, Users, BookOpen, TrendingUp, TrendingDown, Package, BrainCircuit, Loader2, Info, Target, ShieldCheck, HelpCircle, Briefcase, ShieldAlert as RiskIcon, ListChecks, Zap, ClockIcon, Sparkles as ViralityIcon, Siren, Hourglass, TrendingUpIcon, TrendingDownIcon, BarChartBig, ActivityIcon, UsersIcon, FileTextIcon, Layers, MapPin, FileJson, KeyRound, ShieldQuestion as AuditIcon, UsersRound, MessageSquare, CalendarClock, CheckCircle, XCircle, MinusCircle } from 'lucide-react';
 import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from '@/ai/flows/get-coin-trading-signal';
 import { getCoinRiskAssessment, type GetCoinRiskAssessmentOutput } from '@/ai/flows/get-coin-risk-assessment';
 import { getViralPrediction, type GetViralPredictionOutput } from '@/ai/flows/get-viral-prediction';
@@ -26,6 +26,7 @@ import { StatItem } from '@/components/shared/stat-item';
 import { TokenDnaStrip } from '@/components/shared/token-dna-strip';
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Progress } from '@/components/ui/progress';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 
 interface CoinDetail {
@@ -78,8 +79,8 @@ const SectionCardComponent: React.FC<SectionCardProps> = ({ title, icon, childre
         <Accordion type="single" collapsible className="w-full" defaultValue={defaultOpenAccordion ? "item-1" : undefined}>
           <AccordionItem value="item-1" className="border-b-0">
             <AccordionPrimitive.Header className={cn("flex items-center justify-between", noPadding ? "p-0" : "px-4")}>
-              <AccordionTrigger className={cn(noPadding ? "py-3" : "py-4", "hover:no-underline flex-grow p-0")}>
-                <div className={cn("flex items-center text-xl text-primary font-semibold", titleClassName)}>
+              <AccordionTrigger className={cn(noPadding ? "py-3" : "py-4", "hover:no-underline flex-grow p-0 justify-between text-xl font-semibold", titleClassName)}>
+                 <div className={cn("flex items-center text-primary")}>
                   {icon}
                   <span className={cn(icon && "ml-2")}>{title}</span>
                 </div>
@@ -110,7 +111,7 @@ const SectionCardComponent: React.FC<SectionCardProps> = ({ title, icon, childre
 
   return (
     <Card className={cn("shadow-lg", className)}>
-      <CardHeader className={cn(noPadding ? "pb-2 pt-4 px-4" : "pb-3", "flex flex-row justify-between items-center")}>
+      <CardHeader className={cn(noPadding ? "pb-2 pt-4 px-4" : "", "flex flex-row justify-between items-center")}>
         <div className={cn("flex items-center text-xl text-primary font-semibold", titleClassName)}>
           {icon}
           <span className={cn(icon && "ml-2")}>{title}</span>
@@ -154,7 +155,8 @@ const TradingTargetLabel: React.FC<{ label: string; tooltip: string }> = ({ labe
 const FactorImpactIcon: React.FC<{ impact: "Positive" | "Negative" | "Neutral" }> = ({ impact }) => {
   if (impact === "Positive") return <TrendingUpIcon className="h-4 w-4 text-green-500 mx-auto" />;
   if (impact === "Negative") return <TrendingDownIcon className="h-4 w-4 text-red-500 mx-auto" />;
-  return <MinusCircle className="h-4 w-4 text-yellow-500 mx-auto" />;
+  if (impact === "Neutral") return <MinusCircle className="h-4 w-4 text-yellow-500 mx-auto" />;
+  return <MinusCircle className="h-4 w-4 text-yellow-500 mx-auto" />
 };
 
 export default function CoinDetailPage() {
@@ -225,7 +227,6 @@ export default function CoinDetailPage() {
           console.warn(`CoinGecko API error for ${coinId}:`, errorMessage);
           setError(errorMessage); 
           setLoading(false); 
-          // Stop further AI calls if primary coin data fails
           setSignalLoading(false);
           setRiskLoading(false);
           setViralPredictionLoading(false);
@@ -570,7 +571,7 @@ export default function CoinDetailPage() {
                  <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><Target className="mr-2 h-5 w-5"/>Future Price Outlook</h4>
                  <StatItem label="Short-Term Target" value={tradingSignal.futurePriceOutlook?.shortTermTarget} className="px-3 py-1.5 bg-muted/30 rounded-t-md border-b-0" labelClassName="text-xs" valueClassName="text-sm"/>
                  <StatItem label="Mid-Term Target" value={tradingSignal.futurePriceOutlook?.midTermTarget} className="px-3 py-1.5 bg-muted/30" labelClassName="text-xs" valueClassName="text-sm"/>
-                 <StatItem label="Long-Term Target" value={tradingSignal.futurePriceOutlook?.longTermTarget} className="px-3 py-1.5 bg-muted/30 rounded-b-md" labelClassName="text-xs" valueClassName="text-sm"/>
+                 <StatItem label={<TradingTargetLabel label="Long-Term Target" tooltip="Speculative long-term price target (e.g., 6-12 months or based on project milestones), adjusted for trading style." />} value={tradingSignal.futurePriceOutlook?.longTermTarget} className="px-3 py-1.5 bg-muted/30 rounded-b-md" labelClassName="text-xs" valueClassName="text-sm"/>
             </div>
              <div className="space-y-1">
                 <h4 className="text-md font-semibold text-primary mb-1 flex items-center"><ShieldCheck className="mr-2 h-5 w-5"/>Trading Targets</h4>
@@ -734,10 +735,10 @@ export default function CoinDetailPage() {
                 <CardTitle className="text-base text-primary/90">Rug Pull Indicators</CardTitle>
             </CardHeader>
             <CardContent className="text-xs space-y-1.5 px-3 py-2">
-                <StatItem label="Liquidity Lock" value={riskAssessment.liquidityLockStatus || "N/A"} className="px-0 py-1" labelClassName="text-xs" valueClassName="text-xs" />
-                <StatItem label="Dev Wallet/Holder Concentration" value={riskAssessment.devWalletConcentration || "N/A"} className="px-0 py-1" labelClassName="text-xs" valueClassName="text-xs"/>
-                <StatItem label="Contract Verified" value={riskAssessment.contractVerified === undefined ? "N/A" : riskAssessment.contractVerified ? "Yes" : "No"} className="px-0 py-1" labelClassName="text-xs" valueClassName="text-xs"/>
-                <StatItem label="Honeypot Signs" value={riskAssessment.honeypotIndicators || "N/A"} className="px-0 py-1" labelClassName="text-xs" valueClassName="text-xs"/>
+                <StatItem label="Liquidity Lock" value={riskAssessment.liquidityLockStatus || "N/A"} className="!py-1 px-0" labelClassName="text-xs" valueClassName="text-xs" />
+                <StatItem label="Dev Wallet/Holder Concentration" value={riskAssessment.devWalletConcentration || "N/A"} className="!py-1 px-0" labelClassName="text-xs" valueClassName="text-xs"/>
+                <StatItem label="Contract Verified" value={riskAssessment.contractVerified === undefined ? "N/A" : riskAssessment.contractVerified ? "Yes" : "No"} className="!py-1 px-0" labelClassName="text-xs" valueClassName="text-xs"/>
+                <StatItem label="Honeypot Signs" value={riskAssessment.honeypotIndicators || "N/A"} className="!py-1 px-0" labelClassName="text-xs" valueClassName="text-xs"/>
             </CardContent>
           </Card>
 
@@ -1165,9 +1166,9 @@ export default function CoinDetailPage() {
                         </div>
                     </AccordionTrigger>
                     <AccordionContent className="text-xs text-muted-foreground !pt-0 !pb-0">
-                      <StatItem label="Circulating Supply" value={market_data.circulating_supply} unit={symbol.toUpperCase()} className="!pt-0 !pb-0" />
-                      <StatItem label="Total Supply" value={market_data.total_supply} unit={symbol.toUpperCase()} className="!pt-0 !pb-0" />
-                      <StatItem label="Max Supply" value={market_data.max_supply} unit={symbol.toUpperCase()} className="!pt-0 !pb-0" />
+                      <StatItem label="Circulating Supply" value={market_data.circulating_supply} unit={symbol.toUpperCase()} className="!pt-0 !pb-0 !px-0" />
+                      <StatItem label="Total Supply" value={market_data.total_supply} unit={symbol.toUpperCase()} className="!pt-0 !pb-0 !px-0" />
+                      <StatItem label="Max Supply" value={market_data.max_supply} unit={symbol.toUpperCase()} className="!pt-0 !pb-0 !px-0" />
                     </AccordionContent>
                   </AccordionItem>
                   <AccordionItem value="conceptual-allocation">

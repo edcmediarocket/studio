@@ -1,3 +1,4 @@
+
 # Rocket Meme
 
 This is a NextJS starter for Rocket Meme in Firebase Studio.
