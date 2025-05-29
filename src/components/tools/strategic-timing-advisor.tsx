@@ -1,22 +1,79 @@
 
 "use client";
 
-import React, { useState } from "react";
-import { getStrategicCoinTiming, type StrategicCoinTimingOutput } from "@/ai/flows/get-strategic-coin-timing";
+import React, { useState, useEffect, useCallback } from "react";
+import { getStrategicCoinTiming, type StrategicCoinTimingOutput, type StrategicCoinTimingInput } from "@/ai/flows/get-strategic-coin-timing";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Target, Sparkles, AlertTriangle, Info, Clock, BarChart, ShieldCheck, MessageSquare, Zap } from "lucide-react";
+import { Loader2, Target, Sparkles, AlertTriangle, Info, Clock, BarChart, DollarSign, MessageSquare, Zap } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 
 export function StrategicTimingAdvisor() {
   const [coinName, setCoinName] = useState("");
   const [timingAdvice, setTimingAdvice] = useState<StrategicCoinTimingOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [currentCoinPrice, setCurrentCoinPrice] = useState<number | null>(null);
+  const [priceLoading, setPriceLoading] = useState(false);
+  const [priceError, setPriceError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchPrice = async () => {
+      if (!coinName.trim()) {
+        setCurrentCoinPrice(null);
+        setPriceError(null);
+        return;
+      }
+      setPriceLoading(true);
+      setPriceError(null);
+      setCurrentCoinPrice(null);
+
+      let coinId = coinName.trim().toLowerCase();
+      const coinIdMappings: { [key: string]: string } = {
+        "xrp": "ripple", "shiba inu": "shiba-inu", "dogecoin": "dogecoin", "xdc": "xdce-crowd-sale",
+      };
+      coinId = coinIdMappings[coinId] || coinId.replace(/\s+/g, '-');
+
+      try {
+        const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: "Failed to parse error response" }));
+          const apiErrorMessage = errorData?.error || `CoinGecko API error (Status: ${response.status})`;
+          setPriceError(`Price fetch failed for ${coinName}: ${apiErrorMessage}. AI advice will be general.`);
+        } else {
+          const data = await response.json();
+          if (data[coinId] && data[coinId].usd !== undefined) {
+            setCurrentCoinPrice(data[coinId].usd);
+          } else {
+            setPriceError(`Current price not available for "${coinName}" from CoinGecko. AI advice will be general.`);
+          }
+        }
+      } catch (err) {
+        setPriceError(`Network error fetching price for "${coinName}". AI advice will be general.`);
+      } finally {
+        setPriceLoading(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(() => {
+      if (coinName.trim()) {
+        fetchPrice();
+      } else {
+        setCurrentCoinPrice(null);
+        setPriceError(null);
+        setPriceLoading(false);
+      }
+    }, 500); // Debounce API call
+
+    return () => clearTimeout(debounceTimer);
+  }, [coinName]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,11 +86,21 @@ export function StrategicTimingAdvisor() {
     setError(null);
     setTimingAdvice(null);
     try {
-      const result = await getStrategicCoinTiming({ coinName: coinName.trim() });
+      const input: StrategicCoinTimingInput = {
+        coinName: coinName.trim(),
+        currentPriceUSD: currentCoinPrice !== null ? currentCoinPrice : undefined,
+      };
+      const result = await getStrategicCoinTiming(input);
       setTimingAdvice(result);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error getting strategic timing advice:", err);
-      setError("Failed to get timing advice. The AI might be contemplating the sands of time, please try again.");
+      let errorMsg = "Failed to get timing advice. The AI might be contemplating the sands of time, please try again.";
+      if (err.message && (err.message.toLowerCase().includes('failed to fetch') || err.message.toLowerCase().includes('networkerror'))) {
+        errorMsg = "Network error: Could not fetch AI timing advice. Please check your connection.";
+      } else if (err.message && (err.message.toLowerCase().includes('503') || err.message.toLowerCase().includes('overloaded'))) {
+        errorMsg = "AI service for timing advice is temporarily overloaded. Please try again later.";
+      }
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -74,12 +141,35 @@ export function StrategicTimingAdvisor() {
               placeholder="e.g., Bitcoin, Ethereum, Dogecoin"
               value={coinName}
               onChange={(e) => setCoinName(e.target.value)}
-              disabled={isLoading}
+              disabled={isLoading || priceLoading}
               className="mt-1"
             />
           </div>
-          <Button type="submit" disabled={isLoading || !coinName.trim()} className="w-full bg-primary hover:bg-primary/90">
-            {isLoading ? (
+           {priceLoading && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Fetching current price for {coinName.trim()}...
+            </div>
+          )}
+          {priceError && !priceLoading && (
+            <Alert variant="destructive" className="text-xs py-2 px-3">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{priceError}</AlertDescription>
+            </Alert>
+          )}
+          {currentCoinPrice !== null && !priceLoading && !priceError && (
+            <Card className="bg-muted/30">
+              <CardContent className="p-3">
+                <Label className="text-xs text-muted-foreground">Current Market Price for {coinName.trim()}:</Label>
+                <p className="text-xl font-bold text-neon flex items-center">
+                  <DollarSign className="h-5 w-5 mr-1"/>
+                  {currentCoinPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: currentCoinPrice < 0.01 && currentCoinPrice !== 0 ? 8 : 2 })}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          <Button type="submit" disabled={isLoading || priceLoading || !coinName.trim()} className="w-full bg-primary hover:bg-primary/90">
+            {isLoading || priceLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <>
