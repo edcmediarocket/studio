@@ -13,7 +13,8 @@ const firebaseConfig = {
   projectId: "meme-prophet-xpyi0",
   storageBucket: "meme-prophet-xpyio.appspot.com",
   messagingSenderId: "1080795361618",
-  appId: "1:1080795361618:web:44e0f318a3a9399e77ca8b"
+  appId: "1:1080795361618:web:44e0f318a3a9399e77ca8b",
+  measurementId: "G-27NL1D4JLQ"
 };
 
 firebase.initializeApp(firebaseConfig);

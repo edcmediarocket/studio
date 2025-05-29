@@ -1,10 +1,10 @@
 
 // src/lib/firebase.ts
-import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/app';
+import { initializeApp, getApps, getApp, type FirebaseOptions, type FirebaseApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, type User as FirebaseUser } from 'firebase/auth';
 import { getFirestore, doc, getDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 import { getMessaging, getToken, onMessage, isSupported, type Messaging } from 'firebase/messaging';
-import { getStorage } from "firebase/storage";
+import { getStorage, type FirebaseStorage } from "firebase/storage"; // Import FirebaseStorage type
 import { getAnalytics, type Analytics } from "firebase/analytics";
 
 // Your web app's Firebase configuration
@@ -19,7 +19,7 @@ const firebaseConfig: FirebaseOptions = {
 };
 
 // Initialize Firebase
-let app;
+let app: FirebaseApp; // app will always be initialized
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
 } else {
@@ -28,12 +28,13 @@ if (!getApps().length) {
 
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
+let storage: FirebaseStorage | null = null;
 let analytics: Analytics | null = null;
 let messagingInstance: Messaging | null = null;
 
 if (typeof window !== 'undefined') {
+  storage = getStorage(app);
   analytics = getAnalytics(app);
   isSupported().then(supported => {
     if (supported) {
@@ -87,7 +88,7 @@ export const onMessageListener = () =>
     onMessage(messagingInstance, (payload) => {
       console.log('Foreground message received. ', payload);
       resolve(payload);
-    }, (error) => {
+    }, (error: any) => {
       console.error('Error receiving foreground message: ', error);
       reject(error);
     });
@@ -98,4 +99,5 @@ export const ADMIN_EMAILS = [
   "giomazetti@gmail.com".toLowerCase()
 ];
 
+// Export `app` if needed elsewhere, but often only service instances are exported
 export { app, auth, db, storage, analytics, messagingInstance as messaging, onAuthStateChanged, type FirebaseUser, doc, getDoc, onSnapshot, type Unsubscribe };
