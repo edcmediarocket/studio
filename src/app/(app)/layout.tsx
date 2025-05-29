@@ -3,6 +3,7 @@
 
 import type { PropsWithChildren } from 'react';
 import React, { useState, useEffect } from 'react'; 
+import dynamic from 'next/dynamic'; // Import dynamic
 import { Header } from '@/components/layout/header';
 import { MainNav } from '@/components/layout/main-nav';
 import { Logo } from '@/components/icons/logo';
@@ -24,16 +25,27 @@ import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { FcmInitializer } from '@/components/layout/fcm-initializer';
+// import { FcmInitializer } from '@/components/layout/fcm-initializer'; // Remove direct import
+
+// Dynamically import FcmInitializer
+const FcmInitializer = dynamic(() => import('@/components/layout/fcm-initializer').then(mod => mod.FcmInitializer), {
+  ssr: false,
+  loading: () => null, // Optional: can return a loading spinner or null
+});
+
 
 export default function AppLayout({ children }: PropsWithChildren) {
   const [showSplash, setShowSplash] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleSplashFinished = () => {
-    setShowSplash(false);
-  };
+  useEffect(() => {
+    // Simulate app loading for the splash screen
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 4000); // Match splash screen duration
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -47,7 +59,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
   };
 
   if (showSplash) {
-    return <SplashScreen onFinished={handleSplashFinished} />;
+    return <SplashScreen />;
   }
 
   return (

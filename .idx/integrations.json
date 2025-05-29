@@ -1,3 +1,6 @@
 {
+  "firebase_hosting": {
+    "deploymentHostingUrl": "https://meme-prophet-xpyi0.web.app"
+  },
   "cloud_run_deploy": {}
 }
