@@ -3,11 +3,12 @@
 
 import React, { useState, useEffect } from "react";
 import { getCoinTradingSignal, type GetCoinTradingSignalOutput } from "@/ai/flows/get-coin-trading-signal";
+import { getCoinRiskAssessment, type GetCoinRiskAssessmentOutput } from "@/ai/flows/get-coin-risk-assessment"; // Import the risk assessment flow
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Sparkles, AlertTriangle, Info, DollarSign, TrendingUp, TrendingDown, ShieldCheck, Target, HelpCircle, Briefcase, GraduationCap, CheckCircle, XCircle, MinusCircle } from "lucide-react";
+import { Loader2, Sparkles, AlertTriangle, Info, DollarSign, TrendingUp, TrendingDown, ShieldCheck, Target, HelpCircle, Briefcase, GraduationCap, CheckCircle, XCircle, MinusCircle, Siren } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -50,6 +51,11 @@ export function AiCoach() {
   const [priceLoading, setPriceLoading] = useState(false);
   const [priceError, setPriceError] = useState<string | null>(null);
 
+  // State for On-Chain Threat Radar
+  const [threatRadarData, setThreatRadarData] = useState<GetCoinRiskAssessmentOutput | null>(null);
+  const [threatRadarLoading, setThreatRadarLoading] = useState(false);
+  const [threatRadarError, setThreatRadarError] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchCurrentPrice = async () => {
       if (!coinName.trim()) {
@@ -73,7 +79,7 @@ export function AiCoach() {
           const errorData = await response.json().catch(() => ({ error: "Failed to parse error response" }));
           const apiErrorMessage = errorData?.error || `CoinGecko API error (Status: ${response.status})`;
            if (response.status === 404 || (apiErrorMessage && apiErrorMessage.toLowerCase().includes('could not find coin with id'))) {
-            setPriceError(`Could not find current price for "${coinName}". CoinGecko might use a different ID (e.g., 'ripple' for XRP). AI advice will be general.`);
+            setPriceError(`Could not find current price for "${coinName}". Please check the coin name/ID or try an alternative ID (e.g., 'ripple' for XRP). AI advice will be general.`);
           } else {
             setPriceError(`Failed to fetch current price: ${apiErrorMessage}. AI advice will be general.`);
           }
@@ -120,31 +126,61 @@ export function AiCoach() {
     if (!coinName.trim()) {
       setError("Please enter a coin name to get coaching advice.");
       setCoachAdvice(null);
+      setThreatRadarData(null);
       return;
     }
     setIsLoading(true);
+    setThreatRadarLoading(true);
     setError(null);
+    setThreatRadarError(null);
     setCoachAdvice(null);
+    setThreatRadarData(null);
 
     try {
-      const result = await getCoinTradingSignal({ 
+      // Fetch coaching advice
+      const adviceResult = await getCoinTradingSignal({ 
         coinName: coinName.trim(), 
         currentPriceUSD: currentCoinPrice !== null ? currentCoinPrice : undefined
       });
-      setCoachAdvice(result);
+      setCoachAdvice(adviceResult);
+      setIsLoading(false); // Stop main loading for advice
+
+      // Fetch threat radar data
+      try {
+        const riskResult = await getCoinRiskAssessment({ coinName: coinName.trim() });
+        setThreatRadarData(riskResult);
+      } catch (riskErr) {
+        console.error("Error fetching threat radar data:", riskErr);
+        setThreatRadarError("Failed to fetch on-chain threat radar. AI analysis may be incomplete.");
+      } finally {
+        setThreatRadarLoading(false);
+      }
+
     } catch (err) {
       console.error("Error getting AI Coach advice:", err);
       setError("Failed to get coaching advice. The AI Coach might be strategizing, please try again later.");
-    } finally {
       setIsLoading(false);
+      setThreatRadarLoading(false); // Also stop threat radar loading if main call fails
     }
   };
 
   const getRecommendationBadgeVariant = (recommendation?: 'Buy' | 'Sell' | 'Hold') => {
-    if (recommendation === 'Buy') return 'default';
+    if (recommendation === 'Buy') return 'default'; 
     if (recommendation === 'Sell') return 'destructive';
     if (recommendation === 'Hold') return 'secondary';
     return 'outline';
+  };
+  
+  const getThreatLevelBadgeClasses = (riskLevel?: GetCoinRiskAssessmentOutput['riskLevel'], isHighRugRisk?: boolean) => {
+    if (isHighRugRisk) return 'bg-red-700 hover:bg-red-800 text-white border-red-900';
+    switch (riskLevel) {
+      case 'Low': return 'bg-green-500 hover:bg-green-600 text-white';
+      case 'Medium': return 'bg-yellow-500 hover:bg-yellow-600 text-black';
+      case 'High': return 'bg-orange-500 hover:bg-orange-600 text-white';
+      case 'Very High': return 'bg-red-600 hover:bg-red-700 text-white';
+      case 'Degenerate Gambler Zone': return 'bg-purple-600 hover:bg-purple-700 text-white';
+      default: return 'bg-muted text-muted-foreground';
+    }
   };
 
   return (
@@ -167,7 +203,7 @@ export function AiCoach() {
               placeholder="e.g., Dogecoin, Shiba Inu"
               value={coinName}
               onChange={(e) => setCoinName(e.target.value)}
-              disabled={isLoading || priceLoading}
+              disabled={isLoading || priceLoading || threatRadarLoading}
               className="mt-1"
             />
              {priceLoading && (
@@ -182,12 +218,12 @@ export function AiCoach() {
                 <p className="mt-1 text-xs text-green-500">Current price for {coinName.trim()}: ${currentCoinPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: currentCoinPrice > 0.01 ? 2 : 8 })}</p>
             )}
           </div>
-          <Button type="submit" disabled={isLoading || priceLoading || !coinName.trim()} className="w-full bg-primary hover:bg-primary/90">
-            {isLoading ? (
+          <Button type="submit" disabled={isLoading || priceLoading || threatRadarLoading || !coinName.trim()} className="w-full bg-primary hover:bg-primary/90">
+            {(isLoading || threatRadarLoading) ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <>
-                <Sparkles className="mr-2 h-4 w-4" /> Get AI Coaching
+                <Sparkles className="mr-2 h-4 w-4" /> Get AI Coaching & Threat Scan
               </>
             )}
           </Button>
@@ -201,7 +237,7 @@ export function AiCoach() {
           </Alert>
         )}
 
-        {coachAdvice && (
+        {coachAdvice && !isLoading && (
           <div className="mt-8 space-y-6">
             <Separator />
             <h3 className="text-xl font-semibold text-neon text-center">
@@ -247,7 +283,6 @@ export function AiCoach() {
               </InfoCard>
             )}
 
-
             <InfoCard icon={<Info className="h-5 w-5" />} title="Detailed Analysis">
               <p className="text-base sm:text-sm text-muted-foreground whitespace-pre-wrap">{coachAdvice.detailedAnalysis}</p>
             </InfoCard>
@@ -275,16 +310,76 @@ export function AiCoach() {
             )}
           </div>
         )}
-         {!isLoading && !coachAdvice && !error && (
+
+        {/* On-Chain Threat Radar Section */}
+        {threatRadarLoading && !threatRadarData && (
+             <div className="mt-8 text-center">
+                <Loader2 className="mx-auto h-6 w-6 animate-spin text-primary mb-2" />
+                <p className="text-sm text-muted-foreground">Scanning On-Chain Threats...</p>
+            </div>
+        )}
+        {threatRadarError && (
+             <Alert variant="destructive" className="mt-6">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Threat Radar Error</AlertTitle>
+                <AlertDescription>{threatRadarError}</AlertDescription>
+            </Alert>
+        )}
+        {threatRadarData && !threatRadarLoading && (
+            <Card className="mt-8 shadow-md border-primary/50">
+                <CardHeader>
+                    <CardTitle className="flex items-center text-xl text-neon">
+                        <Siren className="mr-2 h-5 w-5"/> On-Chain Threat Radar
+                    </CardTitle>
+                    <CardDescription>AI-simulated on-chain risk indicators for {threatRadarData.coinName}.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    <div className="text-center">
+                        <span className="text-sm font-medium text-muted-foreground">Overall Threat Level: </span>
+                        <Badge className={`px-3 py-1 text-sm ${getThreatLevelBadgeClasses(threatRadarData.riskLevel, threatRadarData.isHighRugRisk)}`}>
+                            {threatRadarData.isHighRugRisk ? "High Rug Risk" : threatRadarData.riskLevel || "N/A"}
+                        </Badge>
+                         <p className="text-xs text-muted-foreground mt-1">Assessed on: {new Date(threatRadarData.assessmentDate).toLocaleDateString()}</p>
+                    </div>
+                    
+                    {threatRadarData.isHighRugRisk && (
+                        <Alert variant="destructive" className="border-2 border-red-700">
+                            <Siren className="h-5 w-5 text-red-700" />
+                            <AlertTitle className="text-red-700 font-bold">High Rug Risk Detected!</AlertTitle>
+                            <AlertDescription className="text-red-600">
+                                {threatRadarData.rugPullWarningSummary || "AI has flagged this coin as having multiple indicators associated with high rug pull risk. Extreme caution advised."}
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                    
+                    <StatItem label="Liquidity Lock" value={threatRadarData.liquidityLockStatus || "N/A"} className="!py-1" labelClassName="text-xs" valueClassName="text-xs"/>
+                    <StatItem label="Dev Wallet/Holder Concentration" value={threatRadarData.devWalletConcentration || "N/A"} className="!py-1" labelClassName="text-xs" valueClassName="text-xs"/>
+                    <StatItem label="Contract Verified" value={threatRadarData.contractVerified === undefined ? "N/A" : threatRadarData.contractVerified ? "Yes" : "No"} className="!py-1" labelClassName="text-xs" valueClassName="text-xs"/>
+                    <StatItem label="Honeypot Signs" value={threatRadarData.honeypotIndicators || "N/A"} className="!py-1" labelClassName="text-xs" valueClassName="text-xs"/>
+
+                    {threatRadarData.overallAssessment && (
+                        <div>
+                            <h4 className="font-semibold text-sm text-primary mb-1">AI Assessment Summary:</h4>
+                            <p className="text-xs text-muted-foreground bg-muted/20 p-2 rounded-md whitespace-pre-wrap">{threatRadarData.overallAssessment}</p>
+                        </div>
+                    )}
+                    {threatRadarData.disclaimer && (
+                        <p className="text-xs text-muted-foreground pt-3 border-t border-dashed mt-3">{threatRadarData.disclaimer}</p>
+                    )}
+                </CardContent>
+            </Card>
+        )}
+
+         {(!isLoading && !threatRadarLoading) && !coachAdvice && !error && (
             <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center bg-muted/10 mt-6">
                 <GraduationCap className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <p className="text-muted-foreground">Enter a coin name above to get personalized AI coaching.</p>
+                <p className="text-muted-foreground">Enter a coin name above to get personalized AI coaching and its on-chain threat assessment.</p>
             </div>
         )}
       </CardContent>
       <CardFooter className="mt-auto pt-4">
          <p className="text-xs text-muted-foreground">
-           AI Coach advice is for informational purposes only and not financial advice. Always DYOR.
+           AI Coach advice and Threat Radar insights are for informational purposes only and not financial advice. Always DYOR.
          </p>
       </CardFooter>
     </Card>
@@ -309,4 +404,3 @@ const InfoCard: React.FC<InfoCardProps> = ({icon, title, children}) => (
         </CardContent>
     </Card>
 );
-
