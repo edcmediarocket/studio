@@ -17,7 +17,7 @@ const GetAlphaFeedIdeasInputSchema = z.object({
 });
 export type GetAlphaFeedIdeasInput = z.infer<typeof GetAlphaFeedIdeasInputSchema>;
 
-// Define the array of strings for idea types
+// This array is for internal Zod enum definition
 const ideaTypeValues = [
     "High Potential Upside",
     "Narrative Play",
@@ -27,14 +27,12 @@ const ideaTypeValues = [
     "Ecosystem Growth"
 ] as const;
 
-// Create the Zod enum using this array for internal schema validation
+// Internal Zod enum using the array
 const IdeaTypeEnumInternal = z.enum(ideaTypeValues);
+// type InternalIdeaType = z.infer<typeof IdeaTypeEnumInternal>; // This type is not exported
 
-// This type is internal and not exported to avoid conflicts
-type InternalIdeaType = z.infer<typeof IdeaTypeEnumInternal>;
-
-
-const TradeIdeaSchema = z.object({
+// Define the schema for a single trade idea with a unique internal name
+const InternalSingleTradeIdeaSchema = z.object({ // Renamed from TradeIdeaSchema
   coinName: z.string().describe('The name of the coin or token.'),
   symbol: z.string().describe('The ticker symbol for the coin (e.g., BTC, DOGE).'),
   ideaType: IdeaTypeEnumInternal.describe('The category or type of trade idea.'),
@@ -52,10 +50,12 @@ const TradeIdeaSchema = z.object({
   suggestedTimeframe: z.string().describe('Suggested holding or monitoring timeframe for this idea (e.g., "1-2 weeks", "Next 24-72 hours", "Medium-term hold (1-3 months)").'),
   keyMetricsToWatch: z.array(z.string()).optional().describe("Specific metrics or events to monitor that would support or invalidate the idea.")
 });
-export type AlphaFeedTradeIdea = z.infer<typeof TradeIdeaSchema>;
+
+// Export the type inferred from this schema with the desired name
+export type AlphaFeedTradeIdea = z.infer<typeof InternalSingleTradeIdeaSchema>;
 
 const GetAlphaFeedIdeasOutputSchema = z.object({
-  feedItems: z.array(TradeIdeaSchema).describe('A list of AI-generated trade ideas.'),
+  feedItems: z.array(InternalSingleTradeIdeaSchema).describe('A list of AI-generated trade ideas.'), // Use the renamed internal schema here
   lastGenerated: z.string().describe('Timestamp of when the feed was generated.'),
   disclaimer: z.string().default("These AI-generated trade ideas are for informational and educational purposes only, and do not constitute financial advice. Trading cryptocurrencies is highly speculative and involves substantial risk of loss. Always do your own research (DYOR).")
 });
@@ -108,9 +108,3 @@ const getAlphaFeedIdeasFlow = ai.defineFlow(
     return output!;
   }
 );
-
-// This array is for use by client components if needed, define it here and export it.
-// Since it's a simple array, it's fine to export from a 'use server' file IF the client component is also a client component.
-// However, to be absolutely safe with strict server module rules, client components should define their own options.
-// For now, the AlphaFeedDisplay.tsx defines its own options.
-// export const AlphaIdeaTypeOptions = [...ideaTypeValues];

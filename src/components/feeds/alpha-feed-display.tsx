@@ -2,7 +2,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { getAlphaFeedIdeas, type GetAlphaFeedIdeasOutput, type AlphaFeedTradeIdea } from "@/ai/flows/get-alpha-feed-ideas"; // Updated import type
+// Ensure the type import matches the unique export from the AI flow
+import { getAlphaFeedIdeas, type GetAlphaFeedIdeasOutput, type AlphaFeedTradeIdea } from "@/ai/flows/get-alpha-feed-ideas"; 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertTriangle, Info, RefreshCw, Sparkles, Target, ShieldHalf, CalendarDays, Brain, TrendingUp, Zap, Filter, X } from "lucide-react";
@@ -58,13 +59,13 @@ export function AlphaFeedDisplay() {
     setSelectedFilter(undefined);
   };
 
-  const getSignalColor = (signal: AlphaFeedTradeIdea['signal']) => { // Updated type
+  const getSignalColor = (signal: AlphaFeedTradeIdea['signal']) => { 
     if (signal === "Buy" || signal === "Accumulate") return "text-green-400 border-green-400/70 bg-green-500/10";
     if (signal === "Consider Short") return "text-red-400 border-red-400/70 bg-red-500/10";
     return "text-yellow-400 border-yellow-400/70 bg-yellow-500/10"; // For "Watch"
   };
 
-  const getRiskColor = (risk: AlphaFeedTradeIdea['riskRewardProfile']) => { // Updated type
+  const getRiskColor = (risk: AlphaFeedTradeIdea['riskRewardProfile']) => { 
     if (risk.toLowerCase().includes("high risk")) return "border-red-500 text-red-500";
     if (risk.toLowerCase().includes("medium risk")) return "border-yellow-500 text-yellow-500";
     if (risk.toLowerCase().includes("low risk")) return "border-green-500 text-green-500";
@@ -227,10 +228,6 @@ const InfoItem: React.FC<InfoItemProps> = ({ icon, label, value, valueClassName 
   </div>
 );
 
-// Helper type for lastGeneratedTime which is not in schema but can be used for key
-// This is purely a client-side convenience for key generation and does not affect AI flow.
-declare module "@/ai/flows/get-alpha-feed-ideas" {
-  interface AlphaFeedTradeIdea { // Ensure this matches the exported type name
-    lastGeneratedTime?: string;
-  }
-}
+// Removed the declare module block that was previously here
+// as it was causing issues with "use server" and type exports.
+// The AlphaIdeaTypeOptions are now defined directly in this client component.
