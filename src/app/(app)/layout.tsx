@@ -2,8 +2,8 @@
 "use client"; 
 
 import type { PropsWithChildren } from 'react';
-import React, { useState, useEffect } from 'react'; 
-import dynamic from 'next/dynamic'; // Import dynamic
+import React, { useState, useEffect, useCallback } from 'react'; 
+import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/header';
 import { MainNav } from '@/components/layout/main-nav';
 import { Logo } from '@/components/icons/logo';
@@ -25,12 +25,10 @@ import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-// import { FcmInitializer } from '@/components/layout/fcm-initializer'; // Remove direct import
 
-// Dynamically import FcmInitializer
 const FcmInitializer = dynamic(() => import('@/components/layout/fcm-initializer').then(mod => mod.FcmInitializer), {
   ssr: false,
-  loading: () => null, // Optional: can return a loading spinner or null
+  loading: () => null, 
 });
 
 
@@ -39,13 +37,12 @@ export default function AppLayout({ children }: PropsWithChildren) {
   const router = useRouter();
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Simulate app loading for the splash screen
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 4000); // Match splash screen duration
-    return () => clearTimeout(timer);
+  const handleSplashFinished = useCallback(() => {
+    setShowSplash(false);
   }, []);
+
+  // Removed redundant useEffect that was also setting showSplash to false.
+  // SplashScreen will call onFinished when its internal timer completes.
 
   const handleLogout = async () => {
     try {
@@ -59,7 +56,7 @@ export default function AppLayout({ children }: PropsWithChildren) {
   };
 
   if (showSplash) {
-    return <SplashScreen />;
+    return <SplashScreen onFinished={handleSplashFinished} />;
   }
 
   return (
