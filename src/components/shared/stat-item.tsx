@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 
 interface StatItemProps {
-  label: string;
+  label: React.ReactNode; // Changed from string to React.ReactNode
   value: string | number | undefined | null;
   unit?: string;
   isPercentage?: boolean;
