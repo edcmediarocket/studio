@@ -1,11 +1,10 @@
-
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   output: 'export',
   trailingSlash: true, // Ensures URLs end with a slash, e.g., /about/
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false, // Changed to false for stricter type checking
   },
   eslint: {
     ignoreDuringBuilds: true,
@@ -34,12 +33,6 @@ const nextConfig: NextConfig = {
       { 
         protocol: 'https',
         hostname: 'upload.wikimedia.org',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'drive.google.com',
         port: '',
         pathname: '/**',
       },
